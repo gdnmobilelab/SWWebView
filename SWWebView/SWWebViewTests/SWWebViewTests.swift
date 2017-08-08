@@ -22,13 +22,10 @@ class SWWebViewTests: XCTestCase {
         super.tearDown()
     }
     
-    func testWKWebViewStuff() {
+    func testCreate() {
         
-        let wk = WKWebView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-//        wk.loadHTMLString("", baseURL: URL(string: "http://www.example.com")!)
-        wk.evaluateJavaScript("test") { (resp, err) in
-            NSLog("woah")
-        }
+        let sw = SWWebView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
+
     }
     
     func testPerformanceExample() {

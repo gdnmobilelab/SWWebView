@@ -1,0 +1,16 @@
+{
+  "name": "swwebview-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "rollup": "^0.45.2",
+    "rollup-plugin-typescript": "^0.8.1",
+    "typescript": "^2.4.2"
+  }
+}

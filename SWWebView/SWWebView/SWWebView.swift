@@ -33,8 +33,18 @@ public class SWWebView : WKWebView {
         }
     }
     
+    fileprivate func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration) {
+        
+        let pathToJS = Bundle(for: SWWebView.self).url(forResource: "runtime", withExtension: "js", subdirectory: "js-dist")
+        
+        NSLog("waah")
+//        let jsContents =
+        
+    }
+    
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
         super.init(frame: frame, configuration: configuration)
+        self.addSWHooksToConfiguration(configuration)
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
         self.containerBridge = WebViewServiceWorkerBridge(for: self)
         super.navigationDelegate = self.swNavigationDelegate
