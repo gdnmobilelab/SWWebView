@@ -10,15 +10,21 @@ import Foundation
 import PromiseKit
 import ServiceWorker
 
-class CoreDatabase {
+public class CoreDatabase {
 
-    public static let dbPath = SharedResources.appGroupStorage.appendingPathComponent("core.db")
+//    public static let dbPath = SharedResources.appGroupStorage.appendingPathComponent("core.db")
+    public static var dbPath:URL? = nil
 
     /// The migrations only change with a new version of the app, so as long as we've
     /// checked for migrations once per app launch, we're OK to not check again
     static var dbMigrationCheckDone = false
 
     fileprivate static func doMigrationCheck() throws {
+        
+        if self.dbPath == nil {
+            throw ErrorMessage("CoreDatabase.dbPath must be set on app startup")
+        }
+        
         if self.dbMigrationCheckDone == false {
 
             Log.info?("Migration check for core DB not done yet, doing it now...")
@@ -29,17 +35,21 @@ class CoreDatabase {
 
             // This might be the first time it's being run, in which case, we need to ensure we have the
             // directory structure ready.
-            try FileManager.default.createDirectory(at: dbPath.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(at: dbPath!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
 
-            _ = try DatabaseMigration.check(dbPath: dbPath, migrationsPath: migrations)
+            _ = try DatabaseMigration.check(dbPath: dbPath!, migrationsPath: migrations)
             dbMigrationCheckDone = true
         }
     }
 
     public static func inConnection<T>(_ cb: (SQLiteConnection) throws -> T) throws -> T {
 
+        if self.dbPath == nil {
+            throw ErrorMessage("CoreDatabase.dbPath must be set on app startup")
+        }
+        
         try self.doMigrationCheck()
-        return try SQLiteConnection.inConnection(self.dbPath, cb)
+        return try SQLiteConnection.inConnection(self.dbPath!, cb)
     }
 
     public static func inConnection<T>(_ cb: @escaping (SQLiteConnection) throws -> Promise<T>) -> Promise<T> {
@@ -47,11 +57,14 @@ class CoreDatabase {
         return Promise(value: ())
             .then {
                 try self.doMigrationCheck()
-                return SQLiteConnection.inConnection(self.dbPath, cb)
+                return SQLiteConnection.inConnection(self.dbPath!, cb)
             }
     }
 
     static func createConnection() throws -> SQLiteConnection {
-        return try SQLiteConnection(self.dbPath)
+        if self.dbPath == nil {
+            throw ErrorMessage("CoreDatabase.dbPath must be set on app startup")
+        }
+        return try SQLiteConnection(self.dbPath!)
     }
 }

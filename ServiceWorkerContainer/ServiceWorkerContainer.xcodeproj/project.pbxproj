@@ -34,6 +34,13 @@
 		8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360351F35FDF800969268 /* SharedResources.swift */; };
 		8A2360451F35FE1B00969268 /* WorkerInstances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360361F35FDF800969268 /* WorkerInstances.swift */; };
 		8AB72E1D1F35FED70049117E /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A23604D1F35FE4A00969268 /* ServiceWorker.framework */; };
+		8AF85D7D1F3A2815001B0A87 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */; };
+		8AF85D7E1F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */; };
+		8AF85D831F3A28BD001B0A87 /* TestWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D821F3A289B001B0A87 /* TestWeb.swift */; };
+		8AF85D841F3A28C0001B0A87 /* ServiceWorkerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D811F3A289B001B0A87 /* ServiceWorkerExtensions.swift */; };
+		8AF85D851F3A28C3001B0A87 /* PromiseAssert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D801F3A289B001B0A87 /* PromiseAssert.swift */; };
+		8AF85D871F3A2A0C001B0A87 /* ServiceWorkerContainerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D861F3A2A0C001B0A87 /* ServiceWorkerContainerExtensions.swift */; };
+		8AF85D8E1F3A31AA001B0A87 /* DatabaseMigrations in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85D8D1F3A3134001B0A87 /* DatabaseMigrations */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,9 +89,6 @@
 		8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerTests.swift; sourceTree = "<group>"; };
 		8A2360211F35FDCC00969268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerHooks.swift; sourceTree = "<group>"; };
-		8A23602F1F35FDF800969268 /* 1_worker_tables.sql */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1_worker_tables.sql; sourceTree = "<group>"; };
-		8A2360301F35FDF800969268 /* 2_imported_scripts.sql */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2_imported_scripts.sql; sourceTree = "<group>"; };
-		8A2360311F35FDF800969268 /* 3_add_content_hashes.sql */ = {isa = PBXFileReference; lastKnownFileType = text; path = 3_add_content_hashes.sql; sourceTree = "<group>"; };
 		8A2360331F35FDF800969268 /* CoreDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDatabase.swift; sourceTree = "<group>"; };
 		8A2360341F35FDF800969268 /* DbExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DbExtensions.swift; sourceTree = "<group>"; };
 		8A2360351F35FDF800969268 /* SharedResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedResources.swift; sourceTree = "<group>"; };
@@ -93,6 +97,14 @@
 		8A23603A1F35FDF800969268 /* ServiceWorkerRegistrationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationOptions.swift; sourceTree = "<group>"; };
 		8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
 		8A2360471F35FE4A00969268 /* ServiceWorker.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ServiceWorker.xcodeproj; path = ../ServiceWorker/ServiceWorker.xcodeproj; sourceTree = "<group>"; };
+		8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationTests.swift; sourceTree = "<group>"; };
+		8AF85D7A1F3A2815001B0A87 /* ImportScriptsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportScriptsTests.swift; sourceTree = "<group>"; };
+		8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bootstrap.swift; sourceTree = "<group>"; };
+		8AF85D801F3A289B001B0A87 /* PromiseAssert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromiseAssert.swift; sourceTree = "<group>"; };
+		8AF85D811F3A289B001B0A87 /* ServiceWorkerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerExtensions.swift; sourceTree = "<group>"; };
+		8AF85D821F3A289B001B0A87 /* TestWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWeb.swift; sourceTree = "<group>"; };
+		8AF85D861F3A2A0C001B0A87 /* ServiceWorkerContainerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerExtensions.swift; sourceTree = "<group>"; };
+		8AF85D8D1F3A3134001B0A87 /* DatabaseMigrations */ = {isa = PBXFileReference; lastKnownFileType = folder; path = DatabaseMigrations; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,7 +149,7 @@
 		8A2360131F35FDCC00969268 /* ServiceWorkerContainer */ = {
 			isa = PBXGroup;
 			children = (
-				8A23602D1F35FDF800969268 /* DatabaseMigrations */,
+				8AF85D8D1F3A3134001B0A87 /* DatabaseMigrations */,
 				8A23602B1F35FDF800969268 /* Interop */,
 				8A2360371F35FDF800969268 /* Registration */,
 				8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */,
@@ -151,6 +163,10 @@
 		8A23601E1F35FDCC00969268 /* ServiceWorkerContainerTests */ = {
 			isa = PBXGroup;
 			children = (
+				8AF85D7F1F3A289B001B0A87 /* TestUtilities */,
+				8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */,
+				8AF85D791F3A2815001B0A87 /* Interop */,
+				8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */,
 				8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */,
 				8A2360211F35FDCC00969268 /* Info.plist */,
 			);
@@ -163,24 +179,6 @@
 				8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */,
 			);
 			path = Interop;
-			sourceTree = "<group>";
-		};
-		8A23602D1F35FDF800969268 /* DatabaseMigrations */ = {
-			isa = PBXGroup;
-			children = (
-				8A23602E1F35FDF800969268 /* core */,
-			);
-			path = DatabaseMigrations;
-			sourceTree = "<group>";
-		};
-		8A23602E1F35FDF800969268 /* core */ = {
-			isa = PBXGroup;
-			children = (
-				8A23602F1F35FDF800969268 /* 1_worker_tables.sql */,
-				8A2360301F35FDF800969268 /* 2_imported_scripts.sql */,
-				8A2360311F35FDF800969268 /* 3_add_content_hashes.sql */,
-			);
-			path = core;
 			sourceTree = "<group>";
 		};
 		8A2360321F35FDF800969268 /* Storage */ = {
@@ -218,6 +216,26 @@
 				8A23604F1F35FE4A00969268 /* ServiceWorkerTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8AF85D791F3A2815001B0A87 /* Interop */ = {
+			isa = PBXGroup;
+			children = (
+				8AF85D7A1F3A2815001B0A87 /* ImportScriptsTests.swift */,
+			);
+			path = Interop;
+			sourceTree = "<group>";
+		};
+		8AF85D7F1F3A289B001B0A87 /* TestUtilities */ = {
+			isa = PBXGroup;
+			children = (
+				8AF85D801F3A289B001B0A87 /* PromiseAssert.swift */,
+				8AF85D811F3A289B001B0A87 /* ServiceWorkerExtensions.swift */,
+				8AF85D821F3A289B001B0A87 /* TestWeb.swift */,
+				8AF85D861F3A2A0C001B0A87 /* ServiceWorkerContainerExtensions.swift */,
+			);
+			name = TestUtilities;
+			path = ../../TestUtilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,6 +280,7 @@
 				8A2360161F35FDCC00969268 /* Sources */,
 				8A2360171F35FDCC00969268 /* Frameworks */,
 				8A2360181F35FDCC00969268 /* Resources */,
+				8AF85D891F3A2BE9001B0A87 /* Carthage Framework Copy */,
 			);
 			buildRules = (
 			);
@@ -342,6 +361,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8AF85D8E1F3A31AA001B0A87 /* DatabaseMigrations in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,6 +388,24 @@
 			shellPath = /bin/sh;
 			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\"\ncat <<EOF > \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap/module.modulemap\"\nmodule CommonCrypto [system] {\n    header \"${SDKROOT}/usr/include/CommonCrypto/CommonCrypto.h\"\n    export *\n}\nEOF";
 		};
+		8AF85D891F3A2BE9001B0A87 /* Carthage Framework Copy */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/GCDWebServers.framework",
+				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/PromiseKit.framework",
+			);
+			name = "Carthage Framework Copy";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/GCDWebServers.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/PromiseKit.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -390,6 +428,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8AF85D7E1F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift in Sources */,
+				8AF85D851F3A28C3001B0A87 /* PromiseAssert.swift in Sources */,
+				8AF85D7D1F3A2815001B0A87 /* Bootstrap.swift in Sources */,
+				8AF85D831F3A28BD001B0A87 /* TestWeb.swift in Sources */,
+				8AF85D841F3A28C0001B0A87 /* ServiceWorkerExtensions.swift in Sources */,
+				8AF85D871F3A2A0C001B0A87 /* ServiceWorkerContainerExtensions.swift in Sources */,
 				8A2360201F35FDCC00969268 /* ServiceWorkerContainerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -586,6 +630,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
+				FRAMEWORK_SEARCH_PATHS = (
+					"${SRCROOT}/../ServiceWorker/Carthage/**",
+					"$(inherited)",
+				);
 				INFOPLIST_FILE = ServiceWorkerContainerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.ServiceWorkerContainerTests;
@@ -600,6 +648,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
+				FRAMEWORK_SEARCH_PATHS = (
+					"${SRCROOT}/../ServiceWorker/Carthage/**",
+					"$(inherited)",
+				);
 				INFOPLIST_FILE = ServiceWorkerContainerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.ServiceWorkerContainerTests;
