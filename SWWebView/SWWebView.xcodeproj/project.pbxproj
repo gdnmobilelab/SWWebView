@@ -17,8 +17,8 @@
 		8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D611F38F5E5001B0A87 /* SWNavigationResponse.swift */; };
 		8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D651F3A08CA001B0A87 /* SWSchemeHandler.swift */; };
 		8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D681F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift */; };
-		8AF85D6F1F3A21BD001B0A87 /* runtime.js in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85D6E1F3A21B6001B0A87 /* runtime.js */; };
 		8AF85D751F3A2747001B0A87 /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */; };
+		8AF85D941F3A3A39001B0A87 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85D931F3A39D3001B0A87 /* js-dist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,8 +57,8 @@
 		8AF85D611F38F5E5001B0A87 /* SWNavigationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWNavigationResponse.swift; sourceTree = "<group>"; };
 		8AF85D651F3A08CA001B0A87 /* SWSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWSchemeHandler.swift; sourceTree = "<group>"; };
 		8AF85D681F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewServiceWorkerBridge.swift; sourceTree = "<group>"; };
-		8AF85D6E1F3A21B6001B0A87 /* runtime.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = runtime.js; sourceTree = "<group>"; };
 		8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorker.framework; path = "../../../Library/Developer/Xcode/DerivedData/SWWebView-asilpmvykkqkfehhurjnoakeivko/Build/Products/Debug-iphonesimulator/ServiceWorker.framework"; sourceTree = "<group>"; };
+		8AF85D931F3A39D3001B0A87 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,7 +85,6 @@
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
-				8AF85D6D1F3A21B6001B0A87 /* js-dist */,
 				8AA76F501F38B81600EFB4E1 /* SWWebView */,
 				8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */,
 				8AA76F4F1F38B81600EFB4E1 /* Products */,
@@ -105,6 +104,7 @@
 		8AA76F501F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXGroup;
 			children = (
+				8AF85D931F3A39D3001B0A87 /* js-dist */,
 				8AF85D641F3A08B6001B0A87 /* URLSchemeHandler */,
 				8AF85D601F38F5CF001B0A87 /* SubstituteWKComponents */,
 				8AA76F511F38B81600EFB4E1 /* SWWebView.h */,
@@ -151,15 +151,6 @@
 			path = URLSchemeHandler;
 			sourceTree = "<group>";
 		};
-		8AF85D6D1F3A21B6001B0A87 /* js-dist */ = {
-			isa = PBXGroup;
-			children = (
-				8AF85D6E1F3A21B6001B0A87 /* runtime.js */,
-			);
-			name = "js-dist";
-			path = "SWWebView/js-dist";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -200,6 +191,7 @@
 				8AA76F531F38B81700EFB4E1 /* Sources */,
 				8AA76F541F38B81700EFB4E1 /* Frameworks */,
 				8AA76F551F38B81700EFB4E1 /* Resources */,
+				8AF85D921F3A3848001B0A87 /* Copy Carthage Frameworks */,
 			);
 			buildRules = (
 			);
@@ -253,7 +245,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8AF85D6F1F3A21BD001B0A87 /* runtime.js in Resources */,
+				8AF85D941F3A3A39001B0A87 /* js-dist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,6 +257,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8AF85D921F3A3848001B0A87 /* Copy Carthage Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/PromiseKit.framework",
+			);
+			name = "Copy Carthage Frameworks";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/PromiseKit.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8AA76F491F38B81600EFB4E1 /* Sources */ = {

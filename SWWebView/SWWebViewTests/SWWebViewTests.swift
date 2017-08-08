@@ -25,14 +25,14 @@ class SWWebViewTests: XCTestCase {
     func testCreate() {
         
         let sw = SWWebView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-
+        sw.loadHTMLString("<html></html>", baseURL: nil)
+        NSLog("wuh")
+        
+        let exp = expectation(description: "This is a test")
+        
+        wait(for: [exp], timeout: 100)
     }
     
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
+
     
 }

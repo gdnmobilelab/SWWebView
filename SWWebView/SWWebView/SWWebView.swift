@@ -8,6 +8,7 @@
 
 import Foundation
 import WebKit
+import ServiceWorker
 
 public class SWWebView : WKWebView {
     
@@ -35,7 +36,30 @@ public class SWWebView : WKWebView {
     
     fileprivate func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration) {
         
-        let pathToJS = Bundle(for: SWWebView.self).url(forResource: "runtime", withExtension: "js", subdirectory: "js-dist")
+        let pathToJS = Bundle(for: SWWebView.self).bundleURL
+            .appendingPathComponent("js-dist", isDirectory: true)
+            .appendingPathComponent("runtime.js")
+        
+        let jsRuntimeSource:String
+        
+        do {
+            jsRuntimeSource = try String(contentsOf: pathToJS)
+        } catch {
+            Log.error?("Could not load SWWebKit runtime JS. Quitting.")
+            
+            // There's something very fundamentally wrong with the app if this happens,
+            // so we hard exit.
+            fatalError()
+        }
+        
+        let fullSource = """
+            var SW_PROTOCOL = "\(SWWebView.ServiceWorkerScheme)";
+            debugger;
+        """ + jsRuntimeSource
+        
+        let userScript = WKUserScript(source: fullSource, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        
+        configuration.userContentController.addUserScript(userScript)
         
         NSLog("waah")
 //        let jsContents =
