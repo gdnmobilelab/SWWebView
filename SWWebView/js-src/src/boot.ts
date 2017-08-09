@@ -1,3 +1,2 @@
-declare const SW_PROTOCOL: String;
-
-console.log(SW_PROTOCOL);
+import { apiRequest } from "./util/api-request";
+import "./service-worker-container";

@@ -1,16 +1,33 @@
 {
-  "name": "swwebview-client",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "rollup -c"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "rollup": "^0.45.2",
-    "rollup-plugin-typescript": "^0.8.1",
-    "typescript": "^2.4.2"
-  }
+    "name": "swwebview-client",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "rollup -c -i ./src/boot.ts -o ../SWWebView/js-dist/runtime.js",
+        "build-tests": "rollup -c rollup.test.config.js -i ./tests/test-bootstrap.ts -o ../SWWebViewTests/js-tests/tests.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@types/chai": "^4.0.2",
+        "chai": "^4.1.1",
+        "eventtarget": "^0.1.0",
+        "rollup": "^0.45.2",
+        "rollup-plugin-commonjs": "^8.1.0",
+        "rollup-plugin-node-resolve": "^3.0.0",
+        "rollup-plugin-typescript": "^0.8.1",
+        "rollup-plugin-typescript2": "^0.5.0",
+        "typescript": "^2.4.2"
+    },
+    "devDependencies": {
+        "@types/expect": "^1.20.1",
+        "@types/mocha": "^2.2.41",
+        "assert": "^1.4.1",
+        "expect": "^1.20.2",
+        "expect.js": "^0.3.1",
+        "mocha": "^3.5.0",
+        "recursive-readdir-sync": "^1.0.6",
+        "rollup-plugin-replace": "^1.1.1"
+    }
 }

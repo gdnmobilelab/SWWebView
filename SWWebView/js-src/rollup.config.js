@@ -1,13 +1,24 @@
-const typescriptPlugin = require("rollup-plugin-typescript");
+const typescriptPlugin = require("rollup-plugin-typescript2");
+const commonjs = require("rollup-plugin-commonjs");
+const nodeResolve = require("rollup-plugin-node-resolve");
 const typescript = require("typescript");
 
 module.exports = {
-  entry: "./src/boot.ts",
-  dest: "../SWWebView/js-dist/runtime.js",
-  format: "iife",
-  plugins: [
-    typescriptPlugin({
-      typescript
-    })
-  ]
+    format: "iife",
+    plugins: [
+        typescriptPlugin(),
+        commonjs({
+            namedExports: {
+                chai: ["assert"]
+            }
+        }),
+        nodeResolve({
+            browser: true,
+            preferBuiltins: false
+        })
+    ],
+    external: ["swwebview-settings"],
+    globals: {
+        "swwebview-settings": "swwebviewSettings"
+    }
 };

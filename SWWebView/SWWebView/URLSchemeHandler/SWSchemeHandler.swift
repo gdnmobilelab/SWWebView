@@ -14,12 +14,12 @@ import WebKit
 /// handles calls to the service worker API itself, which are sent as HTTP requests
 class SWSchemeHandler : NSObject, WKURLSchemeHandler {
     
-    static let apiOperationDomain = "__SERVICE_WORKER_API__"
+    static let serviceWorkerRequestMethod = "SW_REQUEST"
     
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         
-        if urlSchemeTask.request.url?.host == SWSchemeHandler.apiOperationDomain {
-     
+        if urlSchemeTask.request.httpMethod == SWSchemeHandler.serviceWorkerRequestMethod {
+            CommandBridge.processWebview(task: urlSchemeTask)
         }
         
     }

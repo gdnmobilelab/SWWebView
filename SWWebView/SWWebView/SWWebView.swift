@@ -34,7 +34,7 @@ public class SWWebView : WKWebView {
         }
     }
     
-    fileprivate func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration) {
+    fileprivate static func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration) {
         
         let pathToJS = Bundle(for: SWWebView.self).bundleURL
             .appendingPathComponent("js-dist", isDirectory: true)
@@ -52,23 +52,29 @@ public class SWWebView : WKWebView {
             fatalError()
         }
         
-        let fullSource = """
-            var SW_PROTOCOL = "\(SWWebView.ServiceWorkerScheme)";
-            debugger;
-        """ + jsRuntimeSource
-        
-        let userScript = WKUserScript(source: fullSource, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        let userScript = WKUserScript(source: SWWebView.wrapScriptInWebviewSettings(jsRuntimeSource), injectionTime: .atDocumentStart, forMainFrameOnly: false)
         
         configuration.userContentController.addUserScript(userScript)
         
-        NSLog("waah")
-//        let jsContents =
+        configuration.setURLSchemeHandler(SWSchemeHandler(), forURLScheme: SWWebView.ServiceWorkerScheme)
         
     }
     
+    static func wrapScriptInWebviewSettings(_ script: String) -> String {
+        return """
+        (function() {
+        var swwebviewSettings = {
+        API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)"
+        };
+        \(script)
+        })()
+        """
+    }
+    
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
+        SWWebView.addSWHooksToConfiguration(configuration)
         super.init(frame: frame, configuration: configuration)
-        self.addSWHooksToConfiguration(configuration)
+       
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
         self.containerBridge = WebViewServiceWorkerBridge(for: self)
         super.navigationDelegate = self.swNavigationDelegate
@@ -90,6 +96,7 @@ public class SWWebView : WKWebView {
         return super.load(transformedRequest)
         
     }
+
     
     
     /// We need to ensure that we return the non-SW scheme URL no matter what.

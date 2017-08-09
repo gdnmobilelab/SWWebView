@@ -21,6 +21,8 @@ class SWWebViewNavigationDelegate : NSObject, WKNavigationDelegate {
         return self.targetWebview.serviceWorkerPermittedDomains.contains(url.host!)
     }
     
+    
+    
     func makeServiceWorkerSuitableURLRequest(_ request: URLRequest) -> URLRequest {
         
         if request.url!.scheme == SWWebView.ServiceWorkerScheme && self.isServiceWorkerPermittedURL(request.url!) == true {
@@ -84,7 +86,7 @@ class SWWebViewNavigationDelegate : NSObject, WKNavigationDelegate {
             }
         }
         
-        if navigationAction.request.url!.scheme == SWWebView.ServiceWorkerScheme {
+         else if navigationAction.request.url!.scheme == SWWebView.ServiceWorkerScheme {
             
             // If we're already using the service worker scheme, we need to double check that
             // we're using a domain allowed by our configuration.
@@ -124,6 +126,8 @@ class SWWebViewNavigationDelegate : NSObject, WKNavigationDelegate {
             }
             
             
+        } else {
+            decisionHandler(.allow)
         }
         
     }
