@@ -1,6 +1,42 @@
 (function (swwebviewSettings) {
 'use strict';
 
+// We can't read POST bodies in native code, so we're doing the super-gross:
+// putting it in a custom header. Hoping we can get rid of this nonsense soon.
+var originalFetch = fetch;
+function graftedFetch(request, opts) {
+    if (!opts || !opts.body) {
+        // no body, so none of this matters
+        return originalFetch(request, opts);
+    }
+    var url = request instanceof Request ? request.url : request;
+    var resolvedURL = new URL(url, window.location.href);
+    if (resolvedURL.protocol !== swwebviewSettings.SW_PROTOCOL + ":") {
+        // if we're not fetching on the SW protocol, then this
+        // doesn't matter.
+        return originalFetch(request, opts);
+    }
+    opts.headers = opts.headers || {};
+    opts.headers[swwebviewSettings.GRAFTED_REQUEST_HEADER] = opts.body;
+    return originalFetch(request, opts);
+}
+window.fetch = graftedFetch;
+var originalSend = XMLHttpRequest.prototype.send;
+var originalOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function (method, url) {
+    var resolvedURL = new URL(url, window.location.href);
+    if (resolvedURL.protocol === swwebviewSettings.SW_PROTOCOL + ":") {
+        this._graftBody = true;
+    }
+    originalOpen.apply(this, arguments);
+};
+XMLHttpRequest.prototype.send = function (data) {
+    if (data && this._graftBody) {
+        this.setRequestHeader(swwebviewSettings.GRAFTED_REQUEST_HEADER, data);
+    }
+    originalSend.apply(this, arguments);
+};
+
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -27,131 +63,89 @@ function __extends(d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
+function E() {
+  // Keep this empty so it's easier to inherit from
+  // (via https://github.com/lipsmack from https://github.com/scottcorgan/tiny-emitter/issues/3)
 }
 
-var EventTarget_1 = createCommonjsModule(function (module) {
-/**
- * @author mrdoob / http://mrdoob.com
- * @author Jesús Leganés Combarro "Piranna" <piranna@gmail.com>
- */
+E.prototype = {
+  on: function(name, callback, ctx) {
+    var e = this.e || (this.e = {});
 
+    (e[name] || (e[name] = [])).push({
+      fn: callback,
+      ctx: ctx
+    });
 
-function EventTarget()
-{
-  var listeners = {};
+    return this;
+  },
 
-  this.addEventListener = function(type, listener)
-  {
-    if(!listener) return
-
-    var listeners_type = listeners[type];
-    if(listeners_type === undefined)
-      listeners[type] = listeners_type = [];
-
-    for(var i=0,l; l=listeners_type[i]; i++)
-      if(l === listener) return;
-
-    listeners_type.push(listener);
-  };
-
-  this.dispatchEvent = function(event)
-  {
-    if(event._dispatched) throw 'InvalidStateError'
-    event._dispatched = true;
-
-    var type = event.type;
-    if(type == undefined || type == '') throw 'UNSPECIFIED_EVENT_TYPE_ERR'
-
-    var listenerArray = (listeners[type] || []);
-
-    var dummyListener = this['on' + type];
-    if(typeof dummyListener == 'function')
-      listenerArray = listenerArray.concat(dummyListener);
-
-    var stopImmediatePropagation = false;
-
-    // [ToDo] Use read-only properties instead of attributes when availables
-    event.cancelable = true;
-    event.defaultPrevented = false;
-    event.isTrusted = false;
-    event.preventDefault = function()
-    {
-      if(this.cancelable)
-        this.defaultPrevented = true;
-    };
-    event.stopImmediatePropagation = function()
-    {
-      stopImmediatePropagation = true;
-    };
-    event.target = this;
-    event.timeStamp = new Date().getTime();
-
-    for(var i=0,listener; listener=listenerArray[i]; i++)
-    {
-      if(stopImmediatePropagation) break
-
-      listener.call(this, event);
+  once: function(name, callback, ctx) {
+    var self = this;
+    function listener() {
+      self.off(name, listener);
+      callback.apply(ctx, arguments);
     }
 
-    return !event.defaultPrevented
-  };
+    listener._ = callback;
+    return this.on(name, listener, ctx);
+  },
 
-  this.removeEventListener = function(type, listener)
-  {
-    if(!listener) return
+  emit: function(name) {
+    var data = [].slice.call(arguments, 1);
+    var evtArr = ((this.e || (this.e = {}))[name] || []).slice();
+    var i = 0;
+    var len = evtArr.length;
 
-    var listeners_type = listeners[type];
-    if(listeners_type === undefined) return
+    for (i; i < len; i++) {
+      evtArr[i].fn.apply(evtArr[i].ctx, data);
+    }
 
-    for(var i=0,l; l=listeners_type[i]; i++)
-      if(l === listener)
-      {
-        listeners_type.splice(i, 1);
-        break;
+    return this;
+  },
+
+  dispatchEvent: function(ev) {
+    var name = ev.type;
+    console.log("DISPATCH!", name, ev);
+    this.emit(name, ev);
+  },
+
+  off: function(name, callback) {
+    var e = this.e || (this.e = {});
+    var evts = e[name];
+    var liveEvents = [];
+
+    if (evts && callback) {
+      for (var i = 0, len = evts.length; i < len; i++) {
+        if (evts[i].fn !== callback && evts[i].fn._ !== callback)
+          liveEvents.push(evts[i]);
       }
-
-    if(!listeners_type.length)
-      delete listeners[type];
-  };
-}
-
-
-if('object' !== 'undefined' && module.exports)
-  module.exports = EventTarget;
-});
-
-var StreamingXHR = (function (_super) {
-    __extends(StreamingXHR, _super);
-    function StreamingXHR(url) {
-        var _this = _super.call(this) || this;
-        _this.seenBytes = 0;
-        _this.xhr = new XMLHttpRequest();
-        _this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, url);
-        _this.xhr.onreadystatechange = _this.receiveData;
-        _this.xhr.send();
-        return _this;
     }
-    StreamingXHR.prototype.receiveData = function () {
-        if (this.xhr.readyState !== 3) {
-            return;
-        }
-        var newData = this.xhr.response.substr(this.seenBytes);
-        var _a = /(\w+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
-        var evt = new MessageEvent(event, JSON.parse(data));
-        this.dispatchEvent(evt);
-    };
-    return StreamingXHR;
-}(EventTarget_1));
+
+    // Remove event from queue to prevent memory leak
+    // Suggested by https://github.com/lazd
+    // Ref: https://github.com/scottcorgan/tiny-emitter/commit/c6ebfaa9bc973b33d110a84a307742b7cf94c953#commitcomment-5024910
+
+    liveEvents.length ? (e[name] = liveEvents) : delete e[name];
+
+    return this;
+  }
+};
+
+E.prototype.addEventListener = E.prototype.on;
+E.prototype.removeEventListener = E.prototype.off;
+
+var index = E;
 
 var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
     function ServiceWorkerContainerImplementation() {
-        var _this = _super.call(this) || this;
-        _this.dataFeed = new StreamingXHR("/service");
-        _this.dataFeed.addEventListener("controllerchange", _this.controllerChangeMessage);
-        return _this;
+        return _super.call(this) || this;
+        // this.dataFeed = new StreamingXHR("/service");
+        // this.dataFeed.addEventListener(
+        //     "controllerchange",
+        //     this.controllerChangeMessage
+        // );
     }
     ServiceWorkerContainerImplementation.prototype.controllerChangeMessage = function (evt) {
         console.log(evt);
@@ -169,7 +163,7 @@ var ServiceWorkerContainerImplementation = (function (_super) {
         // return new Promise<ServiceWorkerRegistration>(undefined);
     };
     return ServiceWorkerContainerImplementation;
-}(EventTarget_1));
-navigator.serviceWorker = new ServiceWorkerContainerImplementation();
+}(index));
+// (navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
 
 }(swwebviewSettings));

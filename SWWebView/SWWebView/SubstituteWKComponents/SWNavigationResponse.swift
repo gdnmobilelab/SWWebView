@@ -9,29 +9,23 @@
 import Foundation
 import WebKit
 
-class SWNavigationResponse : WKNavigationResponse {
-    
+class SWNavigationResponse: WKNavigationResponse {
+
     fileprivate let _canShowMIMEType: Bool
     override var canShowMIMEType: Bool {
-        get {
-            return self._canShowMIMEType
-        }
+        return self._canShowMIMEType
     }
-    
-    fileprivate let _isForMainFrame:Bool
+
+    fileprivate let _isForMainFrame: Bool
     override var isForMainFrame: Bool {
-        get {
-            return self._isForMainFrame
-        }
+        return self._isForMainFrame
     }
-    
+
     fileprivate let _response: URLResponse
     override var response: URLResponse {
-        get {
-            return self._response
-        }
+        return self._response
     }
-    
+
     init(response: URLResponse, isForMainFrame: Bool, canShowMIMEType: Bool) {
         self._response = response
         self._isForMainFrame = isForMainFrame

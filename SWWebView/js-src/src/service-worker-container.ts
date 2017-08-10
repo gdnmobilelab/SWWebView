@@ -1,7 +1,7 @@
-import EventTarget from "eventtarget";
+import EventEmitter from "tiny-emitter";
 import { StreamingXHR } from "./util/streaming-xhr";
 
-class ServiceWorkerContainerImplementation extends EventTarget
+class ServiceWorkerContainerImplementation extends EventEmitter
     implements ServiceWorkerContainer {
     controller: ServiceWorker;
     oncontrollerchange: (ev: Event) => void;
@@ -12,11 +12,12 @@ class ServiceWorkerContainerImplementation extends EventTarget
 
     constructor() {
         super();
-        this.dataFeed = new StreamingXHR("/service");
-        this.dataFeed.addEventListener(
-            "controllerchange",
-            this.controllerChangeMessage
-        );
+
+        // this.dataFeed = new StreamingXHR("/service");
+        // this.dataFeed.addEventListener(
+        //     "controllerchange",
+        //     this.controllerChangeMessage
+        // );
     }
 
     controllerChangeMessage(evt: MessageEvent) {
@@ -42,4 +43,4 @@ class ServiceWorkerContainerImplementation extends EventTarget
     }
 }
 
-(navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
+// (navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();

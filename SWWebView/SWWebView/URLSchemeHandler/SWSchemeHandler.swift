@@ -9,23 +9,31 @@
 import Foundation
 import WebKit
 
-
 /// This is the class that intercepts any requests sent to our SW scheme. It also
 /// handles calls to the service worker API itself, which are sent as HTTP requests
-class SWSchemeHandler : NSObject, WKURLSchemeHandler {
-    
+class SWSchemeHandler: NSObject, WKURLSchemeHandler {
+
     static let serviceWorkerRequestMethod = "SW_REQUEST"
+    static let graftedRequestBodyHeader = "X-Grafted-Request-Body"
+
+    func webView(_: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
     
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        // Because WKURLSchemeTask doesn't receive POST bodies (rdar://33814386) we have to
+        // graft them into a header. Gross. Hopefully this gets fixed.
         
-        if urlSchemeTask.request.httpMethod == SWSchemeHandler.serviceWorkerRequestMethod {
-            CommandBridge.processWebview(task: urlSchemeTask)
+        let graftedBody = urlSchemeTask.request.value(forHTTPHeaderField: SWSchemeHandler.graftedRequestBodyHeader)
+        var data:Data? = nil
+        
+        if let body = graftedBody {
+            data = body.data(using: String.Encoding.utf8)
         }
         
-    }
-    
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         
+        if urlSchemeTask.request.httpMethod == SWSchemeHandler.serviceWorkerRequestMethod {
+            CommandBridge.processWebview(task: urlSchemeTask, data: data)
+        }
     }
-    
+
+    func webView(_: WKWebView, stop _: WKURLSchemeTask) {
+    }
 }

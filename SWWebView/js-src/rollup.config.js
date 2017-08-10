@@ -9,7 +9,8 @@ module.exports = {
         typescriptPlugin(),
         commonjs({
             namedExports: {
-                chai: ["assert"]
+                chai: ["assert"],
+                "../../../git/tiny-emitter/index.js": ["EventEmitter"]
             }
         }),
         nodeResolve({

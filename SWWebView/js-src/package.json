@@ -12,6 +12,7 @@
     "dependencies": {
         "@types/chai": "^4.0.2",
         "chai": "^4.1.1",
+        "event-target": "^0.1.0",
         "eventtarget": "^0.1.0",
         "rollup": "^0.45.2",
         "rollup-plugin-commonjs": "^8.1.0",

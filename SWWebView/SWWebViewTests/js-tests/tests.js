@@ -16254,54 +16254,6 @@ function hasOwnProperty(obj, prop) {
 },{"./support/isBuffer":100,"_process":81,"inherits":99}]},{},[1]);
 });
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = Object.setPrototypeOf ||
-    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
-
-var APIError = (function (_super) {
-    __extends(APIError, _super);
-    function APIError(message, response) {
-        var _this = _super.call(this, message) || this;
-        _this.response = response;
-        return _this;
-    }
-    return APIError;
-}(Error));
-function apiRequest(path, body) {
-    if (body === void 0) { body = undefined; }
-    return fetch(path, {
-        method: swwebviewSettings.API_REQUEST_METHOD,
-        body: JSON.stringify(body)
-    }).then(function (res) {
-        if (res.ok === false) {
-            throw new APIError("Received a non-200 response to API request", res);
-        }
-        return res.json();
-    });
-}
-
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -27389,6 +27341,196 @@ var index = chai;
 var index_1 = index.assert;
 
 var test_0 = function () {
+    describe("Fetch grafts", function () {
+        it("Grafts fetch bodies", function () {
+            return fetch("/ping-with-body", {
+                method: swwebviewSettings.API_REQUEST_METHOD,
+                body: JSON.stringify({ value: "test-string" })
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (json) {
+                index_1.equal(json.pong, "test-string");
+            });
+        });
+        it("Grafts XMLHttpRequest bodies", function (done) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    try {
+                        var data = JSON.parse(this.responseText);
+                        index_1.equal(data.pong, "test-string");
+                    }
+                    catch (error) {
+                        done(error);
+                    }
+                    done();
+                }
+            };
+            xhttp.open(swwebviewSettings.API_REQUEST_METHOD, "/ping-with-body", true);
+            xhttp.send(JSON.stringify({ value: "test-string" }));
+        });
+    });
+};
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = Object.setPrototypeOf ||
+    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+var APIError = (function (_super) {
+    __extends(APIError, _super);
+    function APIError(message, response) {
+        var _this = _super.call(this, message) || this;
+        _this.response = response;
+        return _this;
+    }
+    return APIError;
+}(Error));
+function apiRequest(path, body) {
+    if (body === void 0) { body = undefined; }
+    return fetch(path, {
+        method: swwebviewSettings.API_REQUEST_METHOD,
+        body: JSON.stringify(body)
+    }).then(function (res) {
+        if (res.ok === false) {
+            throw new APIError("Received a non-200 response to API request", res);
+        }
+        return res.json();
+    });
+}
+
+function E() {
+  // Keep this empty so it's easier to inherit from
+  // (via https://github.com/lipsmack from https://github.com/scottcorgan/tiny-emitter/issues/3)
+}
+
+E.prototype = {
+  on: function(name, callback, ctx) {
+    var e = this.e || (this.e = {});
+
+    (e[name] || (e[name] = [])).push({
+      fn: callback,
+      ctx: ctx
+    });
+
+    return this;
+  },
+
+  once: function(name, callback, ctx) {
+    var self = this;
+    function listener() {
+      self.off(name, listener);
+      callback.apply(ctx, arguments);
+    }
+
+    listener._ = callback;
+    return this.on(name, listener, ctx);
+  },
+
+  emit: function(name) {
+    var data = [].slice.call(arguments, 1);
+    var evtArr = ((this.e || (this.e = {}))[name] || []).slice();
+    var i = 0;
+    var len = evtArr.length;
+
+    for (i; i < len; i++) {
+      evtArr[i].fn.apply(evtArr[i].ctx, data);
+    }
+
+    return this;
+  },
+
+  dispatchEvent: function(ev) {
+    var name = ev.type;
+    console.log("DISPATCH!", name, ev);
+    this.emit(name, ev);
+  },
+
+  off: function(name, callback) {
+    var e = this.e || (this.e = {});
+    var evts = e[name];
+    var liveEvents = [];
+
+    if (evts && callback) {
+      for (var i = 0, len = evts.length; i < len; i++) {
+        if (evts[i].fn !== callback && evts[i].fn._ !== callback)
+          liveEvents.push(evts[i]);
+      }
+    }
+
+    // Remove event from queue to prevent memory leak
+    // Suggested by https://github.com/lazd
+    // Ref: https://github.com/scottcorgan/tiny-emitter/commit/c6ebfaa9bc973b33d110a84a307742b7cf94c953#commitcomment-5024910
+
+    liveEvents.length ? (e[name] = liveEvents) : delete e[name];
+
+    return this;
+  }
+};
+
+E.prototype.addEventListener = E.prototype.on;
+E.prototype.removeEventListener = E.prototype.off;
+
+var index$18 = E;
+
+var StreamingXHR = (function (_super) {
+    __extends(StreamingXHR, _super);
+    function StreamingXHR(url) {
+        var _this = _super.call(this) || this;
+        _this.seenBytes = 0;
+        _this.xhr = new XMLHttpRequest();
+        _this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, url);
+        _this.xhr.onreadystatechange = _this.receiveData.bind(_this);
+        _this.xhr.send();
+        return _this;
+    }
+    StreamingXHR.prototype.receiveData = function () {
+        try {
+            if (this.xhr.readyState !== 3) {
+                return;
+            }
+            var newData = this.xhr.response.substr(this.seenBytes);
+            var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event_1 = _a[1], data = _a[2];
+            var evt = new MessageEvent(event_1, {
+                data: JSON.parse(data)
+            });
+            this.dispatchEvent(evt);
+        }
+        catch (err) {
+            var errEvt = new ErrorEvent("error", {
+                error: err
+            });
+            this.dispatchEvent(errEvt);
+        }
+    };
+    StreamingXHR.prototype.close = function () {
+        this.xhr.abort();
+    };
+    return StreamingXHR;
+}(index$18));
+
+var test_1 = function () {
     describe("Basic HTTP hooks for Service Worker API", function () {
         it("Returns 404 when trying to access a URL we don't know", function () {
             return apiRequest("/does_not_exist").catch(function (error) {
@@ -27400,10 +27542,22 @@ var test_0 = function () {
                 index_1.equal(json.pong, true);
             });
         });
+        it("Can use a streaming XHR request", function (done) {
+            var stream = new StreamingXHR("/stream");
+            stream.addEventListener("test-event", function (ev) {
+                index_1.equal(ev.data.test, "hello");
+                stream.close();
+                done();
+            });
+            stream.addEventListener("error", function (ev) {
+                done(ev.error);
+            });
+        });
     });
 };
 
-var tests = function() {test_0();};
+var tests = function() {test_0();
+test_1();};
 
 // This is generated by the rollup plugin
 window.runTests = function () {
@@ -27417,10 +27571,11 @@ window.runTests = function () {
     var runner = mocha.run();
     runner.on("fail", function (test, error) {
         console.log(test, error);
-        if (error.message === "Script error. (:0)") {
-            // weird bug, not sure what causes this.
-            return;
-        }
+        window.err = error;
+        // if (error.message === "Script error. (:0)") {
+        //     // weird bug, not sure what causes this.
+        //     return;
+        // }
         console.log("WHAT THE HELL", test.title);
         window.webkit.messageHandlers.testReporter.postMessage({
             done: false,

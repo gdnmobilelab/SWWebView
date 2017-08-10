@@ -1,4 +1,4 @@
-declare module "eventtarget" {
+declare module "event-target" {
     class EventTarget {
         addEventListener<T>(type: string, listener: (T) => void): void;
         removeEventListener<T>(type: string, listener: (T) => void): void;

@@ -17,10 +17,11 @@ import tests from "all-tests";
 
     runner.on("fail", (test, error) => {
         console.log(test, error);
-        if (error.message === "Script error. (:0)") {
-            // weird bug, not sure what causes this.
-            return;
-        }
+        (window as any).err = error;
+        // if (error.message === "Script error. (:0)") {
+        //     // weird bug, not sure what causes this.
+        //     return;
+        // }
         console.log("WHAT THE HELL", test.title);
         (window as any).webkit.messageHandlers.testReporter.postMessage({
             done: false,

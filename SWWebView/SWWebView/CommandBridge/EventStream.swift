@@ -10,13 +10,10 @@ import Foundation
 import WebKit
 
 class EventStream {
-    
-    let host:String
-    
+
+    let host: String
+
     init(for task: WKURLSchemeTask) {
         self.host = task.request.mainDocumentURL!.host!
     }
-    
-    
-    
 }
