@@ -31,7 +31,7 @@ XMLHttpRequest.prototype.open = function (method, url) {
     originalOpen.apply(this, arguments);
 };
 XMLHttpRequest.prototype.send = function (data) {
-    if (data && this._graftBody) {
+    if (data && this._graftBody === true) {
         this.setRequestHeader(swwebviewSettings.GRAFTED_REQUEST_HEADER, data);
     }
     originalSend.apply(this, arguments);
@@ -137,15 +137,73 @@ E.prototype.removeEventListener = E.prototype.off;
 
 var index = E;
 
+var APIError = (function (_super) {
+    __extends(APIError, _super);
+    function APIError(message, response) {
+        var _this = _super.call(this, message) || this;
+        _this.response = response;
+        return _this;
+    }
+    return APIError;
+}(Error));
+function apiRequest(path, body) {
+    if (body === void 0) { body = undefined; }
+    return fetch(path, {
+        method: swwebviewSettings.API_REQUEST_METHOD,
+        body: JSON.stringify(body),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(function (res) {
+        if (res.ok === false) {
+            if (res.status === 500) {
+                return res.json().then(function (errorJSON) {
+                    throw new Error(errorJSON.error);
+                });
+            }
+            throw new APIError("Received a non-200 response to API request", res);
+        }
+        return res.json();
+    });
+}
+
+var existingRegistrations = [];
+var ServiceWorkerRegistrationImplementation = (function (_super) {
+    __extends(ServiceWorkerRegistrationImplementation, _super);
+    function ServiceWorkerRegistrationImplementation(opts) {
+        var _this = _super.call(this) || this;
+        _this.scope = opts.scope;
+        return _this;
+    }
+    ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
+        var registration = existingRegistrations.find(function (reg) { return reg.scope == opts.scope; });
+        if (!registration) {
+            registration = new ServiceWorkerRegistrationImplementation(opts);
+            existingRegistrations.push(registration);
+        }
+        return registration;
+    };
+    ServiceWorkerRegistrationImplementation.prototype.getNotifications = function () {
+        throw new Error("not yet");
+    };
+    ServiceWorkerRegistrationImplementation.prototype.showNotification = function (title, options) {
+        throw new Error("not yet");
+    };
+    ServiceWorkerRegistrationImplementation.prototype.unregister = function () {
+        throw new Error("not yet");
+    };
+    ServiceWorkerRegistrationImplementation.prototype.update = function () {
+        throw new Error("not yet");
+    };
+    return ServiceWorkerRegistrationImplementation;
+}(index));
+
 var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
     function ServiceWorkerContainerImplementation() {
-        return _super.call(this) || this;
-        // this.dataFeed = new StreamingXHR("/service");
-        // this.dataFeed.addEventListener(
-        //     "controllerchange",
-        //     this.controllerChangeMessage
-        // );
+        var _this = _super.call(this) || this;
+        _this.location = window.location;
+        return _this;
     }
     ServiceWorkerContainerImplementation.prototype.controllerChangeMessage = function (evt) {
         console.log(evt);
@@ -159,11 +217,15 @@ var ServiceWorkerContainerImplementation = (function (_super) {
         // return new Promise<ServiceWorkerRegistration[]>([]);
     };
     ServiceWorkerContainerImplementation.prototype.register = function (url, opts) {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration>(undefined);
+        return apiRequest("/serviceworkercontainer/register", {
+            url: url,
+            scope: opts ? opts.scope : undefined
+        }).then(function (response) {
+            return ServiceWorkerRegistrationImplementation.getOrCreate(response);
+        });
     };
     return ServiceWorkerContainerImplementation;
 }(index));
-// (navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
+navigator.serviceWorker = new ServiceWorkerContainerImplementation();
 
 }(swwebviewSettings));

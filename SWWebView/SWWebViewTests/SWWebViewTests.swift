@@ -55,6 +55,8 @@ class SWWebViewTests: XCTestCase {
             ])
             task.didReceive(response!)
             task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
+            task.didReceive("test-event2: {\"test\":\"hello2\"}".data(using: String.Encoding.utf8)!)
+            
             task.didFinish()
         }
     }
@@ -88,7 +90,7 @@ class SWWebViewTests: XCTestCase {
                 }
 
                 if obj["done"] as? Bool == true {
-                    self.exp.fulfill()
+//                    self.exp.fulfill()
                 } else {
                     let title = obj["test"] as! String
                     let error = obj["error"] as? String

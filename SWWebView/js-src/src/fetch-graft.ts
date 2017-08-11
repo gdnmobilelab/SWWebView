@@ -40,7 +40,7 @@ XMLHttpRequest.prototype.open = function(method, url) {
 };
 
 XMLHttpRequest.prototype.send = function(data) {
-    if (data && this._graftBody) {
+    if (data && this._graftBody === true) {
         this.setRequestHeader(GRAFTED_REQUEST_HEADER, data);
     }
     originalSend.apply(this, arguments);

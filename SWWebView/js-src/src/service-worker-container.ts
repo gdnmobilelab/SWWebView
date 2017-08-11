@@ -1,5 +1,8 @@
 import EventEmitter from "tiny-emitter";
 import { StreamingXHR } from "./util/streaming-xhr";
+import { apiRequest } from "./util/api-request";
+import { ServiceWorkerRegistrationAPIResponse } from "./responses/api-responses";
+import { ServiceWorkerRegistrationImplementation } from "./components/service-worker-registration";
 
 class ServiceWorkerContainerImplementation extends EventEmitter
     implements ServiceWorkerContainer {
@@ -8,16 +11,11 @@ class ServiceWorkerContainerImplementation extends EventEmitter
     onmessage: (ev: Event) => void;
     ready: Promise<ServiceWorkerRegistration>;
 
-    private dataFeed: EventSource;
+    location: Location;
 
     constructor() {
         super();
-
-        // this.dataFeed = new StreamingXHR("/service");
-        // this.dataFeed.addEventListener(
-        //     "controllerchange",
-        //     this.controllerChangeMessage
-        // );
+        this.location = window.location;
     }
 
     controllerChangeMessage(evt: MessageEvent) {
@@ -36,11 +34,19 @@ class ServiceWorkerContainerImplementation extends EventEmitter
 
     register(
         url: string,
-        opts: RegistrationOptions
+        opts?: RegistrationOptions
     ): Promise<ServiceWorkerRegistration> {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration>(undefined);
+        return apiRequest<
+            ServiceWorkerRegistrationAPIResponse
+        >("/serviceworkercontainer/register", {
+            url: url,
+            scope: opts ? opts!.scope : undefined
+        }).then(response => {
+            return ServiceWorkerRegistrationImplementation.getOrCreate(
+                response
+            );
+        });
     }
 }
 
-// (navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
+(navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();

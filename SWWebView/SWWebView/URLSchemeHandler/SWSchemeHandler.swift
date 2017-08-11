@@ -30,10 +30,11 @@ class SWSchemeHandler: NSObject, WKURLSchemeHandler {
         
         
         if urlSchemeTask.request.httpMethod == SWSchemeHandler.serviceWorkerRequestMethod {
-            CommandBridge.processWebview(task: urlSchemeTask, data: data)
+            CommandBridge.processSchemeStart(task: urlSchemeTask, data: data)
         }
     }
 
-    func webView(_: WKWebView, stop _: WKURLSchemeTask) {
+    func webView(_: WKWebView, stop task: WKURLSchemeTask) {
+        NSLog("stahp: \(task.request.url!)")
     }
 }

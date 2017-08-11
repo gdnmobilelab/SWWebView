@@ -17,7 +17,7 @@ public class SWWebView: WKWebView {
     public var serviceWorkerPermittedDomains: [String] = []
     var swNavigationDelegate: SWWebViewNavigationDelegate?
 
-    var containerBridge: WebViewServiceWorkerBridge?
+//    var containerBridge: WebViewServiceWorkerBridge?
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -77,7 +77,7 @@ public class SWWebView: WKWebView {
         super.init(frame: frame, configuration: configuration)
 
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
-        self.containerBridge = WebViewServiceWorkerBridge(for: self)
+//        self.containerBridge = WebViewServiceWorkerBridge(for: self)
         super.navigationDelegate = self.swNavigationDelegate
     }
 

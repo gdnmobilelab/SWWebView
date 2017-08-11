@@ -12,9 +12,17 @@ export class APIError extends Error {
 export function apiRequest<T>(path: string, body: any = undefined): Promise<T> {
     return fetch(path, {
         method: API_REQUEST_METHOD,
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        headers: {
+            "Content-Type": "application/json"
+        }
     }).then(res => {
         if (res.ok === false) {
+            if (res.status === 500) {
+                return res.json().then(errorJSON => {
+                    throw new Error(errorJSON.error);
+                });
+            }
             throw new APIError(
                 "Received a non-200 response to API request",
                 res

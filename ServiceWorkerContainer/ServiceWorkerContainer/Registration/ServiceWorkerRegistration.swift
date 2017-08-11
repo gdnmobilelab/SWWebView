@@ -10,18 +10,18 @@ import Foundation
 import PromiseKit
 import ServiceWorker
 
-class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
+public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
 
-    func showNotification(title _: String) {
+    public func showNotification(title _: String) {
     }
 
     typealias RegisterCallback = (Error?) -> Void
 
-    let scope: URL
-    var active: ServiceWorker?
-    var waiting: ServiceWorker?
-    var installing: ServiceWorker?
-    var redundant: ServiceWorker?
+    public let scope: URL
+    public var active: ServiceWorker?
+    public var waiting: ServiceWorker?
+    public var installing: ServiceWorker?
+    public var redundant: ServiceWorker?
 
     fileprivate init(scope: URL) {
         self.scope = scope

@@ -125,22 +125,12 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
 
-        // As well as deciding how to handle the response, we also want to register the URL with our
-        // SWWebView. This so that we can try to keep track of ServiceWorkerContainers for all frames
-        // in the webview.
-        let decisionHandlerAndRegisterURL = { (response: WKNavigationResponsePolicy) -> Void in
-            decisionHandler(response)
-            if navigationResponse.response.url != nil && response == .allow {
-                self.targetWebview.containerBridge!.addActive(url: navigationResponse.response.url!)
-            }
-        }
-
         if navigationResponse.response.url == nil || navigationResponse.response.url!.scheme != SWWebView.ServiceWorkerScheme {
 
             // If there is no URL(?) or the URL is not a service worker one, then we just pass it straight through.
 
-            guard self.targetWebview.navigationDelegate?.webView?(webView, decidePolicyFor: navigationResponse, decisionHandler: decisionHandlerAndRegisterURL) != nil else {
-                return decisionHandlerAndRegisterURL(.allow)
+            guard self.targetWebview.navigationDelegate?.webView?(webView, decidePolicyFor: navigationResponse, decisionHandler: decisionHandler) != nil else {
+                return decisionHandler(.allow)
             }
 
         } else {
@@ -154,11 +144,11 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
 
             let nonSWNavResponse = SWNavigationResponse(response: response, isForMainFrame: navigationResponse.isForMainFrame, canShowMIMEType: navigationResponse.canShowMIMEType)
 
-            guard self.targetWebview.navigationDelegate?.webView?(webView, decidePolicyFor: nonSWNavResponse, decisionHandler: decisionHandlerAndRegisterURL) != nil else {
+            guard self.targetWebview.navigationDelegate?.webView?(webView, decidePolicyFor: nonSWNavResponse, decisionHandler: decisionHandler) != nil else {
 
                 // If there is no delegate, or it doesn't implement this method, we just allow it.
 
-                decisionHandlerAndRegisterURL(.allow)
+                decisionHandler(.allow)
                 return
             }
         }

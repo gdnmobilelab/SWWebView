@@ -17,6 +17,7 @@ import tests from "all-tests";
 
     runner.on("fail", (test, error) => {
         console.log(test, error);
+        debugger;
         (window as any).err = error;
         // if (error.message === "Script error. (:0)") {
         //     // weird bug, not sure what causes this.
@@ -45,7 +46,7 @@ import tests from "all-tests";
     });
 };
 window.onload = function() {
-    (window as any).runTests();
+    // (window as any).runTests();
 };
 
 window.onerror = function(err) {

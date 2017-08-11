@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97FE1F3CC607002E521F /* ToJSON.swift */; };
+		8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98001F3CC62A002E521F /* ServiceWorker.swift */; };
+		8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */; };
+		8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */; };
+		8A5D980C1F3DF55B002E521F /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */; };
+		8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */; };
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -35,6 +41,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8A5D97FE1F3CC607002E521F /* ToJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToJSON.swift; sourceTree = "<group>"; };
+		8A5D98001F3CC62A002E521F /* ServiceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorker.swift; sourceTree = "<group>"; };
+		8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistration.swift; sourceTree = "<group>"; };
+		8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerCommands.swift; sourceTree = "<group>"; };
+		8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorkerContainer.framework; path = "../ServiceWorkerContainer/build/Release-iphoneos/ServiceWorkerContainer.framework"; sourceTree = "<group>"; };
+		8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorker.framework; path = "../ServiceWorker/build/Release-iphoneos/ServiceWorker.framework"; sourceTree = "<group>"; };
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -69,6 +81,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A5D980C1F3DF55B002E521F /* ServiceWorkerContainer.framework in Frameworks */,
+				8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */,
 				8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -76,6 +90,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */ = {
+			isa = PBXGroup;
+			children = (
+				8A5D97FE1F3CC607002E521F /* ToJSON.swift */,
+				8A5D98001F3CC62A002E521F /* ServiceWorker.swift */,
+				8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */,
+			);
+			path = ToJSONExtensions;
+			sourceTree = "<group>";
+		};
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
@@ -98,6 +122,7 @@
 		8AA76F501F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXGroup;
 			children = (
+				8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */,
 				8AF85DB01F3B6848001B0A87 /* CommandBridge */,
 				8AF85D931F3A39D3001B0A87 /* js-dist */,
 				8AF85D641F3A08B6001B0A87 /* URLSchemeHandler */,
@@ -125,6 +150,8 @@
 			isa = PBXGroup;
 			children = (
 				8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */,
+				8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */,
+				8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */,
 				8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */,
 			);
 			name = Frameworks;
@@ -152,6 +179,7 @@
 			children = (
 				8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */,
 				8AF85DB31F3B6900001B0A87 /* EventStream.swift */,
+				8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */,
 			);
 			path = CommandBridge;
 			sourceTree = "<group>";
@@ -272,7 +300,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/PromiseKit.framework",
+				"$(SRCROOT)/../Carthage/Build/iOS/PromiseKit.framework",
 			);
 			name = "Copy Carthage Frameworks";
 			outputPaths = (
@@ -322,7 +350,11 @@
 				8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */,
 				8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */,
 				8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */,
+				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
+				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,
+				8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */,
 				8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */,
+				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
 				8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */,
 				8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */,
 			);
@@ -470,6 +502,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"${SRCROOT}/../Carthage/**",
+				);
 				INFOPLIST_FILE = SWWebView/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -492,6 +528,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"${SRCROOT}/../Carthage/**",
+				);
 				INFOPLIST_FILE = SWWebView/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";

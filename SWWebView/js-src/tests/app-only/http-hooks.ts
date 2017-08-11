@@ -10,6 +10,7 @@ export default function() {
                 assert.equal(error.response.status, 404);
             });
         });
+
         it("Returns JSON response when URL is known", () => {
             return apiRequest<any>("/ping").then(json => {
                 assert.equal(json.pong, true);
@@ -18,11 +19,20 @@ export default function() {
 
         it("Can use a streaming XHR request", function(done) {
             let stream = new StreamingXHR("/stream");
+            let receivedFirstEvent = false;
+
             stream.addEventListener("test-event", (ev: MessageEvent) => {
                 assert.equal(ev.data.test, "hello");
+                receivedFirstEvent = true;
+            });
+
+            stream.addEventListener("test-event2", (ev: MessageEvent) => {
+                assert.equal(ev.data.test, "hello2");
+                assert.equal(receivedFirstEvent, true);
                 stream.close();
                 done();
             });
+
             stream.addEventListener("error", (ev: ErrorEvent) => {
                 done(ev.error);
             });

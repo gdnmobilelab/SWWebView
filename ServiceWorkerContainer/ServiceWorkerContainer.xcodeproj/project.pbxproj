@@ -394,8 +394,8 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/GCDWebServers.framework",
-				"$(SRCROOT)/../ServiceWorker/Carthage/Build/iOS/PromiseKit.framework",
+				"$(SRCROOT)/../Carthage/Build/iOS/GCDWebServers.framework",
+				"$(SRCROOT)/../Carthage/Build/iOS/PromiseKit.framework",
 			);
 			name = "Carthage Framework Copy";
 			outputPaths = (
@@ -585,7 +585,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"${inherited}",
-					"${SRCROOT}/../ServiceWorker/**",
+					"${SRCROOT}/../Carthage/**",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainer/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -612,7 +612,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"${inherited}",
-					"${SRCROOT}/../ServiceWorker/**",
+					"${SRCROOT}/../Carthage/**",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainer/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -631,7 +631,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
 				FRAMEWORK_SEARCH_PATHS = (
-					"${SRCROOT}/../ServiceWorker/Carthage/**",
+					"${SRCROOT}/../Carthage/**",
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainerTests/Info.plist;
@@ -649,7 +649,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
 				FRAMEWORK_SEARCH_PATHS = (
-					"${SRCROOT}/../ServiceWorker/Carthage/**",
+					"${SRCROOT}/../Carthage/**",
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainerTests/Info.plist;

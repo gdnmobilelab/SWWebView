@@ -45,7 +45,7 @@ public class ServiceWorkerContainer : Hashable {
     }
 
 
-    func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
+    public func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
 
         return firstly {
             var scopeURL = containerURL

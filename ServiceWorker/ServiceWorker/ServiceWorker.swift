@@ -19,14 +19,24 @@ import PromiseKit
     
     public static var storageURL:URL? = nil
 
-    public var state: ServiceWorkerInstallState
+    fileprivate var _installState:ServiceWorkerInstallState
+    
+    public var state: ServiceWorkerInstallState {
+        get {
+            return self._installState
+        }
+        set(value) {
+            self._installState = value
+            GlobalEventLog.notifyChange(self)
+        }
+    }
 
     public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
         self.id = id
         self.url = url
         self.registration = registration
         self.loadContent = loadContent
-        self.state = state
+        self._installState = state
         super.init()
     }
 
@@ -41,7 +51,7 @@ import PromiseKit
         self.loadContent = { _ in
             content
         }
-        self.state = state
+        self._installState = state
         super.init()
     }
 

@@ -19,7 +19,11 @@ export class StreamingXHR extends EventEmitter {
                 return;
             }
 
-            let newData = this.xhr.response.substr(this.seenBytes);
+            // This means the responseText keeps growing and growing. Perhaps
+            // we should look into cutting this off and re-establishing a new
+            // link if it gets too big.
+            let newData = this.xhr.responseText.substr(this.seenBytes);
+            this.seenBytes = this.xhr.responseText.length;
             let [_, event, data] = /([\w\-]+):(.*)/.exec(newData)!;
 
             let evt = new MessageEvent(event, {
