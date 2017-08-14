@@ -227,12 +227,14 @@ class FetchResponseTests: XCTestCase {
                             fulfill()
                         }
                     }
-                        .then { () -> Void in
+                        .then { () -> String in
                             
-                            let contents = try String(contentsOfFile: localURL.path)
-                            XCTAssertEqual(contents, "THIS IS TEST CONTENT")
+                            return try String(contentsOfFile: localURL.path)
                     }
                 })
+            }
+            .then { contents in
+                XCTAssertEqual(contents, "THIS IS TEST CONTENT")
             }
             .assertResolves()
     }

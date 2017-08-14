@@ -120,13 +120,22 @@ public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
 
         return existingHash == newHash
     }
+    
+    fileprivate func addInitialWorkerDetailsToDatabase() {
+        
+    }
 
     fileprivate func insertWorker(fromResponse res: FetchResponseProtocol, intoDatabase db: SQLiteConnection) -> Promise<(String, Data)> {
 
-        return firstly { () -> Promise<(String, Data)> in
-
-            let length = try res.internalResponse.getContentLength()
-
+        // We can't rely on the Content-Length header as some places don't send one. But SQLite requires
+        // you to establish a blob with length. So instead, we are streaming the download to disk, then
+        // manually streaming into the DB when we have the length available.
+        
+        return res.internalResponse.fileDownload(withDownload: { url in
+            
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            let size = fileAttributes[.size] as! Int64
+            
             let newWorkerID = UUID().uuidString
             let rowID = try db.insert(sql: """
                 INSERT INTO workers
@@ -137,22 +146,24 @@ public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
                 newWorkerID,
                 res.url,
                 try res.headers.toJSON(),
-                length,
+                size,
                 ServiceWorkerInstallState.downloading.rawValue,
                 self.scope,
             ])
-
+            
+            let inputStream = InputStream(url: url)!
             let writeStream = db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
-            let reader = try res.getReader()
-
-            return writeStream.pipeReadableStream(stream: reader)
+            
+            return writeStream.pipeReadableStream(stream: ReadableStream.fromInputStream(stream: inputStream, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
                 .then { hash -> (String, Data) in
-
+                    
                     try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, newWorkerID])
-
+                    
                     return (newWorkerID, hash)
-                }
-        }
+            }
+        
+        })
+    
     }
 
     func processHTTPResponse(_ res: FetchResponseProtocol, byteCompareWorker: ServiceWorker? = nil) -> Promise<Void> {

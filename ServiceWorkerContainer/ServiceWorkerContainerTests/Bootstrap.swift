@@ -22,9 +22,9 @@ class TestBootstrap: NSObject {
         Log.debug = { NSLog($0) }
         
         do {
-            CoreDatabase.dbPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("testDB", isDirectory: true)
-            if FileManager.default.fileExists(atPath: CoreDatabase.dbPath!.path) == false {
-                try FileManager.default.createDirectory(at: CoreDatabase.dbPath!, withIntermediateDirectories: true, attributes: nil)
+            CoreDatabase.dbDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("testDB", isDirectory: true)
+            if FileManager.default.fileExists(atPath: CoreDatabase.dbDirectory!.path) == false {
+                try FileManager.default.createDirectory(at: CoreDatabase.dbDirectory!, withIntermediateDirectories: true, attributes: nil)
             }
         } catch {
             XCTFail("\(error)")

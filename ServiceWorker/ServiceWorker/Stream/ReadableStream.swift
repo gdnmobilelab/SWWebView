@@ -38,7 +38,7 @@ import PromiseKit
         }
     }
     
-    static func fromInputStream(stream: InputStream, bufferSize: Int) -> ReadableStream {
+    public static func fromInputStream(stream: InputStream, bufferSize: Int) -> ReadableStream {
         
         var bufferData = Data(count: bufferSize)
         

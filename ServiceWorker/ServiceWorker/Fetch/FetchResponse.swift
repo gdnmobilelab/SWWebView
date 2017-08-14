@@ -186,12 +186,9 @@ import PromiseKit
     }
     
     
-    // Download tasks require the handling of downloaded files to be synchronous. 
+    fileprivate var fileDownloadComplete: ((URL) -> Promise<Void>)?
     
-    fileprivate var fileDownloadFulfillAndReject: (() -> Void, (Error) -> Void)? = nil
-    fileprivate var fileDownloadCallback: ((URL) throws ->  Promise<Void>?)? = nil
-    
-    public func fileDownload(withDownload: @escaping (URL) throws -> Promise<Void>?) -> Promise<Void> {
+    public func fileDownload<T>(withDownload: @escaping (URL) throws -> Promise<T>) -> Promise<T> {
         
         return firstly {
             try self.markBodyUsed()
@@ -203,9 +200,23 @@ import PromiseKit
                 throw ErrorMessage("Response callback already set")
             }
             
-            return Promise<Void> { fulfill, reject in
-                self.fileDownloadCallback = withDownload
-                self.fileDownloadFulfillAndReject = (fulfill, reject)
+            return Promise<T> { fulfill, reject in
+                
+                
+                self.fileDownloadComplete = { url in
+                    
+                    return firstly {
+                        return try withDownload(url)
+                    }
+                        .then { response in
+                            fulfill(response)
+                    }
+                        .recover { error in
+                            reject(error)
+                    }
+                    
+                }
+            
             }
         }
        
@@ -220,28 +231,11 @@ import PromiseKit
         
         DispatchQueue.global(qos: .background).async {
             
-            var downloadCallbackReturn:Promise<Void>?
-            
-            do {
-                downloadCallbackReturn = try self.fileDownloadCallback!(location)
-            } catch {
-                self.fileDownloadFulfillAndReject!.1(error)
-                return
-            }
-            
-            if let promise = downloadCallbackReturn {
-                promise.then { () -> Void in
+            self.fileDownloadComplete!(location)
+                .always {
                     semaphore.signal()
-                    self.fileDownloadFulfillAndReject!.0()
-                }
-                    .catch { error in
-                        self.fileDownloadFulfillAndReject!.1(error)
-                }
-            } else {
-                semaphore.signal()
-                self.fileDownloadFulfillAndReject!.0()
             }
-        
+
         }
         
         semaphore.wait()
