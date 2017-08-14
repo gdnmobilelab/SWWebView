@@ -43,6 +43,40 @@ public class ServiceWorkerContainer : Hashable {
             return newContainer
         }
     }
+    
+    public func getRegistrations() -> Promise<[ServiceWorkerRegistration]> {
+        return CoreDatabase.inConnection { db in
+            
+            return try db.select(sql: "SELECT scope FROM registrations WHERE scope LIKE ?", values: [self.containerURL.absoluteString + "%"] as [Any]) { resultSet -> Promise<[URL]> in
+                
+                var scopes: [URL] = []
+                
+                while resultSet.next() {
+                    scopes.append(try resultSet.url("scope")!)
+                }
+                
+                return Promise(value: scopes)
+                
+            }
+                .then { scopes in
+                    return try scopes.map { scope in
+                        return try ServiceWorkerRegistration.get(scope: scope)!
+                    }
+            }
+            
+            
+        }
+    }
+    
+    public func getRegistration() -> Promise<ServiceWorkerRegistration?> {
+        return self.getRegistrations()
+            .then { registrations in
+                return registrations.sorted(by: { (one, two) -> Bool in
+                    return one.scope.absoluteString.count > two.scope.absoluteString.count
+                }).first
+                
+        }
+    }
 
 
     public func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
@@ -60,6 +94,9 @@ public class ServiceWorkerContainer : Hashable {
                 // another scope.
                 if scopeURL.host != containerURL.host || workerURL.host != containerURL.host {
                     throw ErrorMessage("Service worker scope must be on the same domain as both the page and worker URL")
+                }
+                if workerURL.absoluteString.hasPrefix(scopeURL.absoluteString) == false {
+                    throw ErrorMessage("Service worker must exist under the scope it is being registered to")
                 }
                 scopeURL = scope
             }

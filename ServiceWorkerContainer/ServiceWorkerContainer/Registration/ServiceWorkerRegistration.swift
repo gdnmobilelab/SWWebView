@@ -10,7 +10,7 @@ import Foundation
 import PromiseKit
 import ServiceWorker
 
-public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
+@objc public class ServiceWorkerRegistration: NSObject, ServiceWorkerRegistrationProtocol {
 
     public func showNotification(title _: String) {
     }
@@ -121,10 +121,6 @@ public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
         return existingHash == newHash
     }
     
-    fileprivate func addInitialWorkerDetailsToDatabase() {
-        
-    }
-
     fileprivate func insertWorker(fromResponse res: FetchResponseProtocol, intoDatabase db: SQLiteConnection) -> Promise<(String, Data)> {
 
         // We can't rely on the Content-Length header as some places don't send one. But SQLite requires
@@ -358,5 +354,33 @@ public class ServiceWorkerRegistration: ServiceWorkerRegistrationProtocol {
         } else {
             return try self.create(scope: scope)
         }
+    }
+    
+    public var unregistered = false
+    
+    public func unregister() -> Promise<Void> {
+        
+        return firstly {
+        
+            let allWorkers = [self.active, self.waiting, self.installing, self.redundant]
+            
+            try CoreDatabase.inConnection { db in
+                try allWorkers.forEach { worker in
+                    worker?.destroy()
+                    if worker != nil {
+                        try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
+                    }
+                }
+            }
+            
+            self.unregistered = true
+            
+            GlobalEventLog.notifyChange(self)
+            
+            return Promise(value: ())
+            
+        }
+        
+        
     }
 }

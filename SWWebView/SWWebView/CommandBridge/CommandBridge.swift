@@ -15,7 +15,8 @@ public class CommandBridge {
 
     public static var routes: [String: (SWURLSchemeTask) -> Void] = [
         "/events": { task in EventStream.create(for: task) },
-        "/serviceworkercontainer/register": ServiceWorkerContainerCommands.register
+        "/serviceworkercontainer/register": ServiceWorkerContainerCommands.register,
+        "/serviceworkerregistration/unregister": ServiceWorkerRegistrationCommands.unregister
     ]
     
     static var stopRoutes: [String: (SWURLSchemeTask) -> Void] = [
@@ -60,7 +61,9 @@ public class CommandBridge {
                 
                 let encodedResponse = try JSONSerialization.data(withJSONObject: jsonResponse, options: [])
                 
-                task.didReceive(URLResponse(url: task.request.url!, mimeType: "application/json", expectedContentLength: encodedResponse.count, textEncodingName: nil))
+                task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: nil, headerFields: [
+                    "Content-Type": "application/json"
+                    ])!)
                 
                 task.didReceive(encodedResponse)
                 task.didFinish()

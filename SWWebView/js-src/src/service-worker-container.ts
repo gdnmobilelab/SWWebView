@@ -42,6 +42,7 @@ class ServiceWorkerContainerImplementation extends EventEmitter
             url: url,
             scope: opts ? opts!.scope : undefined
         }).then(response => {
+            console.log("RESPONSE?");
             return ServiceWorkerRegistrationImplementation.getOrCreate(
                 response
             );

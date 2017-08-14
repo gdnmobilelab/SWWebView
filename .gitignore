@@ -3,6 +3,8 @@ Carthage
 node_modules
 .DS_Store
 .rpt2_cache
+.gobble
+.gobble-build
 
 ### Xcode ###
 build/

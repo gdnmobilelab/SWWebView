@@ -13,6 +13,13 @@ import ServiceWorker
 
 class ServiceWorkerContainerCommands {
     
+//    static func getRegistration(task: SWURLSchemeTask) {
+//        CommandBridge.processAsJSON(task: task) { json in
+//            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+////            return container
+//        }
+//    }
+    
     static func register(task: SWURLSchemeTask) {
         CommandBridge.processAsJSON(task: task) { json in
            

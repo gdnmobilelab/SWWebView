@@ -13,3 +13,7 @@ export interface ServiceWorkerRegistrationAPIResponse {
     installing?: ServiceWorkerAPIResponse;
     redundant?: ServiceWorkerAPIResponse;
 }
+
+export interface BooleanSuccessResponse {
+    success: boolean;
+}

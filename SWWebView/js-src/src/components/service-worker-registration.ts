@@ -1,5 +1,7 @@
 import EventEmitter from "tiny-emitter";
 import { ServiceWorkerRegistrationAPIResponse } from "../responses/api-responses";
+import { apiRequest } from "../util/api-request";
+import { BooleanSuccessResponse } from "../responses/api-responses";
 
 const existingRegistrations: ServiceWorkerRegistrationImplementation[] = [];
 
@@ -43,7 +45,13 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     }
 
     unregister(): Promise<boolean> {
-        throw new Error("not yet");
+        return apiRequest<
+            BooleanSuccessResponse
+        >("/serviceworkeregistration/unregister", {
+            scope: this.scope
+        }).then(response => {
+            return response.success;
+        });
     }
 
     update(): Promise<void> {

@@ -12,8 +12,8 @@ import ServiceWorkerContainer
 extension ServiceWorkerRegistration : ToJSON {
     func toJSONSuitableObject() -> Any {
         
-        return [
-            "scope": self.scope,
+       return [
+            "scope": self.scope.absoluteString,
             "active": self.active?.toJSONSuitableObject(),
             "waiting": self.waiting?.toJSONSuitableObject(),
             "installing": self.installing?.toJSONSuitableObject(),

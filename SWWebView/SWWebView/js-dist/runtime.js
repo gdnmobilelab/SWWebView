@@ -190,7 +190,11 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
         throw new Error("not yet");
     };
     ServiceWorkerRegistrationImplementation.prototype.unregister = function () {
-        throw new Error("not yet");
+        return apiRequest("/serviceworkeregistration/unregister", {
+            scope: this.scope
+        }).then(function (response) {
+            return response.success;
+        });
     };
     ServiceWorkerRegistrationImplementation.prototype.update = function () {
         throw new Error("not yet");
@@ -221,6 +225,7 @@ var ServiceWorkerContainerImplementation = (function (_super) {
             url: url,
             scope: opts ? opts.scope : undefined
         }).then(function (response) {
+            console.log("RESPONSE?");
             return ServiceWorkerRegistrationImplementation.getOrCreate(response);
         });
     };
