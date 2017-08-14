@@ -18,6 +18,7 @@ module.exports = {
             preferBuiltins: false
         })
     ],
+    moduleName: "swwebview",
     external: ["swwebview-settings"],
     globals: {
         "swwebview-settings": "swwebviewSettings"

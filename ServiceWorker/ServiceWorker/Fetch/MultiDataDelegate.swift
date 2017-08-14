@@ -10,11 +10,11 @@ import Foundation
 
 /// We want multiple FetchResponses to be able to listen to this (in case they are cloned)
 /// so we use this delegate as a means to attach multiple delegates.
-@objc public class MultiDataDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate {
+@objc public class MultiDataDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
 
-    var listeners: [URLSessionDataDelegate] = []
+    var listeners: [URLSessionDataDelegate & URLSessionDownloadDelegate] = []
 
-    func add(delegate: URLSessionDataDelegate) {
+    func add(delegate: URLSessionDataDelegate & URLSessionDownloadDelegate) {
         self.listeners.append(delegate)
     }
 
@@ -33,6 +33,18 @@ import Foundation
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         self.listeners.forEach { l in
             l.urlSession?(session, didBecomeInvalidWithError: error)
+        }
+    }
+    
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
+        self.listeners.forEach { l in
+            l.urlSession?(session, dataTask: dataTask, didBecome: downloadTask)
+        }
+    }
+    
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        self.listeners.forEach { l in
+            l.urlSession(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
         }
     }
 }

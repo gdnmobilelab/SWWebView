@@ -13,7 +13,13 @@ import ServiceWorker
 public class CoreDatabase {
 
 //    public static let dbPath = SharedResources.appGroupStorage.appendingPathComponent("core.db")
-    public static var dbPath:URL? = nil
+    public static var dbDirectory:URL? = nil
+    
+    static var dbPath:URL? {
+        get {
+            return self.dbDirectory?.appendingPathComponent("core.db")
+        }
+    }
 
     /// The migrations only change with a new version of the app, so as long as we've
     /// checked for migrations once per app launch, we're OK to not check again
@@ -54,8 +60,10 @@ public class CoreDatabase {
 
     public static func inConnection<T>(_ cb: @escaping (SQLiteConnection) throws -> Promise<T>) -> Promise<T> {
 
-        return Promise(value: ())
-            .then {
+        return firstly {
+                if self.dbPath == nil {
+                    throw ErrorMessage("CoreDatabase.dbPath must be set on app startup")
+                }
                 try self.doMigrationCheck()
                 return SQLiteConnection.inConnection(self.dbPath!, cb)
             }

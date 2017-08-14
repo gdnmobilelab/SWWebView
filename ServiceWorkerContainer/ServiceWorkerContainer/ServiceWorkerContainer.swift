@@ -49,6 +49,12 @@ public class ServiceWorkerContainer : Hashable {
 
         return firstly {
             var scopeURL = containerURL
+            
+            if scopeURL.absoluteString.last! != "/" {
+                // if we are a a file (.e.g. /test.html) the scope, by default, is "/")
+                scopeURL.deleteLastPathComponent()
+            }
+            
             if let scope = options?.scope {
                 // By default we register to the current URL, but we can specify
                 // another scope.

@@ -58,15 +58,23 @@ public class SWWebView: WKWebView {
 
         configuration.setURLSchemeHandler(SWSchemeHandler(), forURLScheme: SWWebView.ServiceWorkerScheme)
     }
+    
+    public static var javascriptConfigDictionary: String {
+        get {
+            return """
+            {
+            API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
+            SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
+            GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)"
+            }
+            """
+        }
+    }
 
     static func wrapScriptInWebviewSettings(_ script: String) -> String {
         return """
         (function() {
-        var swwebviewSettings = {
-        API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
-        SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
-        GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)"
-        };
+        var swwebviewSettings = \(javascriptConfigDictionary);
         \(script)
         })()
         """

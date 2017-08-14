@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "build": "rollup -c -i ./src/boot.ts -o ../SWWebView/js-dist/runtime.js",
-        "build-tests": "rollup -c rollup.test.config.js -i ./tests/test-bootstrap.ts -o ../SWWebViewTests/js-tests/tests.js"
+        "build-tests": "rollup -c rollup.test.config.js -i ./tests/test-bootstrap.ts -o ../SWWebView-JSTestSuite/js-tests/tests.js",
+        "test-watch": "npm run build-tests -- --watch"
     },
     "author": "",
     "license": "ISC",
@@ -14,11 +15,14 @@
         "chai": "^4.1.1",
         "event-target": "^0.1.0",
         "eventtarget": "^0.1.0",
+        "gobble": "^0.12.0",
         "rollup": "^0.45.2",
         "rollup-plugin-commonjs": "^8.1.0",
         "rollup-plugin-node-resolve": "^3.0.0",
         "rollup-plugin-typescript": "^0.8.1",
         "rollup-plugin-typescript2": "^0.5.0",
+        "rollup-watch": "^4.3.1",
+        "tiny-emitter": "git+https://github.com/alastaircoote/tiny-emitter-w3cish.git",
         "typescript": "^2.4.2"
     },
     "devDependencies": {
@@ -27,6 +31,7 @@
         "assert": "^1.4.1",
         "expect": "^1.20.2",
         "expect.js": "^0.3.1",
+        "gobble-rollup": "^0.40.0",
         "mocha": "^3.5.0",
         "recursive-readdir-sync": "^1.0.6",
         "rollup-plugin-replace": "^1.1.1"

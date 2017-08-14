@@ -23,17 +23,10 @@ function loadAllTests() {
                 .filter(file => path.extname(file) === ".ts");
 
             let imports = allTests
-                .map(
-                    (filename, idx) => `import test_${idx} from '${filename}';`
-                )
+                .map((filename, idx) => `import '${filename}';`)
                 .join("\n");
 
-            let run =
-                "\n\nexport default function() {" +
-                allTests.map((filename, idx) => `test_${idx}();`).join("\n") +
-                "}";
-
-            return imports + run;
+            return imports;
         },
         resolveId: function(imported, importee) {
             if (imported === "all-tests") {
@@ -42,7 +35,8 @@ function loadAllTests() {
         }
     };
 }
-
+baseConfig.entry = "test-bootstrap.ts";
+baseConfig.dest = "tests.js";
 baseConfig.plugins.push(loadAllTests());
 baseConfig.plugins.push(
     replace({

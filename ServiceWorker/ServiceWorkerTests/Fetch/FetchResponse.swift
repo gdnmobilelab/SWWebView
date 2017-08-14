@@ -207,4 +207,54 @@ class FetchResponseTests: XCTestCase {
 
         wait(for: [expectResponse], timeout: 100)
     }
+    
+    func testResponseToFileDownload() {
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+            let res = GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
+            res!.statusCode = 200
+            return res
+        }
+        
+        FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
+            .then { res in
+                return res.internalResponse.fileDownload(withDownload: { localURL in
+                    
+                    // test that we can use async promises here
+                    
+                    return Promise<Void> { (fulfill: @escaping () -> Void, reject: (Error) -> Void) in
+                        DispatchQueue.global(qos: .background).async {
+                            
+                            fulfill()
+                        }
+                    }
+                        .then { () -> Void in
+                            
+                            let contents = try String(contentsOfFile: localURL.path)
+                            XCTAssertEqual(contents, "THIS IS TEST CONTENT")
+                    }
+                })
+            }
+            .assertResolves()
+    }
+    
+    func testResponseToFileDownloadHandlesErrors() {
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+            let res = GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
+            res!.statusCode = 200
+            return res
+        }
+        
+        FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
+            .then { res in
+                return res.internalResponse.fileDownload(withDownload: { localURL in
+                    
+                    throw ErrorMessage("Oh no")
+                    
+                })
+            }
+            .recover { error in
+                XCTAssertEqual((error as? ErrorMessage)?.message, "Oh no")
+            }
+            .assertResolves()
+    }
 }

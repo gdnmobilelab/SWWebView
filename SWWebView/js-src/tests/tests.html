@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="mocha.css" type="text/css" rel="stylesheet" />
+</head>
+
+<body>
+    <button style="position: fixed; bottom: 0;left:0;" onclick="window.location.reload()">Reload</button>
+    <div id="mocha"></div>
+    <script src="mocha.js"></script>
+    <script>
+        if (!window.swwebviewSettings) {
+            window.swwebviewSettings = {};
+            window.NOT_APP = true;
+        }
+
+        mocha.setup({
+            ui: "bdd"
+        });
+    </script>
+    <script src="tests.js"></script>
+    <script>
+        mocha.run();
+    </script>
+</body>
+
+</html>

@@ -11,18 +11,18 @@ import WebKit
 import ServiceWorker
 import PromiseKit
 
-class CommandBridge {
+public class CommandBridge {
 
-    static var routes: [String: (WKURLSchemeTask, Data?) -> Void] = [
-        "/events": { task, data in EventStream.create(for: task) },
+    public static var routes: [String: (SWURLSchemeTask) -> Void] = [
+        "/events": { task in EventStream.create(for: task) },
         "/serviceworkercontainer/register": ServiceWorkerContainerCommands.register
     ]
     
-    static var stopRoutes: [String: (WKURLSchemeTask) -> Void] = [
+    static var stopRoutes: [String: (SWURLSchemeTask) -> Void] = [
         "/events": { task in EventStream.remove(for: task) },
         ]
 
-    static func processSchemeStart(task: WKURLSchemeTask, data: Data?) {
+    static func processSchemeStart(task: SWURLSchemeTask) {
 
         let matchingRoute = routes.first(where: { $0.key == task.request.url!.path })
 
@@ -34,7 +34,7 @@ class CommandBridge {
             return
         }
 
-        _ = matchingRoute!.value(task, data)
+        _ = matchingRoute!.value(task)
     }
     
     static func processSchemeStop(task: WKURLSchemeTask) {
@@ -45,13 +45,15 @@ class CommandBridge {
             return
         }
         
-        _ = matchingRoute!.value(task)
+        let modifiedTask = SWURLSchemeTask(underlyingTask: task)
+        
+        _ = matchingRoute!.value(modifiedTask)
     }
     
-    static func processAsJSON(task: WKURLSchemeTask, data:Data, _ asJSON: @escaping (AnyObject) throws -> Promise<Any>) {
+    static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject) throws -> Promise<Any>) {
         
         firstly { () -> Promise<Any> in
-            let jsonBody = try JSONSerialization.jsonObject(with: data, options: [])
+            let jsonBody = try JSONSerialization.jsonObject(with: task.request.httpBody!, options: [])
             return try asJSON(jsonBody as AnyObject)
         }
             .then { jsonResponse -> Void in

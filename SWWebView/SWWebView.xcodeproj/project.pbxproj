@@ -13,6 +13,15 @@
 		8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */; };
 		8A5D980C1F3DF55B002E521F /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */; };
 		8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */; };
+		8A5D98271F3E0D77002E521F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98261F3E0D77002E521F /* AppDelegate.swift */; };
+		8A5D98291F3E0D77002E521F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98281F3E0D77002E521F /* ViewController.swift */; };
+		8A5D982C1F3E0D77002E521F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982A1F3E0D77002E521F /* Main.storyboard */; };
+		8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982D1F3E0D77002E521F /* Assets.xcassets */; };
+		8A5D98311F3E0D77002E521F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */; };
+		8A5D98361F3E0E6A002E521F /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
+		8A5D98381F3E0F49002E521F /* GCDWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98371F3E0F49002E521F /* GCDWebServers.framework */; };
+		8A5D983C1F3E167A002E521F /* js-tests in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D98391F3E0F82002E521F /* js-tests */; };
+		8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */; };
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -27,7 +36,6 @@
 		8AF85D941F3A3A39001B0A87 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85D931F3A39D3001B0A87 /* js-dist */; };
 		8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */; };
 		8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85DB31F3B6900001B0A87 /* EventStream.swift */; };
-		8AF85DB71F3B7F45001B0A87 /* js-tests in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85DB51F3B7A63001B0A87 /* js-tests */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +55,16 @@
 		8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerCommands.swift; sourceTree = "<group>"; };
 		8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorkerContainer.framework; path = "../ServiceWorkerContainer/build/Release-iphoneos/ServiceWorkerContainer.framework"; sourceTree = "<group>"; };
 		8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorker.framework; path = "../ServiceWorker/build/Release-iphoneos/ServiceWorker.framework"; sourceTree = "<group>"; };
+		8A5D98241F3E0D77002E521F /* SWWebView-JSTestSuite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SWWebView-JSTestSuite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A5D98261F3E0D77002E521F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		8A5D98281F3E0D77002E521F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		8A5D982B1F3E0D77002E521F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		8A5D982D1F3E0D77002E521F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A5D98301F3E0D77002E521F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		8A5D98321F3E0D77002E521F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A5D98371F3E0F49002E521F /* GCDWebServers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GCDWebServers.framework; path = ../Carthage/Build/iOS/GCDWebServers.framework; sourceTree = "<group>"; };
+		8A5D98391F3E0F82002E521F /* js-tests */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-tests"; sourceTree = "<group>"; };
+		8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLSchemeTask.swift; sourceTree = "<group>"; };
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -64,10 +82,18 @@
 		8AF85D931F3A39D3001B0A87 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = "<group>"; };
 		8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBridge.swift; sourceTree = "<group>"; };
 		8AF85DB31F3B6900001B0A87 /* EventStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStream.swift; sourceTree = "<group>"; };
-		8AF85DB51F3B7A63001B0A87 /* js-tests */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-tests"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		8A5D98211F3E0D77002E521F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A5D98381F3E0F49002E521F /* GCDWebServers.framework in Frameworks */,
+				8A5D98361F3E0E6A002E521F /* SWWebView.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8AA76F4A1F38B81600EFB4E1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -100,11 +126,26 @@
 			path = ToJSONExtensions;
 			sourceTree = "<group>";
 		};
+		8A5D98251F3E0D77002E521F /* SWWebView-JSTestSuite */ = {
+			isa = PBXGroup;
+			children = (
+				8A5D98391F3E0F82002E521F /* js-tests */,
+				8A5D98261F3E0D77002E521F /* AppDelegate.swift */,
+				8A5D98281F3E0D77002E521F /* ViewController.swift */,
+				8A5D982A1F3E0D77002E521F /* Main.storyboard */,
+				8A5D982D1F3E0D77002E521F /* Assets.xcassets */,
+				8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */,
+				8A5D98321F3E0D77002E521F /* Info.plist */,
+			);
+			path = "SWWebView-JSTestSuite";
+			sourceTree = "<group>";
+		};
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
 				8AA76F501F38B81600EFB4E1 /* SWWebView */,
 				8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */,
+				8A5D98251F3E0D77002E521F /* SWWebView-JSTestSuite */,
 				8AA76F4F1F38B81600EFB4E1 /* Products */,
 				8AF85D511F38BA1D001B0A87 /* Frameworks */,
 			);
@@ -115,6 +156,7 @@
 			children = (
 				8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */,
 				8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */,
+				8A5D98241F3E0D77002E521F /* SWWebView-JSTestSuite.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,7 +181,6 @@
 		8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */ = {
 			isa = PBXGroup;
 			children = (
-				8AF85DB51F3B7A63001B0A87 /* js-tests */,
 				8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */,
 				8AA76F5E1F38B81700EFB4E1 /* Info.plist */,
 			);
@@ -149,6 +190,7 @@
 		8AF85D511F38BA1D001B0A87 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8A5D98371F3E0F49002E521F /* GCDWebServers.framework */,
 				8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */,
 				8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */,
 				8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */,
@@ -162,6 +204,7 @@
 			children = (
 				8AF85D5B1F38E4EF001B0A87 /* SWNavigationAction.swift */,
 				8AF85D611F38F5E5001B0A87 /* SWNavigationResponse.swift */,
+				8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */,
 			);
 			path = SubstituteWKComponents;
 			sourceTree = "<group>";
@@ -198,6 +241,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		8A5D98231F3E0D77002E521F /* SWWebView-JSTestSuite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8A5D98331F3E0D77002E521F /* Build configuration list for PBXNativeTarget "SWWebView-JSTestSuite" */;
+			buildPhases = (
+				8A5D98201F3E0D77002E521F /* Sources */,
+				8A5D98211F3E0D77002E521F /* Frameworks */,
+				8A5D98221F3E0D77002E521F /* Resources */,
+				8A5D983B1F3E1030002E521F /* Copy Carthage Dependencies */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SWWebView-JSTestSuite";
+			productName = "SWWebView-JSTestSuite";
+			productReference = 8A5D98241F3E0D77002E521F /* SWWebView-JSTestSuite.app */;
+			productType = "com.apple.product-type.application";
+		};
 		8AA76F4D1F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8AA76F621F38B81700EFB4E1 /* Build configuration list for PBXNativeTarget "SWWebView" */;
@@ -247,6 +308,9 @@
 				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = "Guardian Mobile Innovation Lab";
 				TargetAttributes = {
+					8A5D98231F3E0D77002E521F = {
+						CreatedOnToolsVersion = 9.0;
+					};
 					8AA76F4D1F38B81600EFB4E1 = {
 						CreatedOnToolsVersion = 9.0;
 						LastSwiftMigration = 0900;
@@ -262,6 +326,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 8AA76F441F38B81600EFB4E1;
 			productRefGroup = 8AA76F4F1F38B81600EFB4E1 /* Products */;
@@ -270,11 +335,23 @@
 			targets = (
 				8AA76F4D1F38B81600EFB4E1 /* SWWebView */,
 				8AA76F561F38B81700EFB4E1 /* SWWebViewTests */,
+				8A5D98231F3E0D77002E521F /* SWWebView-JSTestSuite */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8A5D98221F3E0D77002E521F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A5D98311F3E0D77002E521F /* LaunchScreen.storyboard in Resources */,
+				8A5D983C1F3E167A002E521F /* js-tests in Resources */,
+				8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */,
+				8A5D982C1F3E0D77002E521F /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8AA76F4C1F38B81600EFB4E1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -287,13 +364,30 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8AF85DB71F3B7F45001B0A87 /* js-tests in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8A5D983B1F3E1030002E521F /* Copy Carthage Dependencies */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../Carthage/Build/iOS/GCDWebServers.framework",
+				"$(SRCROOT)/../Carthage/Build/iOS/PromiseKit.framework",
+			);
+			name = "Copy Carthage Dependencies";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/GCDWebServers.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/PromiseKit.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
 		8AF85D921F3A3848001B0A87 /* Copy Carthage Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -341,6 +435,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8A5D98201F3E0D77002E521F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A5D98291F3E0D77002E521F /* ViewController.swift in Sources */,
+				8A5D98271F3E0D77002E521F /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8AA76F491F38B81600EFB4E1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -352,6 +455,7 @@
 				8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */,
 				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
 				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,
+				8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */,
 				8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */,
 				8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */,
 				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
@@ -378,7 +482,54 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		8A5D982A1F3E0D77002E521F /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8A5D982B1F3E0D77002E521F /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8A5D98301F3E0D77002E521F /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
+		8A5D98341F3E0D77002E521F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 998P9U5NGJ;
+				INFOPLIST_FILE = "SWWebView-JSTestSuite/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gdnmobilelab.SWWebView-JSTestSuite";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8A5D98351F3E0D77002E521F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 998P9U5NGJ;
+				INFOPLIST_FILE = "SWWebView-JSTestSuite/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gdnmobilelab.SWWebView-JSTestSuite";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		8AA76F601F38B81700EFB4E1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -414,6 +565,10 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/../Carthage/**",
+					"$(inherited)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -474,6 +629,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/../Carthage/**",
+					"$(inherited)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -574,6 +733,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		8A5D98331F3E0D77002E521F /* Build configuration list for PBXNativeTarget "SWWebView-JSTestSuite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A5D98341F3E0D77002E521F /* Debug */,
+				8A5D98351F3E0D77002E521F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		8AA76F481F38B81600EFB4E1 /* Build configuration list for PBXProject "SWWebView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

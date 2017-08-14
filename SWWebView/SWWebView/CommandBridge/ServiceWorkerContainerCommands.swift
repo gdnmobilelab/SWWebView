@@ -13,8 +13,8 @@ import ServiceWorker
 
 class ServiceWorkerContainerCommands {
     
-    static func register(task: WKURLSchemeTask, data: Data?) {
-        CommandBridge.processAsJSON(task: task, data: data!) { json in
+    static func register(task: SWURLSchemeTask) {
+        CommandBridge.processAsJSON(task: task) { json in
            
             guard let workerURLString = json["url"] as? String else {
                 throw ErrorMessage("URL must be provided")
@@ -24,19 +24,17 @@ class ServiceWorkerContainerCommands {
                 throw ErrorMessage("Could not parse URL")
             }
             
-            // defaults to current directory of page
-            var scope = task.request.url!.deletingLastPathComponent()
+            var options:ServiceWorkerRegistrationOptions? = nil
             
             if let specifiedScope = json["scope"] as? String {
-                guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: task.request.url!) else {
+                guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: task.request.mainDocumentURL!) else {
                     throw ErrorMessage("Could not parse scope URL")
                 }
-                scope = specifiedScopeURL
+                options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)
+
             }
             
             let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
-            
-            let options = ServiceWorkerRegistrationOptions(scope: scope)
             
             return container.register(workerURL: workerURL, options: options)
                 .then { result in

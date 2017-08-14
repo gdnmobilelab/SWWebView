@@ -10,8 +10,8 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-@objc public class FetchResponse: NSObject, URLSessionDataDelegate {
-
+@objc public class FetchResponse: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate {
+    
     internal var fetchOperation: FetchOperation?
     internal var responseCallback: ((URLSession.ResponseDisposition) -> Void)?
 
@@ -23,6 +23,78 @@ import PromiseKit
     /// We use this context when using the JS-type functions, like json() etc
     /// to create JSPromises
     internal var jsContext: JSContext?
+    
+    public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) {
+        self.fetchOperation = fetchOperation
+        self.responseCallback = nil
+        self.headers = headers
+        self.status = status
+        self.url = url
+        self.redirected = redirected
+        super.init()
+        
+        if let str = stream {
+            // We can override the underlying stream if we want - this is used
+            // in OpaqueResponse to ensure we don't actually provide the response
+            // body
+            self.dataStream = str
+            self.streamController = str.controller
+        } else {
+            // Otherwise we create another new stream and hook up the fetch
+            // operation.
+            
+            self.dataStream = ReadableStream(start: { controller in
+                self.streamController = controller
+            })
+            
+            if let op = fetchOperation {
+                op.add(delegate: self)
+            }
+        }
+    }
+    
+    init(response: HTTPURLResponse, operation: FetchOperation, callback: @escaping (URLSession.ResponseDisposition) -> Void) {
+        self.fetchOperation = operation
+        self.responseCallback = callback
+        self.status = response.statusCode
+        self.url = response.url!
+        self.redirected = operation.redirected
+        
+        // Convert to our custom FetchHeaders class
+        let headers = FetchHeaders()
+        response.allHeaderFields.keys.forEach { key in
+            
+            let keyString = key as! String
+            let value = response.allHeaderFields[key] as! String
+            
+            if keyString.lowercased() == "content-encoding" {
+                // URLSession automatically decodes content (which we don't actually want it to do)
+                // so the only way to continue to use this is to strip out the Content-Encoding
+                // header, otherwise the browser will try to decode it again
+                return
+            } else if keyString.lowercased() == "content-length" {
+                // Because of this same GZIP issue, the content length will be incorrect. It's actually
+                // also normally incorrect, but because we're stripping out all encoding we should
+                // update the content-length header to be accurate.
+                headers.set("Content-Length", String(operation.task!.countOfBytesExpectedToReceive))
+                return
+            }
+            
+            headers.set(keyString, value)
+        }
+        
+        self.headers = headers
+        
+        super.init()
+        
+        dataStream = ReadableStream(start: { controller in
+            self.streamController = controller
+        })
+        
+        // since this is being created directly from native, we know we want
+        // it to be a delegate
+        operation.add(delegate: self)
+    }
 
     public var internalResponse: FetchResponse {
         return self
@@ -112,7 +184,71 @@ import PromiseKit
             }
         }
     }
+    
+    
+    // Download tasks require the handling of downloaded files to be synchronous. 
+    
+    fileprivate var fileDownloadFulfillAndReject: (() -> Void, (Error) -> Void)? = nil
+    fileprivate var fileDownloadCallback: ((URL) throws ->  Promise<Void>?)? = nil
+    
+    public func fileDownload(withDownload: @escaping (URL) throws -> Promise<Void>?) -> Promise<Void> {
+        
+        return firstly {
+            try self.markBodyUsed()
+            if let responseCallback = self.internalResponse.responseCallback {
+                responseCallback(.becomeDownload)
+                // This can only be run once, so once we've done that, clear it out.
+                self.internalResponse.responseCallback = nil
+            } else {
+                throw ErrorMessage("Response callback already set")
+            }
+            
+            return Promise<Void> { fulfill, reject in
+                self.fileDownloadCallback = withDownload
+                self.fileDownloadFulfillAndReject = (fulfill, reject)
+            }
+        }
+       
+    }
+    
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
 
+        // Because this needs to be run synchronously, we freeze the current (background) thread
+        // and process our callback promise. Then resume the thread.
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        DispatchQueue.global(qos: .background).async {
+            
+            var downloadCallbackReturn:Promise<Void>?
+            
+            do {
+                downloadCallbackReturn = try self.fileDownloadCallback!(location)
+            } catch {
+                self.fileDownloadFulfillAndReject!.1(error)
+                return
+            }
+            
+            if let promise = downloadCallbackReturn {
+                promise.then { () -> Void in
+                    semaphore.signal()
+                    self.fileDownloadFulfillAndReject!.0()
+                }
+                    .catch { error in
+                        self.fileDownloadFulfillAndReject!.1(error)
+                }
+            } else {
+                semaphore.signal()
+                self.fileDownloadFulfillAndReject!.0()
+            }
+        
+        }
+        
+        semaphore.wait()
+        
+        
+    }
+    
     internal func data(_ callback: @escaping (Error?, Data?) -> Void) {
 
         var reader: ReadableStream
@@ -153,27 +289,6 @@ import PromiseKit
                 let str = String(data: data, encoding: encoding)!
                 return str
             }
-
-        //        return firstly {
-        //            Promise(value: try self.getReader())
-        //        }
-        //        .then { reader in
-        //
-        //            var str = ""
-        //
-        //            return reader.readToEnd(transformer: { data in
-        //                let encodingdfgdf = encoding
-        //                let data = data
-        //                let chunk = String(data: data, encoding: String.Encoding.utf8)
-        //                if chunk == nil {
-        //                    throw ErrorMessage("Could not decode text")
-        //                }
-        //                str += chunk!
-        //            })
-        //                .then { () -> String in
-        //                str
-        //            }
-        //        }
     }
 
     public func getContentLength() throws -> Int64 {
@@ -329,77 +444,9 @@ import PromiseKit
         }
     }
 
-    public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) {
-        self.fetchOperation = fetchOperation
-        self.responseCallback = nil
-        self.headers = headers
-        self.status = status
-        self.url = url
-        self.redirected = redirected
-        super.init()
+   
 
-        if let str = stream {
-            // We can override the underlying stream if we want - this is used
-            // in OpaqueResponse to ensure we don't actually provide the response
-            // body
-            self.dataStream = str
-            self.streamController = str.controller
-        } else {
-            // Otherwise we create another new stream and hook up the fetch
-            // operation.
-
-            self.dataStream = ReadableStream(start: { controller in
-                self.streamController = controller
-            })
-
-            if let op = fetchOperation {
-                op.add(delegate: self)
-            }
-        }
-    }
-
-    init(response: HTTPURLResponse, operation: FetchOperation, callback: @escaping (URLSession.ResponseDisposition) -> Void) {
-        self.fetchOperation = operation
-        self.responseCallback = callback
-        self.status = response.statusCode
-        self.url = response.url!
-        self.redirected = operation.redirected
-
-        // Convert to our custom FetchHeaders class
-        let headers = FetchHeaders()
-        response.allHeaderFields.keys.forEach { key in
-
-            let keyString = key as! String
-            let value = response.allHeaderFields[key] as! String
-
-            if keyString.lowercased() == "content-encoding" {
-                // URLSession automatically decodes content (which we don't actually want it to do)
-                // so the only way to continue to use this is to strip out the Content-Encoding
-                // header, otherwise the browser will try to decode it again
-                return
-            } else if keyString.lowercased() == "content-length" {
-                // Because of this same GZIP issue, the content length will be incorrect. It's actually
-                // also normally incorrect, but because we're stripping out all encoding we should
-                // update the content-length header to be accurate.
-                headers.set("Content-Length", String(operation.task!.countOfBytesExpectedToReceive))
-                return
-            }
-
-            headers.set(keyString, value)
-        }
-
-        self.headers = headers
-
-        super.init()
-
-        dataStream = ReadableStream(start: { controller in
-            self.streamController = controller
-        })
-
-        // since this is being created directly from native, we know we want
-        // it to be a delegate
-        operation.add(delegate: self)
-    }
+    
 
     deinit {
         if self.fetchOperation?.task!.state == .running {

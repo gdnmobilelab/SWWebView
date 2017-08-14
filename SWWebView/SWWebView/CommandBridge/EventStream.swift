@@ -20,11 +20,11 @@ class EventStream {
     // on ServiceWorkerContainer.get(), but that's fine, since this event stream
     // is the most reliable handle we have on the 'lifetime' of a webview frame.
     let container:ServiceWorkerContainer
-    let task: WKURLSchemeTask
+    let task: SWURLSchemeTask
     
     var workerListener: Listener<ServiceWorker>? = nil
 
-    fileprivate init(for task: WKURLSchemeTask) {
+    fileprivate init(for task: SWURLSchemeTask) {
         self.task = task
         self.container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
         
@@ -33,6 +33,13 @@ class EventStream {
                 self.sendUpdate(identifier: "serviceworker", object: worker)
             }
         }
+        
+        let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache"
+            ])!
+        
+        task.didReceive(response)
         
     }
     
@@ -52,7 +59,7 @@ class EventStream {
         }
     }
     
-    static func create(for task: WKURLSchemeTask) {
+    static func create(for task: SWURLSchemeTask) {
         if EventStream.currentEventStreams[task.hash] != nil {
             Log.error?("Tried to create an EventStream for a task when it already exists")
             task.didFailWithError(ErrorMessage("EventStream already exists for this task"))
@@ -63,7 +70,7 @@ class EventStream {
         EventStream.currentEventStreams[task.hash] = newStream
     }
     
-    static func remove(for task: WKURLSchemeTask) {
+    static func remove(for task: SWURLSchemeTask) {
         if EventStream.currentEventStreams[task.hash] == nil {
             Log.error?("Tried to remove an EventStream that does not exist")
         }
