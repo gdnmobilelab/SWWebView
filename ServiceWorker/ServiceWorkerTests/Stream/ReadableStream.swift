@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import ServiceWorker
+import PromiseKit
 
 class ReadableStreamTests: XCTestCase {
 
@@ -60,5 +61,42 @@ class ReadableStreamTests: XCTestCase {
         str.read { read in
             XCTAssert(read.done == true)
         }
+    }
+    
+    func testInputStream() {
+        
+        let testContent = "ABCDE"
+        let targetURL = URL(fileURLWithPath: NSTemporaryDirectory() + "/test.txt")
+        
+        
+        firstly { () -> Promise<Void> in
+            try testContent.write(to: targetURL, atomically: false, encoding: .utf8)
+            
+            let stream = InputStream(url: targetURL)!
+            let readableStream = ReadableStream.fromInputStream(stream: stream, bufferSize: 2)
+            
+            return readableStream.read()
+                .then { result -> Promise<StreamReadResult> in
+                    
+                    XCTAssertEqual(String(data: result.value!, encoding: .utf8), "AB")
+                    return readableStream.read()
+            }
+                .then { result -> Promise<StreamReadResult> in
+                    XCTAssertEqual(String(data: result.value!, encoding: .utf8), "CD")
+                    return readableStream.read()
+            }
+                .then { result -> Promise<StreamReadResult> in
+                    XCTAssertEqual(String(data: result.value!, encoding: .utf8), "E")
+                    return readableStream.read()
+    
+            }
+                .then { result -> Void in
+                    XCTAssertEqual(result.done, true)
+            }
+            
+        }
+        .assertResolves()
+        
+        
     }
 }

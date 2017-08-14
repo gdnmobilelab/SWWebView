@@ -291,7 +291,7 @@ import PromiseKit
             }
     }
 
-    public func getContentLength() throws -> Int64 {
+    public func getContentLength() throws -> Int64? {
         if let lengthHeader = self.headers.get("Content-Length") {
             if let lengthIsANumber = Int64(lengthHeader) {
                 return lengthIsANumber
@@ -299,7 +299,7 @@ import PromiseKit
                 throw ErrorMessage("Content-Length header must be a number")
             }
         } else {
-            throw ErrorMessage("Responses must send a Content-Length header")
+            return nil
         }
     }
 
