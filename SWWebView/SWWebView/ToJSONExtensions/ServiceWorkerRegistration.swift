@@ -17,7 +17,8 @@ extension ServiceWorkerRegistration : ToJSON {
             "active": self.active?.toJSONSuitableObject(),
             "waiting": self.waiting?.toJSONSuitableObject(),
             "installing": self.installing?.toJSONSuitableObject(),
-            "redundant": self.redundant?.toJSONSuitableObject()
+            "redundant": self.redundant?.toJSONSuitableObject(),
+            "unregistered": self.unregistered
         ]
     }
 }

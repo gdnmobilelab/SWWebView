@@ -22,14 +22,40 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         console.log(evt);
     }
 
-    getRegistration(scope?: string): Promise<ServiceWorkerRegistration> {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration>(undefined);
+    getRegistration(
+        scope?: string
+    ): Promise<ServiceWorkerRegistration | undefined> {
+        return apiRequest<ServiceWorkerRegistrationAPIResponse | null>(
+            "/ServiceWorkerContainer/getregistration",
+            {
+                scope: scope
+            }
+        ).then(response => {
+            if (response === null) {
+                return undefined;
+            }
+            return ServiceWorkerRegistrationImplementation.getOrCreate(
+                response
+            );
+        });
     }
 
     getRegistrations(): Promise<ServiceWorkerRegistration[]> {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration[]>([]);
+        return apiRequest<[ServiceWorkerRegistrationAPIResponse]>(
+            "/ServiceWorkerContainer/getregistrations"
+        ).then(response => {
+            let registrations: ServiceWorkerRegistration[] = [];
+
+            response.forEach(r => {
+                if (r) {
+                    registrations.push(
+                        ServiceWorkerRegistrationImplementation.getOrCreate(r)
+                    );
+                }
+            });
+
+            return registrations;
+        });
     }
 
     register(
@@ -38,11 +64,10 @@ class ServiceWorkerContainerImplementation extends EventEmitter
     ): Promise<ServiceWorkerRegistration> {
         return apiRequest<
             ServiceWorkerRegistrationAPIResponse
-        >("/serviceworkercontainer/register", {
+        >("/ServiceWorkerContainer/register", {
             url: url,
             scope: opts ? opts!.scope : undefined
         }).then(response => {
-            console.log("RESPONSE?");
             return ServiceWorkerRegistrationImplementation.getOrCreate(
                 response
             );

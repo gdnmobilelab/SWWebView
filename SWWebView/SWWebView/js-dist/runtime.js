@@ -106,7 +106,6 @@ E.prototype = {
 
   dispatchEvent: function(ev) {
     var name = ev.type;
-    console.log("DISPATCH!", name, ev);
     this.emit(name, ev);
   },
 
@@ -150,7 +149,7 @@ function apiRequest(path, body) {
     if (body === void 0) { body = undefined; }
     return fetch(path, {
         method: swwebviewSettings.API_REQUEST_METHOD,
-        body: JSON.stringify(body),
+        body: body === undefined ? undefined : JSON.stringify(body),
         headers: {
             "Content-Type": "application/json"
         }
@@ -176,6 +175,7 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
         return _this;
     }
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
+        console.log("opts", opts);
         var registration = existingRegistrations.find(function (reg) { return reg.scope == opts.scope; });
         if (!registration) {
             registration = new ServiceWorkerRegistrationImplementation(opts);
@@ -190,7 +190,7 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
         throw new Error("not yet");
     };
     ServiceWorkerRegistrationImplementation.prototype.unregister = function () {
-        return apiRequest("/serviceworkeregistration/unregister", {
+        return apiRequest("/ServiceWorkerRegistration/unregister", {
             scope: this.scope
         }).then(function (response) {
             return response.success;
@@ -213,19 +213,31 @@ var ServiceWorkerContainerImplementation = (function (_super) {
         console.log(evt);
     };
     ServiceWorkerContainerImplementation.prototype.getRegistration = function (scope) {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration>(undefined);
+        return apiRequest("/ServiceWorkerContainer/getregistration", {
+            scope: scope
+        }).then(function (response) {
+            if (response === null) {
+                return undefined;
+            }
+            return ServiceWorkerRegistrationImplementation.getOrCreate(response);
+        });
     };
     ServiceWorkerContainerImplementation.prototype.getRegistrations = function () {
-        throw new Error("not yet");
-        // return new Promise<ServiceWorkerRegistration[]>([]);
+        return apiRequest("/ServiceWorkerContainer/getregistrations").then(function (response) {
+            var registrations = [];
+            response.forEach(function (r) {
+                if (r) {
+                    registrations.push(ServiceWorkerRegistrationImplementation.getOrCreate(r));
+                }
+            });
+            return registrations;
+        });
     };
     ServiceWorkerContainerImplementation.prototype.register = function (url, opts) {
-        return apiRequest("/serviceworkercontainer/register", {
+        return apiRequest("/ServiceWorkerContainer/register", {
             url: url,
             scope: opts ? opts.scope : undefined
         }).then(function (response) {
-            console.log("RESPONSE?");
             return ServiceWorkerRegistrationImplementation.getOrCreate(response);
         });
     };

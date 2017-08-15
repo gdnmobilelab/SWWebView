@@ -13,17 +13,42 @@ import ServiceWorker
 
 class ServiceWorkerContainerCommands {
     
-//    static func getRegistration(task: SWURLSchemeTask) {
-//        CommandBridge.processAsJSON(task: task) { json in
-//            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
-////            return container
-//        }
-//    }
+    static func getRegistration(task: SWURLSchemeTask) {
+        CommandBridge.processAsJSON(task: task) { json in
+            
+            var scope: URL? = nil
+            if let scopeString = json!["scope"] as? String {
+                scope = URL(string: scopeString)
+                if scope == nil {
+                    throw ErrorMessage("Did not understand passed in scope argument")
+                }
+            }
+            
+            
+            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+            return container.getRegistration(scope)
+                .then {reg in
+                    return reg?.toJSONSuitableObject()
+                    
+            }
+        }
+    }
+    
+    static func getRegistrations(task: SWURLSchemeTask) {
+        CommandBridge.processAsJSON(task: task) { json in
+            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+            return container.getRegistrations()
+                .then {regs in
+                    return regs.map { $0.toJSONSuitableObject() }
+                    
+            }
+        }
+    }
     
     static func register(task: SWURLSchemeTask) {
         CommandBridge.processAsJSON(task: task) { json in
            
-            guard let workerURLString = json["url"] as? String else {
+            guard let workerURLString = json!["url"] as? String else {
                 throw ErrorMessage("URL must be provided")
             }
             
@@ -33,7 +58,7 @@ class ServiceWorkerContainerCommands {
             
             var options:ServiceWorkerRegistrationOptions? = nil
             
-            if let specifiedScope = json["scope"] as? String {
+            if let specifiedScope = json!["scope"] as? String {
                 guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: task.request.mainDocumentURL!) else {
                     throw ErrorMessage("Could not parse scope URL")
                 }

@@ -371,6 +371,9 @@ import ServiceWorker
                         try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
                     }
                 }
+                
+                try db.update(sql: "DELETE FROM registrations WHERE scope = ?", values:[self.scope])
+                
             }
             
             self.unregistered = true

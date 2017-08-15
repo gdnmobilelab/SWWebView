@@ -44,10 +44,22 @@ public class ServiceWorkerContainer : Hashable {
         }
     }
     
+    fileprivate var defaultScope: URL {
+        get {
+            if self.containerURL.absoluteString.hasSuffix("/") == false {
+                return self.containerURL.deletingLastPathComponent()
+            } else {
+                return self.containerURL
+            }
+        }
+    }
+    
     public func getRegistrations() -> Promise<[ServiceWorkerRegistration]> {
         return CoreDatabase.inConnection { db in
             
-            return try db.select(sql: "SELECT scope FROM registrations WHERE scope LIKE ?", values: [self.containerURL.absoluteString + "%"] as [Any]) { resultSet -> Promise<[URL]> in
+            let like = "\(self.containerURL.scheme!)://\(self.containerURL.host!)/%"
+            
+            return try db.select(sql: "SELECT scope FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> Promise<[URL]> in
                 
                 var scopes: [URL] = []
                 
@@ -68,13 +80,31 @@ public class ServiceWorkerContainer : Hashable {
         }
     }
     
-    public func getRegistration() -> Promise<ServiceWorkerRegistration?> {
-        return self.getRegistrations()
-            .then { registrations in
-                return registrations.sorted(by: { (one, two) -> Bool in
-                    return one.scope.absoluteString.count > two.scope.absoluteString.count
-                }).first
+    public func getRegistration(_ scope:URL? = nil) -> Promise<ServiceWorkerRegistration?> {
+        
+        let scopeToCheck = scope ?? self.containerURL
+        
+        return CoreDatabase.inConnection { db in
+            
+            return try db.select(sql: """
+                SELECT scope
+                FROM registrations WHERE ? LIKE (scope || '%')
+                ORDER BY length(scope) DESC
+                LIMIT 1
+            """, values: [scopeToCheck.absoluteString]) { resultSet -> Promise<URL?> in
+                if resultSet.next() == false {
+                    return Promise(value: nil)
+                }
+                return Promise(value: try resultSet.url("scope")!)
                 
+            }
+            
+        }
+            .then { scopeOfRegistration -> ServiceWorkerRegistration? in
+                if scopeOfRegistration == nil {
+                    return nil
+                }
+                return try ServiceWorkerRegistration.get(scope: scopeOfRegistration!)
         }
     }
 

@@ -306,4 +306,20 @@ class ServiceWorkerRegistrationTests: XCTestCase {
 
         wait(for: [expect], timeout: 1)
     }
+    
+    func testShouldUnregister() {
+        self.testShouldInstallWorker()
+        firstly { () -> Promise<Void> in
+            let reg = try ServiceWorkerRegistration.get(scope: TestWeb.serverURL)!
+            let worker = reg.active!
+            return reg.unregister()
+                .then { () -> Void in
+                    XCTAssertEqual(reg.unregistered, true)
+                    XCTAssertEqual(worker.state, ServiceWorkerInstallState.redundant)
+            }
+        }
+        .assertResolves()
+        
+        
+    }
 }

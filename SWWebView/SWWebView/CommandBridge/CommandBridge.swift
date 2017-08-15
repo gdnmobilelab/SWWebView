@@ -15,8 +15,10 @@ public class CommandBridge {
 
     public static var routes: [String: (SWURLSchemeTask) -> Void] = [
         "/events": { task in EventStream.create(for: task) },
-        "/serviceworkercontainer/register": ServiceWorkerContainerCommands.register,
-        "/serviceworkerregistration/unregister": ServiceWorkerRegistrationCommands.unregister
+        "/ServiceWorkerContainer/register": ServiceWorkerContainerCommands.register,
+        "/ServiceWorkerContainer/getregistration": ServiceWorkerContainerCommands.getRegistration,
+        "/ServiceWorkerContainer/getregistrations": ServiceWorkerContainerCommands.getRegistrations,
+        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister
     ]
     
     static var stopRoutes: [String: (SWURLSchemeTask) -> Void] = [
@@ -51,15 +53,23 @@ public class CommandBridge {
         _ = matchingRoute!.value(modifiedTask)
     }
     
-    static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject) throws -> Promise<Any>) {
+    static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject?) throws -> Promise<Any?>) {
         
-        firstly { () -> Promise<Any> in
-            let jsonBody = try JSONSerialization.jsonObject(with: task.request.httpBody!, options: [])
+        firstly { () -> Promise<Any?> in
+            var jsonBody: AnyObject? = nil
+            if let body = task.request.httpBody {
+                jsonBody = try JSONSerialization.jsonObject(with: body, options: []) as AnyObject
+            }
+            
             return try asJSON(jsonBody as AnyObject)
         }
             .then { jsonResponse -> Void in
                 
-                let encodedResponse = try JSONSerialization.data(withJSONObject: jsonResponse, options: [])
+                var encodedResponse = "null".data(using: .utf8)!
+                if let response = jsonResponse {
+                    encodedResponse = try JSONSerialization.data(withJSONObject: response, options: [])
+                }
+                
                 
                 task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: nil, headerFields: [
                     "Content-Type": "application/json"

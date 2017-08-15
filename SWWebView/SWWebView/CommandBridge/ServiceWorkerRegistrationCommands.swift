@@ -16,7 +16,7 @@ class ServiceWorkerRegistrationCommands {
     static func unregister(task: SWURLSchemeTask) {
         CommandBridge.processAsJSON(task: task) { json in
             
-            let registrationScope = json["scope"] as! String
+            let registrationScope = json!["scope"] as! String
             let scopeAsURL = URL(string: registrationScope)!
             
             let reg = try ServiceWorkerRegistration.get(scope: scopeAsURL)

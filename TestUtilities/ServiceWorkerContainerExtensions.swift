@@ -14,7 +14,9 @@ extension CoreDatabase {
     static func clearForTests() {
         
         do {
-            try FileManager.default.removeItem(at: self.dbPath!)
+            if FileManager.default.fileExists(atPath: self.dbPath!.path) {
+                try FileManager.default.removeItem(at: self.dbPath!)
+            }
             self.dbMigrationCheckDone = false
         } catch {
             XCTFail("\(error)")

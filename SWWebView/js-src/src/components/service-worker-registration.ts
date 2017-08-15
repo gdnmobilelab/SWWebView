@@ -21,6 +21,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     }
 
     static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {
+        console.log("opts", opts);
         let registration = existingRegistrations.find(
             reg => reg.scope == opts.scope
         );
@@ -47,7 +48,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     unregister(): Promise<boolean> {
         return apiRequest<
             BooleanSuccessResponse
-        >("/serviceworkeregistration/unregister", {
+        >("/ServiceWorkerRegistration/unregister", {
             scope: this.scope
         }).then(response => {
             return response.success;

@@ -35,12 +35,8 @@ function loadAllTests() {
         }
     };
 }
-baseConfig.entry = "test-bootstrap.ts";
+baseConfig.entry = "tests/test-bootstrap.ts";
 baseConfig.dest = "tests.js";
 baseConfig.plugins.push(loadAllTests());
-baseConfig.plugins.push(
-    replace({
-        "process.env.NODE_DEBUG": "false"
-    })
-);
+
 module.exports = baseConfig;

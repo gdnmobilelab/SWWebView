@@ -12,7 +12,7 @@ export class APIError extends Error {
 export function apiRequest<T>(path: string, body: any = undefined): Promise<T> {
     return fetch(path, {
         method: API_REQUEST_METHOD,
-        body: JSON.stringify(body),
+        body: body === undefined ? undefined : JSON.stringify(body),
         headers: {
             "Content-Type": "application/json"
         }
