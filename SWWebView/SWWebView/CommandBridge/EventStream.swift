@@ -23,6 +23,7 @@ class EventStream {
     let task: SWURLSchemeTask
     
     var workerListener: Listener<ServiceWorker>? = nil
+    var registrationListener: Listener<ServiceWorkerRegistration>? = nil
 
     fileprivate init(for task: SWURLSchemeTask) {
         self.task = task
@@ -31,6 +32,12 @@ class EventStream {
         self.workerListener = GlobalEventLog.addListener { (worker:ServiceWorker) in
             if worker.url.host == self.container.containerURL.host {
                 self.sendUpdate(identifier: "serviceworker", object: worker)
+            }
+        }
+        
+        self.registrationListener = GlobalEventLog.addListener { (reg:ServiceWorkerRegistration) in
+            if reg.scope.host == self.container.containerURL.host {
+                self.sendUpdate(identifier: "serviceworkerregistration", object: reg)
             }
         }
         
@@ -45,13 +52,16 @@ class EventStream {
     
     func shutdown() {
         GlobalEventLog.removeListener(self.workerListener!)
+        GlobalEventLog.removeListener(self.registrationListener!)
         self.workerListener = nil
+        self.registrationListener = nil
     }
     
     func sendUpdate(identifier:String, object: ToJSON) {
         do {
             let json = try JSONSerialization.data(withJSONObject: object.toJSONSuitableObject(), options: [])
-            let str = "\(identifier): \(json)"
+            let jsonString = String(data: json, encoding: .utf8)!
+            let str = "\(identifier): \(jsonString)"
             
             self.task.didReceive(str.data(using: String.Encoding.utf8)!)
         } catch {
@@ -71,9 +81,11 @@ class EventStream {
     }
     
     static func remove(for task: SWURLSchemeTask) {
+        let h = task.hash
         if EventStream.currentEventStreams[task.hash] == nil {
             Log.error?("Tried to remove an EventStream that does not exist")
         }
+        EventStream.currentEventStreams[task.hash]!.shutdown()
         EventStream.currentEventStreams[task.hash] = nil
     }
 }

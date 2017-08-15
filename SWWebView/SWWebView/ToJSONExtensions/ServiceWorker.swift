@@ -14,7 +14,7 @@ extension ServiceWorker : ToJSON {
         return [
             "id": self.id,
             "installState": self.state.rawValue,
-            "scriptURL": self.url.absoluteString
+            "scriptURL": self.url.sWWebviewSuitableAbsoluteString
         ]
     }
 }

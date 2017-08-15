@@ -18,13 +18,15 @@ import ServiceWorker
     typealias RegisterCallback = (Error?) -> Void
 
     public let scope: URL
+    public let id: String
     public var active: ServiceWorker?
     public var waiting: ServiceWorker?
     public var installing: ServiceWorker?
     public var redundant: ServiceWorker?
 
-    fileprivate init(scope: URL) {
+    fileprivate init(scope: URL, id: String) {
         self.scope = scope
+        self.id = id
     }
 
     func update() -> Promise<Void> {
@@ -296,7 +298,7 @@ import ServiceWorker
 
     fileprivate static let activeInstances = NSHashTable<ServiceWorkerRegistration>.weakObjects()
 
-    public static func get(scope: URL) throws -> ServiceWorkerRegistration? {
+    public static func get(scope: URL, id:String? = nil) throws -> ServiceWorkerRegistration? {
 
         let active = activeInstances.allObjects.filter { $0.scope == scope }.first
 
@@ -305,15 +307,28 @@ import ServiceWorker
         }
 
         return try CoreDatabase.inConnection { connection in
+            
+            var query = "SELECT * FROM registrations WHERE scope = ?"
+            var values: [Any] = [scope.absoluteString]
+            
+            if let specificId = id {
+                // Sometimes (usually when interfacing with the web view) we want to
+                // make sure we are fetching a specific registration, which might have
+                // been deleted and replaced
+                
+                query += " AND id = ?"
+                values.append(specificId)
+            }
+            
 
-            try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope.absoluteString]) { rs -> ServiceWorkerRegistration? in
+            return try connection.select(sql: query, values: values) { rs -> ServiceWorkerRegistration? in
 
                 if rs.next() == false {
                     // If we don't already have a registration, return nil (get() doesn't create one)
                     return nil
                 }
 
-                let reg = ServiceWorkerRegistration(scope: scope)
+                let reg = ServiceWorkerRegistration(scope: scope, id: try rs.string("id")!)
 
                 // Need to add this now, as WorkerInstances.get() uses our static storage and
                 // we don't want to get into a loop
@@ -340,8 +355,9 @@ import ServiceWorker
     public static func create(scope: URL) throws -> ServiceWorkerRegistration {
 
         return try CoreDatabase.inConnection { connection in
-            _ = try connection.insert(sql: "INSERT INTO registrations (scope) VALUES (?)", values: [scope])
-            let reg = ServiceWorkerRegistration(scope: scope)
+            let newRegID = UUID().uuidString
+            _ = try connection.insert(sql: "INSERT INTO registrations (id, scope) VALUES (?, ?)", values: [newRegID, scope])
+            let reg = ServiceWorkerRegistration(scope: scope, id: newRegID)
             self.activeInstances.add(reg)
             return reg
         }

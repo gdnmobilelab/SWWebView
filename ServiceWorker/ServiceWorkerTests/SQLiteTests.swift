@@ -10,6 +10,7 @@ import XCTest
 import FMDB
 import PromiseKit
 @testable import ServiceWorker
+import SQLite3
 
 class SQLiteTests: XCTestCase {
     
@@ -17,6 +18,8 @@ class SQLiteTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
+        sqlite3_shutdown()
+        sqlite3_initialize()
         do {
             if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(atPath: self.dbPath.path)
@@ -31,7 +34,13 @@ class SQLiteTests: XCTestCase {
         var conn: SQLiteConnection?
         XCTAssertNoThrow(conn = try SQLiteConnection(self.dbPath))
         XCTAssert(conn!.open == true)
-        conn!.close()
+        
+        XCTAssertNoThrow(try conn!.select(sql: "SELECT 1 as num") { resultSet in
+            XCTAssertEqual(resultSet.next(), true)
+            XCTAssertEqual(try resultSet.int("num"), 1)
+        })
+        
+        XCTAssertNoThrow(try conn!.close())
         XCTAssert(conn!.open == false)
     }
 
@@ -69,7 +78,7 @@ class SQLiteTests: XCTestCase {
                 )
             """)
             
-            conn.close()
+            try conn.close()
             
             let fm = FMDatabase(url: self.dbPath)
             fm.open()
@@ -95,7 +104,7 @@ class SQLiteTests: XCTestCase {
 
             try conn.update(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["hello"])
 
-            conn.close()
+            try conn.close()
 
             let fm = FMDatabase(url: self.dbPath)
             fm.open()
@@ -121,7 +130,7 @@ class SQLiteTests: XCTestCase {
 
             try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], ["there"]])
 
-            conn.close()
+            try conn.close()
 
             let fm = FMDatabase(url: self.dbPath)
             fm.open()
@@ -134,7 +143,7 @@ class SQLiteTests: XCTestCase {
             XCTAssert(rs.next() == true)
 
             XCTAssert(rs.string(forColumn: "val")! == "there")
-
+            rs.close()
             fm.close()
             }())
     }

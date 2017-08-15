@@ -11,3 +11,13 @@ import Foundation
 protocol ToJSON {
     func toJSONSuitableObject() -> Any
 }
+
+extension URL {
+    var sWWebviewSuitableAbsoluteString:String {
+        get {
+            var components = URLComponents(url: self, resolvingAgainstBaseURL: true)!
+            components.scheme = SWWebView.ServiceWorkerScheme
+            return components.url!.absoluteString
+        }
+    }
+}

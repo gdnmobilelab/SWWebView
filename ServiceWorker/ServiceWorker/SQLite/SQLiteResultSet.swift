@@ -13,19 +13,15 @@ public class SQLiteResultSet {
 
     fileprivate let statement: OpaquePointer
     let columnNames: [String]
-    let numRowsModified: Int
     var open = true
 
     init(statement: OpaquePointer) {
         self.statement = statement
-
+      
         let numColumns = sqlite3_column_count(self.statement)
         var columnNames: [String] = []
-        
-        self.numRowsModified = Int(sqlite3_changes(statement))
        
         var currentColumn: Int32 = 0
-
         while currentColumn < numColumns {
             let name = String(cString: sqlite3_column_name(self.statement, currentColumn))
             columnNames.append(name)

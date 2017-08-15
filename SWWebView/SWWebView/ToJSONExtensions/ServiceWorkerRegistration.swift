@@ -13,7 +13,8 @@ extension ServiceWorkerRegistration : ToJSON {
     func toJSONSuitableObject() -> Any {
         
        return [
-            "scope": self.scope.absoluteString,
+            "id": self.id,
+            "scope": self.scope.sWWebviewSuitableAbsoluteString,
             "active": self.active?.toJSONSuitableObject(),
             "waiting": self.waiting?.toJSONSuitableObject(),
             "installing": self.installing?.toJSONSuitableObject(),

@@ -19,12 +19,12 @@ public class SQLiteConnection {
     var open: Bool
 
     public init(_ dbURL: URL) throws {
-
-        //        let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, 0, nil)
-        let open = sqlite3_open(dbURL.path.cString(using: String.Encoding.utf8), &db)
+        
+          let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
+//        let open = sqlite3_open(dbURL.path.cString(using: String.Encoding.utf8), &db)
 
         if open != SQLITE_OK {
-            throw ErrorMessage("Could not create SQLite database instance.")
+            throw ErrorMessage("Could not create SQLite database instance: \(open)")
         }
 
         self.open = true
@@ -35,29 +35,43 @@ public class SQLiteConnection {
         let conn = try SQLiteConnection(dbURL)
         do {
             let result = try cb(conn)
-            conn.close()
+            try conn.close()
             return result
         } catch {
-            conn.close()
+            try conn.close()
             throw error
         }
     }
 
     public static func inConnection<T>(_ dbURL: URL, _ cb: @escaping ((SQLiteConnection) throws -> Promise<T>)) -> Promise<T> {
-
+        
         return firstly {
             Promise(value: try SQLiteConnection(dbURL))
         }.then { conn in
             try cb(conn)
                 .always {
-                    conn.close()
+                    do {
+                        try conn.close()
+                    } catch {
+                        Log.error?("Failed to close database")
                 }
+            
+            
+            }
         }
     }
 
-    public func close() {
+    public func close() throws {
         self.open = false
-        sqlite3_close(self.db!)
+        let rc = sqlite3_close_v2(self.db!)
+        if rc != SQLITE_OK {
+            throw ErrorMessage("Could not close SQLite Database: Error code \(rc)")
+        }
+        self.db = nil
+        let freed = sqlite3_release_memory(Int32.max)
+        if freed > 0 {
+            Log.info?("Freed \(freed) bytes of SQLite memory")
+        }
     }
 
     fileprivate func throwSQLiteError(_ err: UnsafeMutablePointer<Int8>) throws {
@@ -219,21 +233,21 @@ public class SQLiteConnection {
     public func select<T>(sql: String, values: [Any], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
 
         var statement: OpaquePointer?
-
+      
         if sqlite3_prepare_v2(self.db!, sql + ";", -1, &statement, nil) != SQLITE_OK {
             sqlite3_finalize(statement)
             throw self.getLastError()
         }
-
+      
         for (offset, element) in values.enumerated() {
             try self.bindValue(statement!, idx: Int32(offset) + 1, value: element)
         }
-
+       
         let rs = SQLiteResultSet(statement: statement!)
 
         let result = try cb(rs)
         rs.open = false
-
+        
         sqlite3_finalize(statement)
 
         return result

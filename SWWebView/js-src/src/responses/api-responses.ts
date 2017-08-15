@@ -8,6 +8,8 @@ export interface ServiceWorkerAPIResponse {
 
 export interface ServiceWorkerRegistrationAPIResponse {
     scope: string;
+    id: string;
+    unregsistered: boolean;
     active?: ServiceWorkerAPIResponse;
     waiting?: ServiceWorkerAPIResponse;
     installing?: ServiceWorkerAPIResponse;

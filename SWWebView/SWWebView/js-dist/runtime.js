@@ -1,6 +1,12 @@
 (function (swwebviewSettings) {
 'use strict';
 
+function __extends(d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
 // We can't read POST bodies in native code, so we're doing the super-gross:
 // putting it in a custom header. Hoping we can get rid of this nonsense soon.
 var originalFetch = fetch;
@@ -36,32 +42,6 @@ XMLHttpRequest.prototype.send = function (data) {
     }
     originalSend.apply(this, arguments);
 };
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = Object.setPrototypeOf ||
-    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
 
 function E() {
   // Keep this empty so it's easier to inherit from
@@ -166,6 +146,50 @@ function apiRequest(path, body) {
     });
 }
 
+var StreamingXHR = (function (_super) {
+    __extends(StreamingXHR, _super);
+    function StreamingXHR(url) {
+        var _this = _super.call(this) || this;
+        _this.seenBytes = 0;
+        _this.xhr = new XMLHttpRequest();
+        _this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, url);
+        _this.xhr.onreadystatechange = _this.receiveData.bind(_this);
+        _this.xhr.send();
+        return _this;
+    }
+    StreamingXHR.prototype.receiveData = function () {
+        try {
+            if (this.xhr.readyState !== 3) {
+                return;
+            }
+            // This means the responseText keeps growing and growing. Perhaps
+            // we should look into cutting this off and re-establishing a new
+            // link if it gets too big.
+            var newData = this.xhr.responseText.substr(this.seenBytes);
+            console.log("new event: ", newData);
+            this.seenBytes = this.xhr.responseText.length;
+            var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
+            var evt = new MessageEvent(event, {
+                data: JSON.parse(data)
+            });
+            this.dispatchEvent(evt);
+        }
+        catch (err) {
+            var errEvt = new ErrorEvent("error", {
+                error: err
+            });
+            this.dispatchEvent(errEvt);
+        }
+    };
+    StreamingXHR.prototype.close = function () {
+        this.xhr.abort();
+    };
+    return StreamingXHR;
+}(index));
+
+var eventStream = new StreamingXHR("/events");
+eventStream.addEventListener("serviceworkerregistration", console.info);
+
 var existingRegistrations = [];
 var ServiceWorkerRegistrationImplementation = (function (_super) {
     __extends(ServiceWorkerRegistrationImplementation, _super);
@@ -175,8 +199,7 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
         return _this;
     }
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
-        console.log("opts", opts);
-        var registration = existingRegistrations.find(function (reg) { return reg.scope == opts.scope; });
+        var registration = existingRegistrations.find(function (reg) { return reg.id == opts.id; });
         if (!registration) {
             registration = new ServiceWorkerRegistrationImplementation(opts);
             existingRegistrations.push(registration);
@@ -191,7 +214,8 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     };
     ServiceWorkerRegistrationImplementation.prototype.unregister = function () {
         return apiRequest("/ServiceWorkerRegistration/unregister", {
-            scope: this.scope
+            scope: this.scope,
+            id: this.id
         }).then(function (response) {
             return response.success;
         });
@@ -201,6 +225,7 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     };
     return ServiceWorkerRegistrationImplementation;
 }(index));
+eventStream.addEventListener("serviceworkerregistration", console.info);
 
 var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
@@ -243,6 +268,8 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     };
     return ServiceWorkerContainerImplementation;
 }(index));
-navigator.serviceWorker = new ServiceWorkerContainerImplementation();
+if ("serviceWorker" in navigator === false) {
+    navigator.serviceWorker = new ServiceWorkerContainerImplementation();
+}
 
 }(swwebviewSettings));

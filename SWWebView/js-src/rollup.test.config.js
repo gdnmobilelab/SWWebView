@@ -38,5 +38,6 @@ function loadAllTests() {
 baseConfig.entry = "tests/test-bootstrap.ts";
 baseConfig.dest = "tests.js";
 baseConfig.plugins.push(loadAllTests());
+baseConfig.format = "umd";
 
 module.exports = baseConfig;

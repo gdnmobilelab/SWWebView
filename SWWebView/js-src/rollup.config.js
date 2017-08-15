@@ -1,4 +1,4 @@
-const typescriptPlugin = require("rollup-plugin-typescript2");
+const typescriptPlugin = require("rollup-plugin-typescript");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
 const typescript = require("typescript");
@@ -6,11 +6,14 @@ const typescript = require("typescript");
 module.exports = {
     format: "iife",
     plugins: [
-        typescriptPlugin(),
+        typescriptPlugin({
+            typescript: typescript,
+            include: [__dirname + "/**/*.ts", __dirname + "/.gobble/**/*.ts"]
+        }),
         commonjs({
             namedExports: {
                 chai: ["assert"],
-                "../../../git/tiny-emitter/index.js": ["EventEmitter"]
+                "tiny-emitter": ["EventEmitter"]
             }
         }),
         nodeResolve({

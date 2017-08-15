@@ -112,26 +112,31 @@ public class ServiceWorkerContainer : Hashable {
     public func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
 
         return firstly {
-            var scopeURL = containerURL
+            var scopeURL = workerURL
+            
+            if workerURL.host != containerURL.host {
+                throw ErrorMessage("Service worker scope must be on the same domain as both the page and worker URL")
+            }
             
             if scopeURL.absoluteString.last! != "/" {
                 // if we are a a file (.e.g. /test.html) the scope, by default, is "/")
                 scopeURL.deleteLastPathComponent()
             }
             
+            // The maximum scope is set no matter what custom scope is or is not provided.
+            let maxScope = scopeURL
+            
             if let scope = options?.scope {
+
                 // By default we register to the current URL, but we can specify
                 // another scope.
-                if scopeURL.host != containerURL.host || workerURL.host != containerURL.host {
-                    throw ErrorMessage("Service worker scope must be on the same domain as both the page and worker URL")
-                }
-                if workerURL.absoluteString.hasPrefix(scopeURL.absoluteString) == false {
+                if scope.absoluteString.hasPrefix(maxScope.absoluteString) == false {
                     throw ErrorMessage("Service worker must exist under the scope it is being registered to")
                 }
                 scopeURL = scope
             }
 
-            if workerURL.absoluteString.starts(with: scopeURL.absoluteString) == false {
+            if workerURL.absoluteString.starts(with: maxScope.absoluteString) == false {
                 throw ErrorMessage("Script must be within scope")
             }
 

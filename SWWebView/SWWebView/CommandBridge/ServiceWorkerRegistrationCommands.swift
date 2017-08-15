@@ -17,9 +17,15 @@ class ServiceWorkerRegistrationCommands {
         CommandBridge.processAsJSON(task: task) { json in
             
             let registrationScope = json!["scope"] as! String
+            let registrationID = json!["id"] as! String
             let scopeAsURL = URL(string: registrationScope)!
             
-            let reg = try ServiceWorkerRegistration.get(scope: scopeAsURL)
+            let reg = try ServiceWorkerRegistration.get(scope: scopeAsURL, id: registrationID)
+            
+            if reg == nil {
+                throw ErrorMessage("Registration does not exist any more")
+            }
+            
             return reg!.unregister()
                 .then {
                 return [

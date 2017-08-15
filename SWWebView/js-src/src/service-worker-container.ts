@@ -74,5 +74,6 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         });
     }
 }
-
-(navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
+if ("serviceWorker" in navigator === false) {
+    (navigator as any).serviceWorker = new ServiceWorkerContainerImplementation();
+}

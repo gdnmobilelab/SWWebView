@@ -1,5 +1,5 @@
 import { StreamingXHR } from "./util/streaming-xhr";
 
-const eventStream = new StreamingXHR("/events");
+export const eventStream = new StreamingXHR("/events");
 
-// dataFeed.addEventListener("controllerchange", this.controllerChangeMessage);
+eventStream.addEventListener("serviceworkerregistration", console.info);

@@ -5,6 +5,7 @@ PRAGMA foreign_keys = false;
 -- ----------------------------
 DROP TABLE IF EXISTS "registrations";
 CREATE TABLE "registrations" (
+"id" TEXT NOT NULL,
 "scope" TEXT NOT NULL,
 "active" TEXT,
 "installing" TEXT,

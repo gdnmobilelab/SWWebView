@@ -2,6 +2,7 @@ import EventEmitter from "tiny-emitter";
 import { ServiceWorkerRegistrationAPIResponse } from "../responses/api-responses";
 import { apiRequest } from "../util/api-request";
 import { BooleanSuccessResponse } from "../responses/api-responses";
+import { eventStream } from "../event-stream";
 
 const existingRegistrations: ServiceWorkerRegistrationImplementation[] = [];
 
@@ -13,6 +14,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
 
     pushManager: PushManager;
     scope: string;
+    id: string;
     sync: SyncManager;
 
     constructor(opts: ServiceWorkerRegistrationAPIResponse) {
@@ -21,10 +23,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     }
 
     static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {
-        console.log("opts", opts);
-        let registration = existingRegistrations.find(
-            reg => reg.scope == opts.scope
-        );
+        let registration = existingRegistrations.find(reg => reg.id == opts.id);
         if (!registration) {
             registration = new ServiceWorkerRegistrationImplementation(opts);
             existingRegistrations.push(registration);
@@ -49,7 +48,8 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
         return apiRequest<
             BooleanSuccessResponse
         >("/ServiceWorkerRegistration/unregister", {
-            scope: this.scope
+            scope: this.scope,
+            id: this.id
         }).then(response => {
             return response.success;
         });
@@ -59,3 +59,5 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
         throw new Error("not yet");
     }
 }
+
+eventStream.addEventListener("serviceworkerregistration", console.info);
