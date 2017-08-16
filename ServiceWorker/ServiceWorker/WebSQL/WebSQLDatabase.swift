@@ -22,6 +22,14 @@ import JavaScriptCore
         self.connection = try SQLiteConnection(path)
     }
     
+    deinit {
+        do {
+            try self.connection.close()
+        } catch {
+            Log.error?("Not able to close WebSQL connection on JSContext garbage collect")
+        }
+    }
+    
     func transaction(_ withCallback: JSValue, _ completeCallback: JSValue) {
         _ = WebSQLTransaction(in: self.connection, withCallback: withCallback, completeCallback: completeCallback)
     }

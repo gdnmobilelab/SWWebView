@@ -28,7 +28,7 @@ class WorkerInstances {
                 }
 
                 let registration = try ServiceWorkerRegistration.getOrCreate(scope: try resultSet.url("scope")!)
-                let state = ServiceWorkerInstallState(rawValue: try resultSet.int("install_state")!)!
+                let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
 
                 return ServiceWorker(id: id, url: try resultSet.url("url")!, registration: registration, state: state, loadContent: ServiceWorkerHooks.loadContent)
             }

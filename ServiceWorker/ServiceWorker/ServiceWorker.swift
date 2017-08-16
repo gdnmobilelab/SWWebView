@@ -26,8 +26,11 @@ import PromiseKit
             return self._installState
         }
         set(value) {
+            let oldValue = self._installState
             self._installState = value
-            GlobalEventLog.notifyChange(self)
+            if oldValue != value {
+                GlobalEventLog.notifyChange(self)
+            }
         }
     }
 
@@ -43,8 +46,8 @@ import PromiseKit
     deinit {
         NSLog("deinit?")
     }
-
-    @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
+    
+     public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url
         self.registration = registration
@@ -55,13 +58,16 @@ import PromiseKit
         super.init()
     }
 
-    fileprivate var isDestroyed = false
-    @objc public func destroy() {
-        self.isDestroyed = true
-        if let exec = self._executionEnvironment {
-            exec.destroy()
-            self._executionEnvironment = nil
+    @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: String, content: String) {
+        self.id = id
+        self.url = url
+        self.registration = registration
+        self.loadContent = { _ in
+            content
         }
+        
+        self._installState = ServiceWorkerInstallState(rawValue: state)!
+        super.init()
     }
 
     fileprivate var _executionEnvironment: ServiceWorkerExecutionEnvironment?
@@ -70,10 +76,6 @@ import PromiseKit
 
         if self._executionEnvironment != nil {
             return Promise(value: self._executionEnvironment!)
-        }
-
-        if self.isDestroyed {
-            return Promise(error: ErrorMessage("Worker has been destroyed"))
         }
 
         // Being lazy means that we can create instances of ServiceWorker whenever we feel

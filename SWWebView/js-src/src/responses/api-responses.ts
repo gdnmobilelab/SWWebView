@@ -1,9 +1,7 @@
-export { ServiceWorkerInstallState } from "../enum/enums";
-
 export interface ServiceWorkerAPIResponse {
     id: string;
     url: string;
-    state: ServiceWorkerInstallState;
+    state: ServiceWorkerState;
 }
 
 export interface ServiceWorkerRegistrationAPIResponse {

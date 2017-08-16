@@ -12,7 +12,6 @@ import ServiceWorker
 
 public class CoreDatabase {
 
-//    public static let dbPath = SharedResources.appGroupStorage.appendingPathComponent("core.db")
     public static var dbDirectory:URL? = nil
     
     static var dbPath:URL? {

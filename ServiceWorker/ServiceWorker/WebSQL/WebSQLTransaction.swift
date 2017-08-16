@@ -26,13 +26,13 @@ import JavaScriptCore
         // synchronously. But hey, we'll implement it.
         
         do {
-            try self.connection.beginTransaction()
+//            try self.connection.beginTransaction()
             withCallback.call(withArguments: [self])
-            try self.connection.commitTransaction()
+//            try self.connection.commitTransaction()
             completeCallback.call(withArguments: [])
         } catch {
             do {
-                try self.connection.rollbackTransaction()
+//                try self.connection.rollbackTransaction()
             } catch {
                 Log.error?("Couldn't rollback WebSQL transaction: \(error)")
             }

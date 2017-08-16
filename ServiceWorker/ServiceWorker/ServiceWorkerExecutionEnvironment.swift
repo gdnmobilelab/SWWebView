@@ -12,38 +12,38 @@ import PromiseKit
 
 @objc public class ServiceWorkerExecutionEnvironment: NSObject {
 
-    internal let jsContext: JSContext
+    internal var jsContext: JSContext?
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
 
     @objc public init(_ worker: ServiceWorker) throws {
         self.jsContext = JSContext()
-        self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
+        self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext!, worker)
 
         super.init()
-        self.jsContext.exceptionHandler = self.grabException
+        
+        // Thrown errors don't error on the evaluateScript call (necessarily?), so after
+        // evaluating, we need to check whether there is a new exception.
+        self.jsContext!.exceptionHandler = { [unowned self] (context: JSContext?, error: JSValue?) in
+            // unowned self is *crucial* to avoid a circular reference that never
+            // destroys the JSContext
+            self.currentException = error
+        }
 
         // add setTimeout etc to our context
         _ = TimeoutManager(for: self)
     }
 
     deinit {
-        NSLog("Deinit?")
+        JSGarbageCollect(self.jsContext!.jsGlobalContextRef)
+        // this causes an error, so commenting out:
+//        JSGlobalContextRelease(self.jsContext!.jsGlobalContextRef)
+        // not sure if this will really do anything, but worth a try:
+        self.jsContext = nil
     }
 
-    func destroy() {
-        // If we don't reset the exception handler then the JSContext never gets
-        // garbage collected.
-        self.jsContext.exceptionHandler = nil
-        self.currentException = nil
-    }
-
-    // Thrown errors don't error on the evaluateScript call (necessarily?), so after
-    // evaluating, we need to check whether there is a new exception.
     internal var currentException: JSValue?
-    fileprivate func grabException(context _: JSContext?, error: JSValue?) {
-        self.currentException = error
-    }
+
 
     fileprivate func throwExceptionIfExists() throws {
         if self.currentException != nil {
@@ -61,7 +61,7 @@ import PromiseKit
                     throw ErrorMessage("Cannot run script while context has an exception")
                 }
 
-                let returnVal = self.jsContext.evaluateScript(script, withSourceURL: withSourceURL)
+                let returnVal = self.jsContext!.evaluateScript(script, withSourceURL: withSourceURL)
 
                 try self.throwExceptionIfExists()
 
@@ -76,7 +76,7 @@ import PromiseKit
 
         return Promise(value: ())
             .then(on: self.dispatchQueue, execute: { () -> Void in
-                try cb(self.jsContext)
+                try cb(self.jsContext!)
                 try self.throwExceptionIfExists()
             })
     }

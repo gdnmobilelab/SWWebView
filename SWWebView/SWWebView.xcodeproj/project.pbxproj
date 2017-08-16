@@ -23,6 +23,7 @@
 		8A5D983C1F3E167A002E521F /* js-tests in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D98391F3E0F82002E521F /* js-tests */; };
 		8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */; };
 		8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */; };
+		8AA4C7E81F438EF300D3C572 /* SWURLConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA4C7E71F438EF300D3C572 /* SWURLConverter.swift */; };
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -67,6 +68,7 @@
 		8A5D98391F3E0F82002E521F /* js-tests */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-tests"; sourceTree = "<group>"; };
 		8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLSchemeTask.swift; sourceTree = "<group>"; };
 		8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationCommands.swift; sourceTree = "<group>"; };
+		8AA4C7E71F438EF300D3C572 /* SWURLConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLConverter.swift; sourceTree = "<group>"; };
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -142,6 +144,14 @@
 			path = "SWWebView-JSTestSuite";
 			sourceTree = "<group>";
 		};
+		8AA4C7E61F438EE300D3C572 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				8AA4C7E71F438EF300D3C572 /* SWURLConverter.swift */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
@@ -166,6 +176,7 @@
 		8AA76F501F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXGroup;
 			children = (
+				8AA4C7E61F438EE300D3C572 /* Util */,
 				8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */,
 				8AF85DB01F3B6848001B0A87 /* CommandBridge */,
 				8AF85D931F3A39D3001B0A87 /* js-dist */,
@@ -456,6 +467,7 @@
 				8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */,
 				8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */,
 				8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */,
+				8AA4C7E81F438EF300D3C572 /* SWURLConverter.swift in Sources */,
 				8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */,
 				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
 				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,

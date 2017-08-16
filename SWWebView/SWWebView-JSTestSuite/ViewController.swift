@@ -23,6 +23,8 @@ class ViewController: UIViewController {
         CoreDatabase.dbDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("testapp-db", isDirectory: true)
         
+        NSLog("Database stored at: \(CoreDatabase.dbDirectory!)")
+        
         do {
             if FileManager.default.fileExists(atPath: CoreDatabase.dbDirectory!.path) {
                 try FileManager.default.removeItem(at: CoreDatabase.dbDirectory!)

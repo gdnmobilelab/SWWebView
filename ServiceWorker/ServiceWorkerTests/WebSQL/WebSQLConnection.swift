@@ -50,11 +50,13 @@ class WebSQLConnectionTests: XCTestCase {
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
-                    var db = openDatabase('test', 1, 'pretty name', 1024);
-                     typeof db.transaction !== 'undefined'
+                    (function() {
+                        var db = openDatabase('test', 1, 'pretty name', 1024);
+                        return typeof db.transaction !== 'undefined'}
+                )()
                 """)
         }
-            .then { jsResult in
+            .then { jsResult -> Void in
                 XCTAssertEqual(jsResult?.toBool(), true)
             }
             .assertResolves()

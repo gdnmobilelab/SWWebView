@@ -166,7 +166,6 @@ var StreamingXHR = (function (_super) {
             // we should look into cutting this off and re-establishing a new
             // link if it gets too big.
             var newData = this.xhr.responseText.substr(this.seenBytes);
-            console.log("new event: ", newData);
             this.seenBytes = this.xhr.responseText.length;
             var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
             var evt = new MessageEvent(event, {
@@ -190,14 +189,47 @@ var StreamingXHR = (function (_super) {
 var eventStream = new StreamingXHR("/events");
 eventStream.addEventListener("serviceworkerregistration", console.info);
 
+var existingWorkers = [];
+var ServiceWorkerImplementation = (function (_super) {
+    __extends(ServiceWorkerImplementation, _super);
+    function ServiceWorkerImplementation(opts) {
+        var _this = _super.call(this) || this;
+        _this.scriptURL = opts.url;
+        _this.state = opts.state;
+        _this.id = opts.id;
+        return _this;
+    }
+    ServiceWorkerImplementation.prototype.postMessage = function () { };
+    ServiceWorkerImplementation.getOrCreate = function (opts) {
+        var worker = existingWorkers.find(function (worker) { return worker.id == opts.id; });
+        if (!worker) {
+            worker = new ServiceWorkerImplementation(opts);
+            existingWorkers.push(worker);
+        }
+        return worker;
+    };
+    return ServiceWorkerImplementation;
+}(index));
+
 var existingRegistrations = [];
 var ServiceWorkerRegistrationImplementation = (function (_super) {
     __extends(ServiceWorkerRegistrationImplementation, _super);
     function ServiceWorkerRegistrationImplementation(opts) {
         var _this = _super.call(this) || this;
+        console.log(opts);
         _this.scope = opts.scope;
+        _this.id = opts.id;
+        _this.active = _this.createWorkerOrSetNull(opts.active);
+        _this.installing = _this.createWorkerOrSetNull(opts.installing);
+        _this.waiting = _this.createWorkerOrSetNull(opts.waiting);
         return _this;
     }
+    ServiceWorkerRegistrationImplementation.prototype.createWorkerOrSetNull = function (workerResponse) {
+        if (!workerResponse) {
+            return null;
+        }
+        return ServiceWorkerImplementation.getOrCreate(workerResponse);
+    };
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
         var registration = existingRegistrations.find(function (reg) { return reg.id == opts.id; });
         if (!registration) {

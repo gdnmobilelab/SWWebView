@@ -18,7 +18,7 @@ import JavaScriptCore
 @objc class ServiceWorkerGlobalScope: EventTarget, ServiceWorkerGlobalScopeExports {
 
     let console: ConsoleMirror
-    var worker: ServiceWorker?
+    weak var worker: ServiceWorker?
     weak var context: JSContext?
 
     var skipWaitingStatus = false

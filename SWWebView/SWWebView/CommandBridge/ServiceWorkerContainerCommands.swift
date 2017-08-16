@@ -18,7 +18,7 @@ class ServiceWorkerContainerCommands {
             
             var scope: URL? = nil
             if let scopeString = json!["scope"] as? String {
-                scope = URL(string: scopeString)
+                scope = URL(string: scopeString, relativeTo: task.request.mainDocumentURL!)
                 if scope == nil {
                     throw ErrorMessage("Did not understand passed in scope argument")
                 }
