@@ -12,21 +12,22 @@ import PromiseKit
 
 class JSPromise {
 
-    let context: JSContext
+    unowned let context: JSContext
+    let virtualMachine:JSVirtualMachine
     fileprivate var fulfill: JSManagedValue?
     fileprivate var reject: JSManagedValue?
     fileprivate var promiseJSValue: JSManagedValue?
 
     public init(context: JSContext) {
         self.context = context
-
+        self.virtualMachine = context.virtualMachine
         let capture: @convention(block) (JSValue, JSValue) -> Void = { (fulfillVal: JSValue, rejectVal: JSValue) in
 
             let fulfillManaged = JSManagedValue(value: fulfillVal)
             let rejectManaged = JSManagedValue(value: rejectVal)
 
-            self.context.virtualMachine.addManagedReference(fulfillManaged, withOwner: self)
-            self.context.virtualMachine.addManagedReference(rejectManaged, withOwner: self)
+            self.virtualMachine.addManagedReference(fulfillManaged, withOwner: self)
+            self.virtualMachine.addManagedReference(rejectManaged, withOwner: self)
 
             self.fulfill = fulfillManaged
             self.reject = rejectManaged
@@ -34,7 +35,7 @@ class JSPromise {
 
         let val = self.context.objectForKeyedSubscript("Promise")!.construct(withArguments: [unsafeBitCast(capture, to: AnyObject.self)])
         promiseJSValue = JSManagedValue(value: val)
-        self.context.virtualMachine.addManagedReference(self.jsValue, withOwner: self)
+        self.virtualMachine.addManagedReference(self.jsValue, withOwner: self)
     }
 
     public var jsValue: JSValue {
@@ -42,9 +43,9 @@ class JSPromise {
     }
 
     deinit {
-        self.context.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
-        self.context.virtualMachine.removeManagedReference(self.reject, withOwner: self)
-        self.context.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
+        self.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
+        self.virtualMachine.removeManagedReference(self.reject, withOwner: self)
+        self.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
     }
 
     public func fulfill(_ value: Any?) {
