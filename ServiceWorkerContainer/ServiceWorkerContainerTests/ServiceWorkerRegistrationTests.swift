@@ -30,7 +30,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
 
         var reg: ServiceWorkerRegistration?
 
-        XCTAssertNoThrow( reg = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com")!))
+        XCTAssertNoThrow(reg = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com")!))
         XCTAssertEqual(reg!.scope.absoluteString, "https://www.example.com")
 
         // An attempt to create a registration when one already exists should fail
@@ -41,7 +41,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
 
         var reg: ServiceWorkerRegistration?
 
-        XCTAssertNoThrow( reg = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/one")!) )
+        XCTAssertNoThrow(reg = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/one")!))
         XCTAssertEqual(reg!.scope.absoluteString, "https://www.example.com/one")
 
         reg!.register(URL(string: "https://www.example.com/two/test.js")!)
@@ -50,9 +50,9 @@ class ServiceWorkerRegistrationTests: XCTestCase {
     func testShouldPopulateWorkerFields() {
 
         XCTAssertNoThrow(try CoreDatabase.inConnection { connection in
-            
+
             try ["active", "installing", "waiting", "redundant"].forEach { state in
-                
+
                 let dummyWorkerValues: [Any] = [
                     "TEST_ID_" + state,
                     "https://www.example.com/worker.js",
@@ -60,16 +60,15 @@ class ServiceWorkerRegistrationTests: XCTestCase {
                     "DUMMY_CONTENT",
                     ServiceWorkerInstallState.activated.rawValue,
                     "https://www.example.com",
-                    ]
-                
+                ]
+
                 _ = try connection.insert(sql: "INSERT INTO workers (worker_id, url, headers, content, install_state, scope) VALUES (?,?,?,?,?,?)", values: dummyWorkerValues)
             }
-            
-            let registrationValues = ["https://www.example.com","TEST_ID", "TEST_ID_active", "TEST_ID_installing", "TEST_ID_waiting", "TEST_ID_redundant"]
+
+            let registrationValues = ["https://www.example.com", "TEST_ID", "TEST_ID_active", "TEST_ID_installing", "TEST_ID_waiting", "TEST_ID_redundant"]
             _ = try connection.insert(sql: "INSERT INTO registrations (scope, id, active, installing, waiting, redundant) VALUES (?,?,?,?,?,?)", values: registrationValues)
         })
 
-        
         var reg: ServiceWorkerRegistration?
         XCTAssertNoThrow(reg = try ServiceWorkerRegistration.get(scope: URL(string: "https://www.example.com")!)!)
 
@@ -77,7 +76,6 @@ class ServiceWorkerRegistrationTests: XCTestCase {
         XCTAssert(reg!.installing!.id == "TEST_ID_installing")
         XCTAssert(reg!.waiting!.id == "TEST_ID_waiting")
         XCTAssert(reg!.redundant!.id == "TEST_ID_redundant")
-        
     }
 
     func testShouldInstallWorker() {
@@ -179,7 +177,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
 
         var reg: ServiceWorkerRegistration?
 
-        XCTAssertNoThrow(reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL) )
+        XCTAssertNoThrow(reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL))
 
         let expect = expectation(description: "Registration fails")
 
@@ -306,7 +304,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
 
         wait(for: [expect], timeout: 1)
     }
-    
+
     func testShouldUnregister() {
         self.testShouldInstallWorker()
         firstly { () -> Promise<Void> in
@@ -316,10 +314,8 @@ class ServiceWorkerRegistrationTests: XCTestCase {
                 .then { () -> Void in
                     XCTAssertEqual(reg.unregistered, true)
                     XCTAssertEqual(worker.state, ServiceWorkerInstallState.redundant)
-            }
+                }
         }
         .assertResolves()
-        
-        
     }
 }

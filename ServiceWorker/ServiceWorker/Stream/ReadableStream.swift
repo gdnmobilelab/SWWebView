@@ -37,16 +37,16 @@ import PromiseKit
             self.start!(self.controller!)
         }
     }
-    
+
     public static func fromInputStream(stream: InputStream, bufferSize: Int) -> ReadableStream {
-        
+
         var bufferData = Data(count: bufferSize)
-        
+
         var cancelled = false
-        let start = { (c: ReadableStreamController) in
+        let start = { (_: ReadableStreamController) in
             stream.open()
         }
-        
+
         let pull = { (c: ReadableStreamController) in
             if cancelled == true {
                 return
@@ -55,38 +55,35 @@ import PromiseKit
                 c.close()
                 stream.close()
             }
-            bufferData.withUnsafeMutableBytes { (body:UnsafeMutablePointer<UInt8>) -> Void in
+            bufferData.withUnsafeMutableBytes { (body: UnsafeMutablePointer<UInt8>) -> Void in
                 let length = stream.read(body, maxLength: bufferSize)
-                
+
                 if length > 0 {
                     // We might have read less data than the size of our buffer.
                     let actualReadData = Data(bytesNoCopy: body, count: length, deallocator: Data.Deallocator.none)
                     do {
-                        
+
                         try c.enqueue(actualReadData)
                     } catch {
                         cancelled = true
                         Log.error?("Failed to read stream: \(error)")
                     }
                 }
-                
-                
+
                 if stream.hasBytesAvailable == false {
                     stream.close()
                     c.close()
                 }
             }
         }
-        
-        let cancel = { (c:ReadableStreamController) in
+
+        let cancel = { (c: ReadableStreamController) in
             cancelled = true
             c.close()
         }
-        
+
         return ReadableStream(start: start, pull: pull, cancel: cancel)
-        
     }
-    
 
     internal func enqueue(_ data: Data) throws {
 
@@ -127,20 +124,18 @@ import PromiseKit
                 DispatchQueue.main.async {
                     self.pull?(self.controller!)
                 }
-                
             }
         }
     }
-    
+
     public func read() -> Promise<StreamReadResult> {
-        
-        return Promise { (fulfill: @escaping (StreamReadResult) -> Void, reject: (Error) -> Void) in
+
+        return Promise { (fulfill: @escaping (StreamReadResult) -> Void, _: (Error) -> Void) in
             self.read { pending in
-                
+
                 fulfill(pending)
             }
         }
-        
     }
 
     public func readToEnd(transformer: @escaping (Data) throws -> Void) -> Promise<Void> {

@@ -22,13 +22,12 @@ import PromiseKit
         case Resolved
     }
 
-    
     var state: ExtendableEventState = .Valid
 
     fileprivate var pendingPromises: [JSManagedValue] = []
 
     func waitUntil(_ val: JSValue) {
-        
+
         if self.state == .Invalid {
             val.context.exception = JSValue(newErrorFromMessage: "Invalid state for waitUntil()", in: val.context)
             return

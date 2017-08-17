@@ -35,13 +35,13 @@ import Foundation
             l.urlSession?(session, didBecomeInvalidWithError: error)
         }
     }
-    
+
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
         self.listeners.forEach { l in
             l.urlSession?(session, dataTask: dataTask, didBecome: downloadTask)
         }
     }
-    
+
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         self.listeners.forEach { l in
             l.urlSession(session, downloadTask: downloadTask, didFinishDownloadingTo: location)

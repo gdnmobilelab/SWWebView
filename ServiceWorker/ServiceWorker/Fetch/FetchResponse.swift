@@ -11,7 +11,7 @@ import JavaScriptCore
 import PromiseKit
 
 @objc public class FetchResponse: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate {
-    
+
     internal var fetchOperation: FetchOperation?
     internal var responseCallback: ((URLSession.ResponseDisposition) -> Void)?
 
@@ -23,7 +23,7 @@ import PromiseKit
     /// We use this context when using the JS-type functions, like json() etc
     /// to create JSPromises
     internal var jsContext: JSContext?
-    
+
     public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) {
         self.fetchOperation = fetchOperation
         self.responseCallback = nil
@@ -32,7 +32,7 @@ import PromiseKit
         self.url = url
         self.redirected = redirected
         super.init()
-        
+
         if let str = stream {
             // We can override the underlying stream if we want - this is used
             // in OpaqueResponse to ensure we don't actually provide the response
@@ -42,31 +42,31 @@ import PromiseKit
         } else {
             // Otherwise we create another new stream and hook up the fetch
             // operation.
-            
+
             self.dataStream = ReadableStream(start: { controller in
                 self.streamController = controller
             })
-            
+
             if let op = fetchOperation {
                 op.add(delegate: self)
             }
         }
     }
-    
+
     init(response: HTTPURLResponse, operation: FetchOperation, callback: @escaping (URLSession.ResponseDisposition) -> Void) {
         self.fetchOperation = operation
         self.responseCallback = callback
         self.status = response.statusCode
         self.url = response.url!
         self.redirected = operation.redirected
-        
+
         // Convert to our custom FetchHeaders class
         let headers = FetchHeaders()
         response.allHeaderFields.keys.forEach { key in
-            
+
             let keyString = key as! String
             let value = response.allHeaderFields[key] as! String
-            
+
             if keyString.lowercased() == "content-encoding" {
                 // URLSession automatically decodes content (which we don't actually want it to do)
                 // so the only way to continue to use this is to strip out the Content-Encoding
@@ -79,18 +79,18 @@ import PromiseKit
                 headers.set("Content-Length", String(operation.task!.countOfBytesExpectedToReceive))
                 return
             }
-            
+
             headers.set(keyString, value)
         }
-        
+
         self.headers = headers
-        
+
         super.init()
-        
+
         dataStream = ReadableStream(start: { controller in
             self.streamController = controller
         })
-        
+
         // since this is being created directly from native, we know we want
         // it to be a delegate
         operation.add(delegate: self)
@@ -184,12 +184,11 @@ import PromiseKit
             }
         }
     }
-    
-    
+
     fileprivate var fileDownloadComplete: ((URL) -> Promise<Void>)?
-    
+
     public func fileDownload<T>(withDownload: @escaping (URL) throws -> Promise<T>) -> Promise<T> {
-        
+
         return firstly {
             try self.markBodyUsed()
             if let responseCallback = self.internalResponse.responseCallback {
@@ -199,50 +198,43 @@ import PromiseKit
             } else {
                 throw ErrorMessage("Response callback already set")
             }
-            
+
             return Promise<T> { fulfill, reject in
-                
-                
+
                 self.fileDownloadComplete = { url in
-                    
-                    return firstly {
+
+                    firstly {
                         return try withDownload(url)
                     }
-                        .then { response in
-                            fulfill(response)
+                    .then { response in
+                        fulfill(response)
                     }
-                        .recover { error in
-                            reject(error)
+                    .recover { error in
+                        reject(error)
                     }
-                    
                 }
-            
             }
         }
-       
     }
-    
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+
+    public func urlSession(_: URLSession, downloadTask _: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
 
         // Because this needs to be run synchronously, we freeze the current (background) thread
         // and process our callback promise. Then resume the thread.
-        
+
         let semaphore = DispatchSemaphore(value: 0)
-        
+
         DispatchQueue.global(qos: .background).async {
-            
+
             self.fileDownloadComplete!(location)
                 .always {
                     semaphore.signal()
-            }
-
+                }
         }
-        
+
         semaphore.wait()
-        
-        
     }
-    
+
     internal func data(_ callback: @escaping (Error?, Data?) -> Void) {
 
         var reader: ReadableStream
@@ -437,10 +429,6 @@ import PromiseKit
             }
         }
     }
-
-   
-
-    
 
     deinit {
         if self.fetchOperation?.task!.state == .running {

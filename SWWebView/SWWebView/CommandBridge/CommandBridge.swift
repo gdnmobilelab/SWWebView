@@ -18,12 +18,12 @@ public class CommandBridge {
         "/ServiceWorkerContainer/register": ServiceWorkerContainerCommands.register,
         "/ServiceWorkerContainer/getregistration": ServiceWorkerContainerCommands.getRegistration,
         "/ServiceWorkerContainer/getregistrations": ServiceWorkerContainerCommands.getRegistrations,
-        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister
+        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister,
     ]
-    
+
     static var stopRoutes: [String: (SWURLSchemeTask) -> Void] = [
         "/events": { task in EventStream.remove(for: task) },
-        ]
+    ]
 
     static func processSchemeStart(task: SWURLSchemeTask) {
 
@@ -39,66 +39,57 @@ public class CommandBridge {
 
         _ = matchingRoute!.value(task)
     }
-    
+
     static func processSchemeStop(task: SWURLSchemeTask) {
         let matchingRoute = stopRoutes.first(where: { $0.key == task.request.url!.path })
-        
+
         if matchingRoute == nil {
             Log.error?("Tried to stop a connection that has no route. This should never happen.")
             return
         }
-        
+
         _ = matchingRoute!.value(task)
     }
-    
+
     static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject?) throws -> Promise<Any?>) {
-        
+
         firstly { () -> Promise<Any?> in
-            var jsonBody: AnyObject? = nil
+            var jsonBody: AnyObject?
             if let body = task.request.httpBody {
                 jsonBody = try JSONSerialization.jsonObject(with: body, options: []) as AnyObject
             }
-            
+
             return try asJSON(jsonBody as AnyObject)
         }
-            .then { jsonResponse -> Void in
-                
-                var encodedResponse = "null".data(using: .utf8)!
-                if let response = jsonResponse {
-                    encodedResponse = try JSONSerialization.data(withJSONObject: response, options: [])
-                }
-                
-                
-                task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: nil, headerFields: [
-                    "Content-Type": "application/json"
-                    ])!)
-                
+        .then { jsonResponse -> Void in
+
+            var encodedResponse = "null".data(using: .utf8)!
+            if let response = jsonResponse {
+                encodedResponse = try JSONSerialization.data(withJSONObject: response, options: [])
+            }
+
+            task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: nil, headerFields: [
+                "Content-Type": "application/json",
+            ])!)
+
+            task.didReceive(encodedResponse)
+            task.didFinish()
+        }
+        .catch { error in
+
+            do {
+                let encodedResponse = try JSONSerialization.data(withJSONObject: [
+                    "error": "\(error)",
+                ], options: [])
+
+                task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 500, httpVersion: "1.1", headerFields: nil)!)
                 task.didReceive(encodedResponse)
                 task.didFinish()
-                
-                
+
+            } catch {
+                // In case we can't even report errors correctly.
+                task.didFailWithError(error)
+            }
         }
-            .catch { error in
-                
-                do {
-                    let encodedResponse = try JSONSerialization.data(withJSONObject: [
-                        "error": "\(error)"
-                    ], options: [])
-                    
-                    task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 500, httpVersion: "1.1", headerFields: nil)!)
-                    task.didReceive(encodedResponse)
-                    task.didFinish()
-                    
-                } catch {
-                    // In case we can't even report errors correctly.
-                    task.didFailWithError(error)
-                }
-                
-                
-                
-                
-                
-        }
-        
     }
 }

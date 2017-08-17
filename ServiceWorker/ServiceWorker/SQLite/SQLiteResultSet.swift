@@ -17,10 +17,10 @@ public class SQLiteResultSet {
 
     init(statement: OpaquePointer) {
         self.statement = statement
-      
+
         let numColumns = sqlite3_column_count(self.statement)
         var columnNames: [String] = []
-       
+
         var currentColumn: Int32 = 0
         while currentColumn < numColumns {
             let name = String(cString: sqlite3_column_name(self.statement, currentColumn))
@@ -70,16 +70,16 @@ public class SQLiteResultSet {
         let result = sqlite3_column_int(statement, idx)
         return Int(result)
     }
-    
+
     public func double(_ name: String) throws -> Double? {
         let idx = try idxForColumnName(name)
-        
+
         if self.nullCheck(idx) {
             return nil
         }
-        
+
         let result = sqlite3_column_double(statement, idx)
-        
+
         return result
     }
 
@@ -103,12 +103,12 @@ public class SQLiteResultSet {
         }
         return nil
     }
-    
+
     public func getColumnType(_ name: String) throws -> SQLiteDataType {
-        
+
         let idx = try idxForColumnName(name)
         let colType = sqlite3_column_type(self.statement, idx)
-        
+
         if colType == SQLITE_TEXT {
             return .Text
         } else if colType == SQLITE_INTEGER {
@@ -122,6 +122,5 @@ public class SQLiteResultSet {
         } else {
             throw ErrorMessage("Did not recognise SQLite data type: \(colType)")
         }
- 
     }
 }

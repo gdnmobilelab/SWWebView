@@ -42,10 +42,9 @@ class JSPromise {
     }
 
     deinit {
-            self.context.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
-           self.context.virtualMachine.removeManagedReference(self.reject, withOwner: self)
-            self.context.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
-       
+        self.context.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
+        self.context.virtualMachine.removeManagedReference(self.reject, withOwner: self)
+        self.context.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
     }
 
     public func fulfill(_ value: Any?) {
@@ -67,24 +66,22 @@ class JSPromise {
 
         reject!.value.call(withArguments: [err!])
     }
-    
+
     public static func fromJSValue(_ promise: JSValue) -> Promise<JSManagedValue?> {
-        
+
         return Promise { fulfill, reject in
-            
+
             let reject: @convention(block) (JSValue) -> Void = { err in
                 reject(ErrorMessage(err.objectForKeyedSubscript("message").toString()))
             }
             let fulfill: @convention(block) (JSValue?) -> Void = { result in
                 fulfill(JSManagedValue(value: result))
             }
-            
+
             let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})")!
-            
+
             bindFunc.call(withArguments: [promise, unsafeBitCast(fulfill, to: AnyObject.self), unsafeBitCast(reject, to: AnyObject.self)])
-            
         }
-        
     }
 
     public static func resolve(_ promise: JSValue, _ cb: @escaping (Error?, JSValue?) -> Void) {

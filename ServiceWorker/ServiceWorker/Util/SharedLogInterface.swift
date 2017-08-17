@@ -19,4 +19,3 @@ public struct SharedLogInterface {
 // This var is here for quick access inside the SW code (Log?.info()), but can be set
 // via ServiceWorker.logInterface in external code.
 public var Log = SharedLogInterface(debug: nil, info: nil, warn: nil, error: nil)
-

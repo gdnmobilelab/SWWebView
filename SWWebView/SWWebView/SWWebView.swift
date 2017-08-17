@@ -17,7 +17,7 @@ public class SWWebView: WKWebView {
     public var serviceWorkerPermittedDomains: [String] = []
     var swNavigationDelegate: SWWebViewNavigationDelegate?
 
-//    var containerBridge: WebViewServiceWorkerBridge?
+    //    var containerBridge: WebViewServiceWorkerBridge?
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -58,17 +58,15 @@ public class SWWebView: WKWebView {
 
         configuration.setURLSchemeHandler(SWSchemeHandler(), forURLScheme: SWWebView.ServiceWorkerScheme)
     }
-    
+
     public static var javascriptConfigDictionary: String {
-        get {
-            return """
-            {
-            API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
-            SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
-            GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)"
-            }
-            """
+        return """
+        {
+        API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
+        SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
+        GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)"
         }
+        """
     }
 
     static func wrapScriptInWebviewSettings(_ script: String) -> String {
@@ -85,7 +83,7 @@ public class SWWebView: WKWebView {
         super.init(frame: frame, configuration: configuration)
 
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
-//        self.containerBridge = WebViewServiceWorkerBridge(for: self)
+        //        self.containerBridge = WebViewServiceWorkerBridge(for: self)
         super.navigationDelegate = self.swNavigationDelegate
     }
 

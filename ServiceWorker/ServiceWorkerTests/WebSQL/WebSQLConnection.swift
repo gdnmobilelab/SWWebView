@@ -12,45 +12,43 @@ import PromiseKit
 import SQLite3
 
 class WebSQLConnectionTests: XCTestCase {
-    
+
     let webSQLTestPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("websql", isDirectory: true)
-    
+
     override func setUp() {
         super.setUp()
-     
+
         ServiceWorker.storageURL = self.webSQLTestPath
-        
+
         do {
 
             if FileManager.default.fileExists(atPath: self.webSQLTestPath.path) {
                 try FileManager.default.removeItem(atPath: self.webSQLTestPath.path)
             }
             try FileManager.default.createDirectory(at: self.webSQLTestPath, withIntermediateDirectories: true, attributes: nil)
-           
+
         } catch {
             XCTFail("\(error)")
         }
-        
     }
-    
+
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-    
-    func injectOpenDBIntoWorker(_ sw:ServiceWorker) -> Promise<Void> {
+
+    func injectOpenDBIntoWorker(_ sw: ServiceWorker) -> Promise<Void> {
         return sw.withJSContext { context in
-            
+
             let open = WebSQLDatabase.createOpenDatabaseFunction(for: sw.url)
             context.globalObject.setValue(open, forProperty: "openDatabase")
-            
         }
     }
-    
+
     func testOpeningDatabase() {
-        
+
         let sw = ServiceWorker.createTestWorker()
-        
+
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
@@ -59,18 +57,17 @@ class WebSQLConnectionTests: XCTestCase {
                     delete db;
                     result;
                 """)
-        }
+            }
             .then { jsResult in
                 XCTAssertEqual(jsResult?.toBool(), true)
             }
             .assertResolves()
-        
     }
-    
+
     func testTransactionCallback() {
-        
+
         let sw = ServiceWorker.createTestWorker()
-        
+
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
@@ -92,17 +89,16 @@ class WebSQLConnectionTests: XCTestCase {
             .then { jsResult in
                 return JSPromise.fromJSValue(jsResult!)
             }
-//            .then { promiseResult in
-//                XCTAssertEqual(promiseResult?.toBool(), true)
-//            }
+            //            .then { promiseResult in
+            //                XCTAssertEqual(promiseResult?.toBool(), true)
+            //            }
             .assertResolves()
-
     }
-    
+
     func testResultSetSelect() {
-        
+
         let sw = ServiceWorker.createTestWorker()
-        
+
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
@@ -129,8 +125,5 @@ class WebSQLConnectionTests: XCTestCase {
                 XCTAssertEqual(promiseResult?.value.toString(), "test")
             }
             .assertResolves()
-        
     }
-
-    
 }

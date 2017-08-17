@@ -15,7 +15,7 @@ class SWWebViewTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        CommandBridge.routes["/ping"] = { task, data in
+        CommandBridge.routes["/ping"] = { task, _ in
 
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
                 "Content-Type": "application/json",
@@ -24,31 +24,30 @@ class SWWebViewTests: XCTestCase {
             task.didReceive("{\"pong\":true}".data(using: String.Encoding.utf8)!)
             task.didFinish()
         }
-        
+
         CommandBridge.routes["/ping-with-body"] = { task, data in
 
             var responseText = "no body found"
             do {
                 if data != nil {
                     let obj = try JSONSerialization.jsonObject(with: data!, options: []) as? AnyObject
-                
+
                     responseText = obj!["value"]! as! String
-                
                 }
-                
+
             } catch {
                 fatalError("\(error)")
             }
-            
+
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
                 "Content-Type": "application/json",
-                ])
+            ])
             task.didReceive(response!)
             task.didReceive("{\"pong\":\"\(responseText)\"}".data(using: String.Encoding.utf8)!)
             task.didFinish()
         }
 
-        CommandBridge.routes["/stream"] = { task, data in
+        CommandBridge.routes["/stream"] = { task, _ in
 
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
                 "Content-Type": "text/event-stream",
@@ -56,7 +55,7 @@ class SWWebViewTests: XCTestCase {
             task.didReceive(response!)
             task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
             task.didReceive("test-event2: {\"test\":\"hello2\"}".data(using: String.Encoding.utf8)!)
-            
+
             task.didFinish()
         }
     }
@@ -67,7 +66,7 @@ class SWWebViewTests: XCTestCase {
         CommandBridge.routes.removeValue(forKey: "/ping")
         CommandBridge.routes.removeValue(forKey: "/ping-with-body")
         CommandBridge.routes.removeValue(forKey: "/stream")
-        
+
         super.tearDown()
     }
 
@@ -90,7 +89,7 @@ class SWWebViewTests: XCTestCase {
                 }
 
                 if obj["done"] as? Bool == true {
-//                    self.exp.fulfill()
+                    //                    self.exp.fulfill()
                 } else {
                     let title = obj["test"] as! String
                     let error = obj["error"] as? String

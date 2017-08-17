@@ -16,11 +16,11 @@ import PromiseKit
     public let id: String
     let registration: ServiceWorkerRegistrationProtocol
     let loadContent: (ServiceWorker) -> String
-    
-    public static var storageURL:URL? = nil
 
-    fileprivate var _installState:ServiceWorkerInstallState
-    
+    public static var storageURL: URL?
+
+    fileprivate var _installState: ServiceWorkerInstallState
+
     public var state: ServiceWorkerInstallState {
         get {
             return self._installState
@@ -86,9 +86,8 @@ import PromiseKit
                     // return value doesn't really mean anything here
                     self._executionEnvironment = env
                     return env
-            }
+                }
         }
-        
     }
 
     public func evaluateScript(_ script: String) -> Promise<JSValue?> {

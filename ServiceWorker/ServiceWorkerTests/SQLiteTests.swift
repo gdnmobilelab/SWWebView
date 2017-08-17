@@ -13,25 +13,24 @@ import PromiseKit
 import SQLite3
 
 class SQLiteTests: XCTestCase {
-    
-    let dbPath = URL(fileURLWithPath:NSTemporaryDirectory()).appendingPathComponent("test.db")
-    
+
+    let dbPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test.db")
+
     override func setUp() {
         super.setUp()
 
         do {
-            try SQLiteConnection.inConnection(self.dbPath) {db in
+            try SQLiteConnection.inConnection(self.dbPath) { db in
                 try db.exec(sql: """
-                PRAGMA writable_schema = 1;
-                delete from sqlite_master where type in ('table', 'index', 'trigger');
-                PRAGMA writable_schema = 0;
-                VACUUM;
-            """)
+                    PRAGMA writable_schema = 1;
+                    delete from sqlite_master where type in ('table', 'index', 'trigger');
+                    PRAGMA writable_schema = 0;
+                    VACUUM;
+                """)
             }
         } catch {
             XCTFail("\(error)")
         }
-       
     }
 
     func testOpenDatabaseConnection() {
@@ -39,12 +38,12 @@ class SQLiteTests: XCTestCase {
         var conn: SQLiteConnection?
         XCTAssertNoThrow(conn = try SQLiteConnection(self.dbPath))
         XCTAssert(conn!.open == true)
-        
+
         XCTAssertNoThrow(try conn!.select(sql: "SELECT 1 as num") { resultSet in
             XCTAssertEqual(resultSet.next(), true)
             XCTAssertEqual(try resultSet.int("num"), 1)
         })
-        
+
         XCTAssertNoThrow(try conn!.close())
         XCTAssert(conn!.open == false)
     }
@@ -53,7 +52,7 @@ class SQLiteTests: XCTestCase {
 
         SQLiteConnection.inConnection(self.dbPath) { db -> Promise<Int> in
 
-            return Promise { fulfill, _ in
+            Promise { fulfill, _ in
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     do {
@@ -82,17 +81,17 @@ class SQLiteTests: XCTestCase {
                     "value" TEXT NOT NULL
                 )
             """)
-            
+
             try conn.close()
-            
+
             let fm = FMDatabase(url: self.dbPath)
             fm.open()
             let rs = try fm.executeQuery("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='test-table';", values: nil)
-            
+
             rs.next()
-            
+
             XCTAssert(rs.int(forColumnIndex: 0) == 1)
-            
+
             fm.close()
         }())
     }
@@ -150,7 +149,7 @@ class SQLiteTests: XCTestCase {
             XCTAssert(rs.string(forColumn: "val")! == "there")
             rs.close()
             fm.close()
-            }())
+        }())
     }
 
     func testMultiInsertRollback() {
@@ -193,7 +192,7 @@ class SQLiteTests: XCTestCase {
     }
 
     func testSelect() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -225,7 +224,7 @@ class SQLiteTests: XCTestCase {
     }
 
     func testSelectOfOptionalTypes() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -245,7 +244,7 @@ class SQLiteTests: XCTestCase {
     }
 
     func testInsert() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -259,11 +258,10 @@ class SQLiteTests: XCTestCase {
             rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["there"])
             XCTAssert(rowId == 2)
         }())
-        
     }
 
     func testBlobReadStream() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -309,7 +307,7 @@ class SQLiteTests: XCTestCase {
     }
 
     func testBlobWriteStream() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -346,7 +344,7 @@ class SQLiteTests: XCTestCase {
     }
 
     func testUpdateMonitor() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
@@ -383,97 +381,90 @@ class SQLiteTests: XCTestCase {
             monitor.removeListener(listenerID)
         }())
     }
-    
+
     func testRowChangesNumber() {
-        
+
         XCTAssertNoThrow(try {
-            
+
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
                 CREATE TABLE "testtable" (
                     "val" TEXT NOT NULL
                 );
             """)
-            
+
             XCTAssertNoThrow(_ = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: [100]))
-            
+
             XCTAssertEqual(conn.lastNumberChanges, 1)
-            
-            XCTAssertNoThrow(_ = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?),(?)", values: [100,200]))
-            
+
+            XCTAssertNoThrow(_ = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?),(?)", values: [100, 200]))
+
             XCTAssertEqual(conn.lastNumberChanges, 2)
-            
+
         }())
-        
     }
-    
-    
+
     func testInsertedRowID() {
-        
+
         XCTAssertNoThrow(try {
-            
+
             let conn = try SQLiteConnection(self.dbPath)
             try conn.exec(sql: """
                 CREATE TABLE "testtable" (
                     "val" TEXT NOT NULL
                 );
             """)
-            
+
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: [100])
-            
-            
+
             try conn.select(sql: "SELECT val FROM testtable WHERE rowid = ?", values: [rowId]) { resultSet in
                 XCTAssertEqual(resultSet.next(), true)
                 XCTAssertEqual(try resultSet.int("val"), 100)
             }
-            
-            
+
         }())
-        
     }
-    
+
     func testDataTypeDetection() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
-            
+
             try conn.select(sql: "SELECT 'hello' as t") { resultSet in
                 _ = resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Text)
             }
-            
+
             try conn.select(sql: "SELECT 1 as t") { resultSet in
                 _ = resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Int)
             }
-            
+
             try conn.select(sql: "SELECT 1.4 as t") { resultSet in
                 _ = resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Float)
             }
-            
-            
+
         }())
-        
     }
-    
+
     func testSimultaneousOperationsShouldWork() {
-        
+
         XCTAssertNoThrow(try {
             let conn = try SQLiteConnection(self.dbPath)
-            
+
             try conn.exec(sql: """
                 CREATE TABLE "testtable" (
                     "val" TEXT NOT NULL
                 );
             """)
-            
+
             try conn.close()
-            
+
             var keepInserting = true
-            var errorFound:Error? = nil
+            var errorFound: Error?
             DispatchQueue.global(qos: DispatchQoS.QoSClass.userInteractive).async {
-                
+
                 do {
                     let db = try SQLiteConnection(self.dbPath)
                     try db.update(sql: "DELETE FROM testtable", values: [])
@@ -484,23 +475,19 @@ class SQLiteTests: XCTestCase {
                     errorFound = error
                 }
             }
-            
+
             let db = try SQLiteConnection(self.dbPath)
             var i = 0
             while i < 10000 && keepInserting == true {
                 //                    NSLog("RUN INSERT")
                 _ = try db.insert(sql: "INSERT INTO testtable (val) VALUES (1)", values: [])
                 i = i + 1
-                
             }
             if errorFound != nil {
                 throw errorFound!
             }
             NSLog("\(i) rows")
-            
-            
-            }())
-        
-        
+
+        }())
     }
 }

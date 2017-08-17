@@ -18,12 +18,12 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
     }
 
     func isServiceWorkerPermittedURL(_ url: URL) -> Bool {
-        
+
         var checkFor = url.host!
         if url.port != nil && url.port != 80 {
             checkFor += ":" + String(url.port!)
         }
-        
+
         return self.targetWebview.serviceWorkerPermittedDomains.contains(checkFor)
     }
 

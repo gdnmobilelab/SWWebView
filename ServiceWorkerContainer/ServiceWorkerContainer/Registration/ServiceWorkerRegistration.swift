@@ -122,18 +122,18 @@ import ServiceWorker
 
         return existingHash == newHash
     }
-    
+
     fileprivate func insertWorker(fromResponse res: FetchResponseProtocol, intoDatabase db: SQLiteConnection) -> Promise<(String, Data)> {
 
         // We can't rely on the Content-Length header as some places don't send one. But SQLite requires
         // you to establish a blob with length. So instead, we are streaming the download to disk, then
         // manually streaming into the DB when we have the length available.
-        
+
         return res.internalResponse.fileDownload(withDownload: { url in
-            
+
             let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
             let size = fileAttributes[.size] as! Int64
-            
+
             let newWorkerID = UUID().uuidString
             let rowID = try db.insert(sql: """
                 INSERT INTO workers
@@ -148,20 +148,19 @@ import ServiceWorker
                 ServiceWorkerInstallState.downloading.rawValue,
                 self.scope,
             ])
-            
+
             let inputStream = InputStream(url: url)!
             let writeStream = db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
-            
+
             return writeStream.pipeReadableStream(stream: ReadableStream.fromInputStream(stream: inputStream, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
                 .then { hash -> (String, Data) in
-                    
+
                     try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, newWorkerID])
-                    
+
                     return (newWorkerID, hash)
-            }
-        
+                }
+
         })
-    
     }
 
     func processHTTPResponse(_ res: FetchResponseProtocol, byteCompareWorker: ServiceWorker? = nil) -> Promise<Void> {
@@ -298,7 +297,7 @@ import ServiceWorker
 
     fileprivate static let activeInstances = NSHashTable<ServiceWorkerRegistration>.weakObjects()
 
-    public static func get(scope: URL, id:String? = nil) throws -> ServiceWorkerRegistration? {
+    public static func get(scope: URL, id: String? = nil) throws -> ServiceWorkerRegistration? {
 
         let active = activeInstances.allObjects.filter { $0.scope == scope }.first
 
@@ -307,19 +306,18 @@ import ServiceWorker
         }
 
         return try CoreDatabase.inConnection { connection in
-            
+
             var query = "SELECT * FROM registrations WHERE scope = ?"
             var values: [Any] = [scope.absoluteString]
-            
+
             if let specificId = id {
                 // Sometimes (usually when interfacing with the web view) we want to
                 // make sure we are fetching a specific registration, which might have
                 // been deleted and replaced
-                
+
                 query += " AND id = ?"
                 values.append(specificId)
             }
-            
 
             return try connection.select(sql: query, values: values) { rs -> ServiceWorkerRegistration? in
 
@@ -371,15 +369,15 @@ import ServiceWorker
             return try self.create(scope: scope)
         }
     }
-    
+
     public var unregistered = false
-    
+
     public func unregister() -> Promise<Void> {
-        
+
         return firstly {
-        
+
             let allWorkers = [self.active, self.waiting, self.installing, self.redundant]
-            
+
             try CoreDatabase.inConnection { db in
                 try allWorkers.forEach { worker in
                     worker?.destroy()
@@ -387,19 +385,15 @@ import ServiceWorker
                         try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
                     }
                 }
-                
-                try db.update(sql: "DELETE FROM registrations WHERE scope = ?", values:[self.scope])
-                
+
+                try db.update(sql: "DELETE FROM registrations WHERE scope = ?", values: [self.scope])
             }
-            
+
             self.unregistered = true
-            
+
             GlobalEventLog.notifyChange(self)
-            
+
             return Promise(value: ())
-            
         }
-        
-        
     }
 }

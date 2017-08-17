@@ -21,14 +21,14 @@ import PromiseKit
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
 
         super.init()
-        self.jsContext.exceptionHandler = { [unowned self] (context: JSContext?, error: JSValue?) in
+        self.jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
             // evaluating, we need to check whether there is a new exception.
             // unowned is *required* to avoid circular references that mean this never gets garbage
             // collected
             self.currentException = error
         }
-        
+
         // add setTimeout etc to our context
         _ = TimeoutManager(for: self)
     }

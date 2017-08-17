@@ -41,7 +41,6 @@ class ImportScriptsTests: XCTestCase {
         worker.evaluateScript("importScripts('import.js'); test")
             .then { returnVal -> Void in
                 XCTAssertEqual(returnVal!.toInt32(), 100)
-
             }
             .assertResolves()
     }
@@ -99,9 +98,7 @@ class ImportScriptsTests: XCTestCase {
             }
             .then { returnVal -> Void in
                 XCTAssertEqual(returnVal!.toInt32(), 200)
-
             }
-        .assertResolves()
-
+            .assertResolves()
     }
 }

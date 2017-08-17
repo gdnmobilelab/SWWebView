@@ -15,7 +15,7 @@ class ServiceWorkerContainerTests: XCTestCase {
     override func setUp() {
         super.setUp()
         CoreDatabase.clearForTests()
-        
+
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
@@ -32,9 +32,9 @@ class ServiceWorkerContainerTests: XCTestCase {
 
         XCTAssert(testContainer.containerURL.absoluteString == "https://www.example.com")
     }
-    
+
     func testGetRegistrations() {
-        
+
         firstly { () -> Promise<Void> in
             let reg1 = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1")!)
             let reg2 = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope2")!)
@@ -44,12 +44,11 @@ class ServiceWorkerContainerTests: XCTestCase {
                     XCTAssertEqual(registrations.count, 2)
                     XCTAssertEqual(registrations[0], reg1)
                     XCTAssertEqual(registrations[1], reg2)
+                }
         }
-            }
-            .assertResolves()
-    
+        .assertResolves()
     }
-    
+
     func testGetRegistration() {
         firstly { () -> Promise<Void> in
             _ = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1/")!)
@@ -59,8 +58,8 @@ class ServiceWorkerContainerTests: XCTestCase {
             return container.getRegistration()
                 .then { registration -> Void in
                     XCTAssertEqual(registration, reg1)
-            }
-            }
-            .assertResolves()
+                }
+        }
+        .assertResolves()
     }
 }

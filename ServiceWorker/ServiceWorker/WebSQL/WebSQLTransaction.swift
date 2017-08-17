@@ -9,22 +9,22 @@
 import Foundation
 import JavaScriptCore
 
-@objc protocol WebSQLTransactionExports : JSExport {
-    func executeSql(_: String, _: [JSValue], _:JSValue, _:JSValue)
+@objc protocol WebSQLTransactionExports: JSExport {
+    func executeSql(_: String, _: [JSValue], _: JSValue, _: JSValue)
 }
 
 @objc class WebSQLTransaction: NSObject, WebSQLTransactionExports {
-    
-    unowned let connection:SQLiteConnection
-    
+
+    unowned let connection: SQLiteConnection
+
     init(in connection: SQLiteConnection, withCallback: JSValue, completeCallback: JSValue) {
         self.connection = connection
         super.init()
-        
+
         // The WebSQL API seems kind of confusing - async seems kind of pointless because
         // the withCallback callback doesn't have a callback itself -  it is executed
         // synchronously. But hey, we'll implement it.
-        
+
         do {
             try self.connection.beginTransaction()
 
@@ -42,18 +42,17 @@ import JavaScriptCore
             let jsError = JSValue(newErrorFromMessage: "\(error)", in: completeCallback.context)!
             completeCallback.call(withArguments: [jsError])
         }
-        
     }
-    
-    func executeSql(_ sqlStatement:String, _ arguments: [JSValue], _ callback: JSValue, _ errorCallback:JSValue) {
-        
-        let asObjects:[Any] = arguments.map { jsVal in
+
+    func executeSql(_ sqlStatement: String, _ arguments: [JSValue], _ callback: JSValue, _ errorCallback: JSValue) {
+
+        let asObjects: [Any] = arguments.map { jsVal in
             return jsVal.toObject()
         }
-        
+
         do {
             let webResultSet = try self.connection.select(sql: sqlStatement, values: asObjects, { res in
-                return try WebSQLResultSet(resultSet: res, connection: self.connection)
+                try WebSQLResultSet(resultSet: res, connection: self.connection)
             })
             callback.call(withArguments: [webResultSet])
         } catch {
@@ -61,9 +60,5 @@ import JavaScriptCore
             let err = JSValue(newErrorFromMessage: "\(error)", in: errorCallback.context)!
             errorCallback.call(withArguments: [err])
         }
-        
-        
     }
-    
-    
 }

@@ -143,25 +143,23 @@ class FetchResponseTests: XCTestCase {
 
         FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res -> Promise<Void> in
-         
+
                 var clone: FetchResponseProtocol?
                 XCTAssertNoThrow(clone = try res.clone())
-                
+
                 let cloneText = clone!.text()
                     .then { text in
-                         XCTAssertEqual(text, "THIS IS TEST CONTENT")
-                }
-                
+                        XCTAssertEqual(text, "THIS IS TEST CONTENT")
+                    }
+
                 let originalText = res.text()
                     .then { text in
                         XCTAssertEqual(text, "THIS IS TEST CONTENT")
-                }
-                
+                    }
+
                 return when(fulfilled: [cloneText, originalText])
-                
-        }
-        .assertResolves()
-       
+            }
+            .assertResolves()
     }
 
     func testArrayBufferResponse() {
@@ -207,29 +205,29 @@ class FetchResponseTests: XCTestCase {
 
         wait(for: [expectResponse], timeout: 100)
     }
-    
+
     func testResponseToFileDownload() {
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
             res!.statusCode = 200
             return res
         }
-        
+
         FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res in
-                return res.internalResponse.fileDownload(withDownload: { localURL in
-                    
+                res.internalResponse.fileDownload(withDownload: { localURL in
+
                     // test that we can use async promises here
-                    
-                    return Promise<Void> { (fulfill: @escaping () -> Void, reject: (Error) -> Void) in
+
+                    Promise<Void> { (fulfill: @escaping () -> Void, _: (Error) -> Void) in
                         DispatchQueue.global(qos: .background).async {
-                            
+
                             fulfill()
                         }
                     }
-                        .then { () -> String in
-                            
-                            return try String(contentsOfFile: localURL.path)
+                    .then { () -> String in
+
+                        return try String(contentsOfFile: localURL.path)
                     }
                 })
             }
@@ -238,20 +236,20 @@ class FetchResponseTests: XCTestCase {
             }
             .assertResolves()
     }
-    
+
     func testResponseToFileDownloadHandlesErrors() {
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
             res!.statusCode = 200
             return res
         }
-        
+
         FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res in
-                return res.internalResponse.fileDownload(withDownload: { localURL in
-                    
+                res.internalResponse.fileDownload(withDownload: { _ in
+
                     throw ErrorMessage("Oh no")
-                    
+
                 })
             }
             .recover { error in

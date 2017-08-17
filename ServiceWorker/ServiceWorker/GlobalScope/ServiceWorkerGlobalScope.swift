@@ -54,53 +54,51 @@ import JavaScriptCore
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
-        
 
         self.applyListenersTo(jsObject: self.context.globalObject)
     }
-    
+
     fileprivate func loadIndexedDBShim() throws {
-        
+
         let file = Bundle(for: ServiceWorkerGlobalScope.self).bundleURL
             .appendingPathComponent("js-dist", isDirectory: true)
             .appendingPathComponent("indexeddbshim.js")
-        
+
         let contents = try String(contentsOf: file)
-        
+
         let targetObj = JSValue(newObjectIn: self.context)!
-        
+
         let shimFunction = self.context.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
-        
+
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
         // "self.indexedDB")
-        
-        let config: [String:Any] = [
+
+        let config: [String: Any] = [
             "DEBUG": true,
             "win": [
-                "openDatabase": WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url)
-            ]
+                "openDatabase": WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url),
+            ],
         ]
-        
+
         // Documentation for the function we're calling is under setGlobalVars here:
         // https://github.com/axemclion/IndexedDBShim
-        
+
         shimFunction.call(withArguments: [targetObj, config])
-        
+
         let keys = self.context.objectForKeyedSubscript("Object")
             .objectForKeyedSubscript("getOwnPropertyNames")
             .call(withArguments: [targetObj])
             .toArray() as! [String]
-        
+
         keys.forEach { key in
-            
+
             if key == "shimIndexedDB" {
                 // The shim makes its own custom key that we don't need to replicate
                 return
             }
-            
+
             self.context.globalObject.setValue(targetObj.objectForKeyedSubscript(key), forProperty: key)
-            
         }
     }
 

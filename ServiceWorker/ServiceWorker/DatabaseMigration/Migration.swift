@@ -39,9 +39,9 @@ public class DatabaseMigration {
     }
 
     public static func check(dbPath: URL, migrationsPath: URL) throws -> Int {
-        
+
         return try SQLiteConnection.inConnection(dbPath) { connection in
-            
+
             try connection.inTransaction {
 
                 try self.ensureMigrationTableCreated(connection)

@@ -9,33 +9,33 @@
 import Foundation
 import JavaScriptCore
 
-@objc protocol WebSQLResultSetProtocol : JSExport {
-    var insertId:Int64 {get}
-    var rowsAffected:Int {get}
-    var rows: [Any] {get}
+@objc protocol WebSQLResultSetProtocol: JSExport {
+    var insertId: Int64 { get }
+    var rowsAffected: Int { get }
+    var rows: [Any] { get }
 }
 
-@objc class WebSQLResultSet : NSObject, WebSQLResultSetProtocol {
-    
-    let insertId:Int64
+@objc class WebSQLResultSet: NSObject, WebSQLResultSetProtocol {
+
+    let insertId: Int64
     let rowsAffected: Int
     var rows: [Any]
-    
+
     init(resultSet: SQLiteResultSet, connection: SQLiteConnection) throws {
-        
+
         self.insertId = connection.lastInsertRowId
         self.rowsAffected = connection.lastNumberChanges
-        
+
         self.rows = []
-        
+
         while resultSet.next() {
-            
+
             var row = [String: Any?]()
-            
+
             try resultSet.columnNames.forEach { name in
-                
+
                 let colType = try resultSet.getColumnType(name)
-                
+
                 if colType == .Text {
                     row[name] = try resultSet.string(name)
                 } else if colType == .Int {
@@ -49,14 +49,9 @@ import JavaScriptCore
                     // binary blobs
                     row[name] = try resultSet.string(name)
                 }
-                
             }
-            
-            rows.append(row)
-            
-        }
-        
-    }
-    
-}
 
+            self.rows.append(row)
+        }
+    }
+}
