@@ -18,18 +18,37 @@ class SQLiteTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        
+        do {
+            
+            if try FileManager.default.fileExists(atPath: self.dbPath.path) {
+                try FileManager.default.removeItem(at: self.dbPath)
+            }
+
+        } catch {
+            fatalError("\(error)")
+        }
+    }
+    
+    override func tearDown() {
+        super.tearDown()
 
         do {
-            try SQLiteConnection.inConnection(self.dbPath) { db in
-                try db.exec(sql: """
-                    PRAGMA writable_schema = 1;
-                    delete from sqlite_master where type in ('table', 'index', 'trigger');
-                    PRAGMA writable_schema = 0;
-                    VACUUM;
-                """)
+            
+            if try FileManager.default.fileExists(atPath: self.dbPath.path) {
+                try FileManager.default.removeItem(at: self.dbPath)
             }
+            
+//            try SQLiteConnection.inConnection(self.dbPath) { db in
+//                try db.exec(sql: """
+//                    PRAGMA writable_schema = 1;
+//                    delete from sqlite_master where type in ('table', 'index', 'trigger');
+//                    PRAGMA writable_schema = 0;
+//                    VACUUM;
+//                """)
+//            }
         } catch {
-            XCTFail("\(error)")
+            fatalError("\(error)")
         }
     }
 
@@ -220,6 +239,7 @@ class SQLiteTests: XCTestCase {
             }
 
             XCTAssert(returnedValue == 2)
+            try conn.close()
         }())
     }
 
@@ -240,6 +260,7 @@ class SQLiteTests: XCTestCase {
                 XCTAssert(rs.next() == true)
                 XCTAssert(try rs.string("val") == nil)
             }
+            try conn.close()
         }())
     }
 
@@ -257,6 +278,7 @@ class SQLiteTests: XCTestCase {
             XCTAssert(rowId == 1)
             rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["there"])
             XCTAssert(rowId == 2)
+            try conn.close()
         }())
     }
 
@@ -303,6 +325,7 @@ class SQLiteTests: XCTestCase {
             XCTAssert(stream.hasBytesAvailable == false)
 
             stream.close()
+            try conn.close()
         }())
     }
 
@@ -340,6 +363,7 @@ class SQLiteTests: XCTestCase {
                 let asStr = String(data: data, encoding: String.Encoding.utf8)
                 XCTAssert(asStr! == "abcdefghijk")
             }
+            try conn.close()
         }())
     }
 
@@ -379,6 +403,7 @@ class SQLiteTests: XCTestCase {
             try conn.exec(sql: "UPDATE testtable SET val = 'new-test'")
             XCTAssert(updateListenerFired == true)
             monitor.removeListener(listenerID)
+            try conn.close()
         }())
     }
 
@@ -400,7 +425,7 @@ class SQLiteTests: XCTestCase {
             XCTAssertNoThrow(_ = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?),(?)", values: [100, 200]))
 
             XCTAssertEqual(conn.lastNumberChanges, 2)
-
+            try conn.close()
         }())
     }
 
@@ -421,6 +446,8 @@ class SQLiteTests: XCTestCase {
                 XCTAssertEqual(resultSet.next(), true)
                 XCTAssertEqual(try resultSet.int("val"), 100)
             }
+            
+            try conn.close()
 
         }())
     }
@@ -444,6 +471,8 @@ class SQLiteTests: XCTestCase {
                 _ = resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Float)
             }
+            
+            try conn.close()
 
         }())
     }
@@ -487,6 +516,7 @@ class SQLiteTests: XCTestCase {
                 throw errorFound!
             }
             NSLog("\(i) rows")
+            try db.close()
 
         }())
     }
