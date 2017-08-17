@@ -18,6 +18,8 @@ class SQLiteTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
+        sqlite3_shutdown()
+        sqlite3_initialize()
         do {
             if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(atPath: self.dbPath.path)
@@ -40,6 +42,30 @@ class SQLiteTests: XCTestCase {
         
         XCTAssertNoThrow(try conn!.close())
         XCTAssert(conn!.open == false)
+    }
+
+    func testOpenDatabaseConnectionPromise() {
+
+        SQLiteConnection.inConnection(self.dbPath) { db -> Promise<Int> in
+
+            return Promise { fulfill, _ in
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    do {
+                        try db.select(sql: "SELECT 1 as num") { resultSet in
+                            XCTAssertEqual(resultSet.next(), true)
+                            fulfill(try resultSet.int("num")!)
+                        }
+                    } catch {
+                        XCTFail()
+                    }
+                }
+            }
+
+        }.then { intVal -> Void in
+            XCTAssertEqual(intVal, 1)
+        }
+        .assertResolves()
     }
 
     func testExecQuery() {
@@ -92,46 +118,74 @@ class SQLiteTests: XCTestCase {
         }())
     }
 
-    
+    func testMultiInsertQuery() {
 
-//    func testMultiInsertRollback() {
-//
-//        XCTAssertNoThrow(try {
-//
-//            XCTAssertThrowsError(try SQLiteConnection.inConnection(self.dbPath, { conn in
-//
-//                try conn.exec(sql: """
-//                    CREATE TABLE "testtable" (
-//                        "val" TEXT NOT NULL
-//                    )
-//                """)
-//
-////                try conn.inTransaction {
-//
-//                    // Don't support booleans
-//
-//                    try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], [true]])
-////                }
-//
-//            }))
-//
-//            let fm = FMDatabase(url: self.dbPath)
-//            fm.open()
-//            let rs = try fm.executeQuery("SELECT * from testtable;", values: nil)
-//
-//            let hasRow = rs.next()
-//
-//            //            if hasRow == true {
-//            //                let val = rs.string(forColumn: "val")!
-//            //                NSLog(val)
-//            //            }
-//
-//            XCTAssert(hasRow == false)
-//            rs.close()
-//
-//            fm.close()
-//        }())
-//    }
+        XCTAssertNoThrow(try {
+            let conn = try SQLiteConnection(self.dbPath)
+            try conn.exec(sql: """
+                CREATE TABLE "testtable" (
+                    "val" TEXT NOT NULL
+                )
+            """)
+
+            try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], ["there"]])
+
+            try conn.close()
+
+            let fm = FMDatabase(url: self.dbPath)
+            fm.open()
+            let rs = try fm.executeQuery("SELECT * from testtable;", values: nil)
+
+            XCTAssert(rs.next() == true)
+
+            XCTAssert(rs.string(forColumn: "val")! == "hello")
+
+            XCTAssert(rs.next() == true)
+
+            XCTAssert(rs.string(forColumn: "val")! == "there")
+            rs.close()
+            fm.close()
+            }())
+    }
+
+    func testMultiInsertRollback() {
+
+        XCTAssertNoThrow(try {
+
+            XCTAssertThrowsError(try SQLiteConnection.inConnection(self.dbPath, { conn in
+
+                try conn.exec(sql: """
+                    CREATE TABLE "testtable" (
+                        "val" TEXT NOT NULL
+                    )
+                """)
+
+                try conn.inTransaction {
+
+                    // Don't support booleans
+
+                    try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], [true]])
+                }
+
+            }))
+
+            let fm = FMDatabase(url: self.dbPath)
+            fm.open()
+            let rs = try fm.executeQuery("SELECT * from testtable;", values: nil)
+
+            let hasRow = rs.next()
+
+            //            if hasRow == true {
+            //                let val = rs.string(forColumn: "val")!
+            //                NSLog(val)
+            //            }
+
+            XCTAssert(hasRow == false)
+            rs.close()
+
+            fm.close()
+        }())
+    }
 
     func testSelect() {
         
@@ -145,11 +199,8 @@ class SQLiteTests: XCTestCase {
                 );
             """)
 
-            _ = try conn.insert(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: ["hello", 1, "blobtest"])
-            
-            _ = try conn.insert(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: ["there", 2, "blobtest2"])
-            
-            
+            try conn.multiUpdate(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: [["hello", 1, "blobtest"], ["there", 2, "blobtest2"]])
+
             let returnedValue = try conn.select(sql: "SELECT * FROM testtable", values: []) { rs -> Int in
 
                 XCTAssert(rs.next() == true)
@@ -400,6 +451,4 @@ class SQLiteTests: XCTestCase {
         }())
         
     }
-    
-    
 }

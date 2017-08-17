@@ -57,10 +57,7 @@ public class ServiceWorkerContainer : Hashable {
     public func getRegistrations() -> Promise<[ServiceWorkerRegistration]> {
         return CoreDatabase.inConnection { db in
             
-            var likeComponents = URLComponents(url: self.containerURL, resolvingAgainstBaseURL: true)!
-            likeComponents.path = "/"
-            
-            let like = likeComponents.url!.absoluteString + "%"
+            let like = "\(self.containerURL.scheme!)://\(self.containerURL.host!)/%"
             
             return try db.select(sql: "SELECT scope FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> Promise<[URL]> in
                 
@@ -86,7 +83,6 @@ public class ServiceWorkerContainer : Hashable {
     public func getRegistration(_ scope:URL? = nil) -> Promise<ServiceWorkerRegistration?> {
         
         let scopeToCheck = scope ?? self.containerURL
-        let abs = scopeToCheck.absoluteString
         
         return CoreDatabase.inConnection { db in
             

@@ -1,12 +1,8 @@
 import EventEmitter from "tiny-emitter";
-import {
-    ServiceWorkerRegistrationAPIResponse,
-    ServiceWorkerAPIResponse
-} from "../responses/api-responses";
+import { ServiceWorkerRegistrationAPIResponse } from "../responses/api-responses";
 import { apiRequest } from "../util/api-request";
 import { BooleanSuccessResponse } from "../responses/api-responses";
 import { eventStream } from "../event-stream";
-import { ServiceWorkerImplementation } from "./service-worker";
 
 const existingRegistrations: ServiceWorkerRegistrationImplementation[] = [];
 
@@ -23,21 +19,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
 
     constructor(opts: ServiceWorkerRegistrationAPIResponse) {
         super();
-        console.log(opts);
         this.scope = opts.scope;
-        this.id = opts.id;
-        this.active = this.createWorkerOrSetNull(opts.active);
-        this.installing = this.createWorkerOrSetNull(opts.installing);
-        this.waiting = this.createWorkerOrSetNull(opts.waiting);
-    }
-
-    createWorkerOrSetNull(
-        workerResponse?: ServiceWorkerAPIResponse
-    ): ServiceWorker | null {
-        if (!workerResponse) {
-            return null;
-        }
-        return ServiceWorkerImplementation.getOrCreate(workerResponse);
     }
 
     static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {

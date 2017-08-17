@@ -63,12 +63,11 @@ class Migrate: XCTestCase {
 
         XCTAssertEqual(version, 2)
 
-        XCTAssertNoThrow(try {
-            let db = try SQLiteConnection(dbPath)
+        XCTAssertNoThrow(try SQLiteConnection.inConnection(dbPath) { db in
             try db.select(sql: "SELECT val FROM test") { rs in
                 XCTAssertEqual(rs.next(), true)
                 XCTAssertEqual(try rs.string("val"), "success")
             }
-        }())
+        })
     }
 }

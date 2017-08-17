@@ -16,12 +16,11 @@ class ServiceWorkerRegistrationCommands {
     static func unregister(task: SWURLSchemeTask) {
         CommandBridge.processAsJSON(task: task) { json in
             
-            let registrationScope = URL(string:json!["scope"] as! String)!
-            let correctedScope = SWURLConverter.toHTTP(registrationScope)
-            
+            let registrationScope = json!["scope"] as! String
             let registrationID = json!["id"] as! String
+            let scopeAsURL = URL(string: registrationScope)!
             
-            let reg = try ServiceWorkerRegistration.get(scope: correctedScope, id: registrationID)
+            let reg = try ServiceWorkerRegistration.get(scope: scopeAsURL, id: registrationID)
             
             if reg == nil {
                 throw ErrorMessage("Registration does not exist any more")

@@ -40,15 +40,17 @@ public class CommandBridge {
         _ = matchingRoute!.value(task)
     }
     
-    static func processSchemeStop(task: SWURLSchemeTask) {
+    static func processSchemeStop(task: WKURLSchemeTask) {
         let matchingRoute = stopRoutes.first(where: { $0.key == task.request.url!.path })
-        let path = task.request.url!.path
+        
         if matchingRoute == nil {
             Log.error?("Tried to stop a connection that has no route. This should never happen.")
             return
         }
         
-        _ = matchingRoute!.value(task)
+        let modifiedTask = SWURLSchemeTask(underlyingTask: task)
+        
+        _ = matchingRoute!.value(modifiedTask)
     }
     
     static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject?) throws -> Promise<Any?>) {

@@ -26,7 +26,7 @@ class TimeoutManager {
     /// corresponding JS function.
     var cancelledTimeouts = Set<Int>()
 
-    unowned let executionEnvironment: ServiceWorkerExecutionEnvironment
+    let executionEnvironment: ServiceWorkerExecutionEnvironment
 
     init(for executionEnvironment: ServiceWorkerExecutionEnvironment) {
         self.executionEnvironment = executionEnvironment
@@ -36,10 +36,10 @@ class TimeoutManager {
         let setTimeout = unsafeBitCast((self.setTimeoutFunction as @convention(block) (JSValue, JSValue) -> Int), to: AnyObject.self)
         let setInterval = unsafeBitCast((self.setIntervalFunction as @convention(block) (JSValue, JSValue) -> Int), to: AnyObject.self)
 
-        executionEnvironment.jsContext!.globalObject.setValue(clearInterval, forProperty: "clearInterval")
-        executionEnvironment.jsContext!.globalObject.setValue(clearTimeout, forProperty: "clearTimeout")
-        executionEnvironment.jsContext!.globalObject.setValue(setTimeout, forProperty: "setTimeout")
-        executionEnvironment.jsContext!.globalObject.setValue(setInterval, forProperty: "setInterval")
+        executionEnvironment.jsContext.globalObject.setValue(clearInterval, forProperty: "clearInterval")
+        executionEnvironment.jsContext.globalObject.setValue(clearTimeout, forProperty: "clearTimeout")
+        executionEnvironment.jsContext.globalObject.setValue(setTimeout, forProperty: "setTimeout")
+        executionEnvironment.jsContext.globalObject.setValue(setInterval, forProperty: "setInterval")
     }
 
     fileprivate func setIntervalFunction(_ callback: JSValue, interval: JSValue) -> Int {

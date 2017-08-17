@@ -36,18 +36,6 @@ class ServiceWorkerRegistrationTests: XCTestCase {
         // An attempt to create a registration when one already exists should fail
         XCTAssertThrowsError(try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com")!))
     }
-    
-    func testCreateBlankRegistrationAndGetByID() {
-        
-        var reg: ServiceWorkerRegistration?
-        let scopeURL = URL(string: "https://www.example.com")!
-        XCTAssertNoThrow( reg = try ServiceWorkerRegistration.create(scope: scopeURL))
-        
-        var test: ServiceWorkerRegistration?
-        XCTAssertNoThrow( test = try ServiceWorkerRegistration.get(scope: scopeURL, id: reg!.id))
-        XCTAssertEqual(test, reg)
-    }
-
 
     func testFailRegistrationOutOfScope() {
 

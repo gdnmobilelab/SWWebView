@@ -6,34 +6,21 @@ describe("Service Worker Container", () => {
             .getRegistrations()
             .then((regs: ServiceWorkerRegistration[]) => {
                 let mapped = regs.map(r => r.unregister());
-                console.log(regs);
-                console.log("UNREGISTER");
+
                 return Promise.all(mapped);
             });
     });
 
-    it.only(
-        "Should register with default scope as JS file directory",
-        function() {
-            this.timeout(10000);
-            console.log("RUN");
-            return navigator.serviceWorker
-                .register("/fixtures/test-register-worker.js")
-                .then(reg => {
-                    assert.equal(
-                        reg.scope,
-                        new URL("/fixtures/", window.location.href).href
-                    );
-                    console.log("NOW DO GET REG");
-                    return navigator.serviceWorker
-                        .getRegistration("/fixtures/")
-                        .then(reg2 => {
-                            console.log("regs", reg, reg2);
-                            assert.equal(reg, reg2);
-                        });
-                });
-        }
-    );
+    it("Should register with default scope as JS file directory", () => {
+        return navigator.serviceWorker
+            .register("/fixtures/test-register-worker.js")
+            .then(reg => {
+                assert.equal(
+                    reg.scope,
+                    new URL("/fixtures/", window.location.href).href
+                );
+            });
+    });
 
     it("Should register with specified scope", () => {
         return navigator.serviceWorker

@@ -24,18 +24,6 @@ class ServiceWorkerTests: XCTestCase {
             }
             .assertResolves()
     }
-    
-    func testShouldDeallocate() {
-        
-        var testArray = [
-            ServiceWorker.createTestWorker()
-        ]
-        
-        testArray[0].evaluateScript("'hello'")
-        
-        testArray.remove(at: 0)
-        
-    }
 
     func testLoadContentDirectly() {
 

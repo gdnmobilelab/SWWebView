@@ -111,7 +111,7 @@ import ServiceWorker
     }
 
     fileprivate func isWorkerByteIdentical(existingWorkerID: String, newHash: Data, db: SQLiteConnection) throws -> Bool {
-        let existingHash = try db.select(sql: "SELECT content_hash FROM workers WHERE worker_id = ? AND install_state != ?", values: [existingWorkerID, ServiceWorkerInstallState.redundant.rawValue]) { resultSet -> Data in
+        let existingHash = try db.select(sql: "SELECT content_hash FROM workers WHERE worker_id = ?", values: [existingWorkerID]) { resultSet -> Data in
 
             if resultSet.next() == false {
                 throw ErrorMessage("Worker does not exist")
@@ -381,12 +381,12 @@ import ServiceWorker
             let allWorkers = [self.active, self.waiting, self.installing, self.redundant]
             
             try CoreDatabase.inConnection { db in
-//                try allWorkers.forEach { worker in
-//                    worker?.destroy()
-//                    if worker != nil {
-//                        try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
-//                    }
-//                }
+                try allWorkers.forEach { worker in
+                    worker?.destroy()
+                    if worker != nil {
+                        try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
+                    }
+                }
                 
                 try db.update(sql: "DELETE FROM registrations WHERE scope = ?", values:[self.scope])
                 
@@ -395,8 +395,6 @@ import ServiceWorker
             self.unregistered = true
             
             GlobalEventLog.notifyChange(self)
-            
-            ServiceWorkerRegistration.activeInstances.remove(self)
             
             return Promise(value: ())
             
