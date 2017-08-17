@@ -65,8 +65,8 @@ class ServiceWorkerRegistrationTests: XCTestCase {
                 _ = try connection.insert(sql: "INSERT INTO workers (worker_id, url, headers, content, install_state, scope) VALUES (?,?,?,?,?,?)", values: dummyWorkerValues)
             }
             
-            let registrationValues = ["https://www.example.com", "TEST_ID_active", "TEST_ID_installing", "TEST_ID_waiting", "TEST_ID_redundant"]
-            _ = try connection.insert(sql: "INSERT INTO registrations (scope, active, installing, waiting, redundant) VALUES (?,?,?,?,?)", values: registrationValues)
+            let registrationValues = ["https://www.example.com","TEST_ID", "TEST_ID_active", "TEST_ID_installing", "TEST_ID_waiting", "TEST_ID_redundant"]
+            _ = try connection.insert(sql: "INSERT INTO registrations (scope, id, active, installing, waiting, redundant) VALUES (?,?,?,?,?,?)", values: registrationValues)
         })
 
         

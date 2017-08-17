@@ -20,7 +20,7 @@ public class SQLiteConnection {
 
     public init(_ dbURL: URL) throws {
         
-          let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
+          let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_SHAREDCACHE, nil)
 //        let open = sqlite3_open(dbURL.path.cString(using: String.Encoding.utf8), &db)
 
         if open != SQLITE_OK {
@@ -28,6 +28,7 @@ public class SQLiteConnection {
         }
 
         self.open = true
+        try self.exec(sql: "PRAGMA cache_size = 0;")
     }
 
     public static func inConnection<T>(_ dbURL: URL, _ cb: ((SQLiteConnection) throws -> T)) throws -> T {

@@ -40,7 +40,7 @@ public class CommandBridge {
         _ = matchingRoute!.value(task)
     }
     
-    static func processSchemeStop(task: WKURLSchemeTask) {
+    static func processSchemeStop(task: SWURLSchemeTask) {
         let matchingRoute = stopRoutes.first(where: { $0.key == task.request.url!.path })
         
         if matchingRoute == nil {
@@ -48,9 +48,7 @@ public class CommandBridge {
             return
         }
         
-        let modifiedTask = SWURLSchemeTask(underlyingTask: task)
-        
-        _ = matchingRoute!.value(modifiedTask)
+        _ = matchingRoute!.value(task)
     }
     
     static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject?) throws -> Promise<Any?>) {

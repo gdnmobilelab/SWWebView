@@ -9,14 +9,23 @@
 import Foundation
 @testable import ServiceWorkerContainer
 import XCTest
+import ServiceWorker
 
 extension CoreDatabase {
     static func clearForTests() {
         
         do {
-            if FileManager.default.fileExists(atPath: self.dbPath!.path) {
-                try FileManager.default.removeItem(at: self.dbPath!)
-            }
+            try SQLiteConnection.inConnection(self.dbPath!) {db in
+                    try db.exec(sql: """
+                PRAGMA writable_schema = 1;
+                delete from sqlite_master where type in ('table', 'index', 'trigger');
+                PRAGMA writable_schema = 0;
+                VACUUM;
+            """)
+                }
+          
+            
+           
             self.dbMigrationCheckDone = false
         } catch {
             XCTFail("\(error)")

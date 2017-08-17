@@ -18,15 +18,20 @@ class SQLiteTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        sqlite3_shutdown()
-        sqlite3_initialize()
+
         do {
-            if FileManager.default.fileExists(atPath: self.dbPath.path) {
-                try FileManager.default.removeItem(atPath: self.dbPath.path)
+            try SQLiteConnection.inConnection(self.dbPath) {db in
+                try db.exec(sql: """
+                PRAGMA writable_schema = 1;
+                delete from sqlite_master where type in ('table', 'index', 'trigger');
+                PRAGMA writable_schema = 0;
+                VACUUM;
+            """)
             }
         } catch {
             XCTFail("\(error)")
         }
+       
     }
 
     func testOpenDatabaseConnection() {
@@ -449,6 +454,53 @@ class SQLiteTests: XCTestCase {
             
             
         }())
+        
+    }
+    
+    func testSimultaneousOperationsShouldWork() {
+        
+        XCTAssertNoThrow(try {
+            let conn = try SQLiteConnection(self.dbPath)
+            
+            try conn.exec(sql: """
+                CREATE TABLE "testtable" (
+                    "val" TEXT NOT NULL
+                );
+            """)
+            
+            try conn.close()
+            
+            var keepInserting = true
+            var errorFound:Error? = nil
+            DispatchQueue.global(qos: DispatchQoS.QoSClass.userInteractive).async {
+                
+                do {
+                    let db = try SQLiteConnection(self.dbPath)
+                    try db.update(sql: "DELETE FROM testtable", values: [])
+                    try db.close()
+                    keepInserting = false
+                } catch {
+                    keepInserting = false
+                    errorFound = error
+                }
+            }
+            
+            let db = try SQLiteConnection(self.dbPath)
+            var i = 0
+            while i < 10000 && keepInserting == true {
+                //                    NSLog("RUN INSERT")
+                _ = try db.insert(sql: "INSERT INTO testtable (val) VALUES (1)", values: [])
+                i = i + 1
+                
+            }
+            if errorFound != nil {
+                throw errorFound!
+            }
+            NSLog("\(i) rows")
+            
+            
+            }())
+        
         
     }
 }
