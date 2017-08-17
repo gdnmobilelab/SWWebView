@@ -18,8 +18,8 @@ import JavaScriptCore
 @objc class ServiceWorkerGlobalScope: EventTarget, ServiceWorkerGlobalScopeExports {
 
     let console: ConsoleMirror
-    var worker: ServiceWorker?
-    weak var context: JSContext?
+    unowned let worker: ServiceWorker
+    unowned let context: JSContext
 
     var skipWaitingStatus = false
 
@@ -28,7 +28,7 @@ import JavaScriptCore
     }
 
     var registration: ServiceWorkerRegistrationProtocol {
-        return self.worker!.registration
+        return self.worker.registration
     }
 
     init(context: JSContext, _ worker: ServiceWorker) throws {
@@ -48,15 +48,15 @@ import JavaScriptCore
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
 
-        self.context!.globalObject.setValue(self, forProperty: "self")
-        self.context!.globalObject.setValue(Event.self, forProperty: "Event")
-        self.context!.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
+        self.context.globalObject.setValue(self, forProperty: "self")
+        self.context.globalObject.setValue(Event.self, forProperty: "Event")
+        self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
-        self.context!.globalObject.setValue(importAsConvention, forProperty: "importScripts")
+        self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
         
 
-        self.applyListenersTo(jsObject: self.context!.globalObject)
+        self.applyListenersTo(jsObject: self.context.globalObject)
     }
     
     fileprivate func loadIndexedDBShim() throws {
@@ -67,9 +67,9 @@ import JavaScriptCore
         
         let contents = try String(contentsOf: file)
         
-        let targetObj = JSValue(newObjectIn: self.context!)!
+        let targetObj = JSValue(newObjectIn: self.context)!
         
-        let shimFunction = self.context!.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
+        let shimFunction = self.context.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
         
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
@@ -78,7 +78,7 @@ import JavaScriptCore
         let config: [String:Any] = [
             "DEBUG": true,
             "win": [
-                "openDatabase": WebSQLDatabase.createOpenDatabaseFunction(for: self.worker!.url)
+                "openDatabase": WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url)
             ]
         ]
         
@@ -87,7 +87,7 @@ import JavaScriptCore
         
         shimFunction.call(withArguments: [targetObj, config])
         
-        let keys = self.context!.objectForKeyedSubscript("Object")
+        let keys = self.context.objectForKeyedSubscript("Object")
             .objectForKeyedSubscript("getOwnPropertyNames")
             .call(withArguments: [targetObj])
             .toArray() as! [String]
@@ -99,7 +99,7 @@ import JavaScriptCore
                 return
             }
             
-            self.context!.globalObject.setValue(targetObj.objectForKeyedSubscript(key), forProperty: key)
+            self.context.globalObject.setValue(targetObj.objectForKeyedSubscript(key), forProperty: key)
             
         }
     }
@@ -109,8 +109,8 @@ import JavaScriptCore
         if let msg = error as? ErrorMessage {
             errMsg = msg.message
         }
-        let err = JSValue(newErrorFromMessage: errMsg, in: context!)
-        context!.exception = err
+        let err = JSValue(newErrorFromMessage: errMsg, in: context)
+        context.exception = err
     }
 
     internal func importScripts(_ scripts: JSValue) {
@@ -126,17 +126,17 @@ import JavaScriptCore
             }
 
             let scriptURLs = try scriptURLStrings.map { urlString -> URL in
-                let asURL = URL(string: urlString, relativeTo: self.worker!.url)
+                let asURL = URL(string: urlString, relativeTo: self.worker.url)
                 if asURL == nil {
                     throw ErrorMessage("Could not parse URL: " + urlString)
                 }
                 return asURL!
             }
 
-            let scripts = try worker!.importScripts(worker!, scriptURLs)
+            let scripts = try worker.importScripts(worker, scriptURLs)
 
             scripts.enumerated().forEach { arg in
-                self.context!.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
+                self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
             }
 
         } catch {

@@ -26,7 +26,7 @@ class TimeoutManager {
     /// corresponding JS function.
     var cancelledTimeouts = Set<Int>()
 
-    let executionEnvironment: ServiceWorkerExecutionEnvironment
+    unowned let executionEnvironment: ServiceWorkerExecutionEnvironment
 
     init(for executionEnvironment: ServiceWorkerExecutionEnvironment) {
         self.executionEnvironment = executionEnvironment

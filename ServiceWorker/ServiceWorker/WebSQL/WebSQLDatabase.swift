@@ -26,6 +26,14 @@ import JavaScriptCore
         _ = WebSQLTransaction(in: self.connection, withCallback: withCallback, completeCallback: completeCallback)
     }
     
+    deinit {
+        do {
+            try self.connection.close()
+        } catch {
+            Log.error?("Could not close WebSQL connection")
+        }
+    }
+    
     static func createOpenDatabaseFunction(for url: URL) -> AnyObject {
         
         let escapedOrigin = url.host!.addingPercentEncoding(withAllowedCharacters: .alphanumerics)!

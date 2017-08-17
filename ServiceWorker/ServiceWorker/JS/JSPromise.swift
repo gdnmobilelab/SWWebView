@@ -42,9 +42,10 @@ class JSPromise {
     }
 
     deinit {
-        self.context.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
-        self.context.virtualMachine.removeManagedReference(self.reject, withOwner: self)
-        self.context.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
+            self.context.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
+           self.context.virtualMachine.removeManagedReference(self.reject, withOwner: self)
+            self.context.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
+       
     }
 
     public func fulfill(_ value: Any?) {
@@ -67,7 +68,7 @@ class JSPromise {
         reject!.value.call(withArguments: [err!])
     }
     
-    public static func fromJSValue(_ promise: JSValue) -> Promise<JSValue?> {
+    public static func fromJSValue(_ promise: JSValue) -> Promise<JSManagedValue?> {
         
         return Promise { fulfill, reject in
             
@@ -75,7 +76,7 @@ class JSPromise {
                 reject(ErrorMessage(err.objectForKeyedSubscript("message").toString()))
             }
             let fulfill: @convention(block) (JSValue?) -> Void = { result in
-                fulfill(result)
+                fulfill(JSManagedValue(value: result))
             }
             
             let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})")!

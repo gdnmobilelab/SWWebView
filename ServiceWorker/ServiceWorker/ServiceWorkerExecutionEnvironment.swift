@@ -21,21 +21,22 @@ import PromiseKit
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
 
         super.init()
-        self.jsContext.exceptionHandler = self.grabException
-
+        self.jsContext.exceptionHandler = { [unowned self] (context: JSContext?, error: JSValue?) in
+            // Thrown errors don't error on the evaluateScript call (necessarily?), so after
+            // evaluating, we need to check whether there is a new exception.
+            // unowned is *required* to avoid circular references that mean this never gets garbage
+            // collected
+            self.currentException = error
+        }
+        
         // add setTimeout etc to our context
         _ = TimeoutManager(for: self)
     }
 
     deinit {
-        NSLog("Deinit?")
-    }
-
-    func destroy() {
-        // If we don't reset the exception handler then the JSContext never gets
-        // garbage collected.
-        self.jsContext.exceptionHandler = nil
+        NSLog("Deinit execution environment: Garbage collect.")
         self.currentException = nil
+        JSGarbageCollect(self.jsContext.jsGlobalContextRef)
     }
 
     // Thrown errors don't error on the evaluateScript call (necessarily?), so after

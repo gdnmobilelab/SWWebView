@@ -41,7 +41,7 @@ import PromiseKit
     }
 
     deinit {
-        NSLog("deinit?")
+        NSLog("deinit worker")
     }
 
     @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
@@ -58,10 +58,6 @@ import PromiseKit
     fileprivate var isDestroyed = false
     @objc public func destroy() {
         self.isDestroyed = true
-        if let exec = self._executionEnvironment {
-            exec.destroy()
-            self._executionEnvironment = nil
-        }
     }
 
     fileprivate var _executionEnvironment: ServiceWorkerExecutionEnvironment?

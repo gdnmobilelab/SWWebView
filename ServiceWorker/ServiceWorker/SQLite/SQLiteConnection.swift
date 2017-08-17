@@ -17,7 +17,37 @@ public class SQLiteConnection {
 
     var db: OpaquePointer?
     var open: Bool
+    
+//    fileprivate static var _temporaryStoreDirectory:UnsafeMutablePointer<Int8>? = nil
+//    static var temporaryStoreDirectory:URL? {
+//        set(value) {
+//
+//            let toStore = value != nil ? value!.path : ""
+//
+//            let cs = (toStore as NSString).utf8String
+//            var buffer = UnsafeMutablePointer<Int8>(mutating: cs)
+//            sqlite3_temp_directory = buffer!
+////
+////            var data = toStore.data(using: .utf8)!
+////
+////            data.withUnsafeMutableBytes { (body:UnsafeMutablePointer<Int8>) in
+////                sqlite3_temp_directory = body
+////                self._temporaryStoreDirectory = body
+////            }
+//        }
+//        get {
+//            let asString = String(cString: sqlite3_temp_directory, encoding: .utf8)
+//            if asString == nil {
+//                return nil
+//            } else {
+//                return URL(fileURLWithPath: asString!)
+//            }
+//
+//        }
+//    }
 
+    static var temporaryStoreDirectory:URL? = nil
+    
     public init(_ dbURL: URL) throws {
         
           let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_SHAREDCACHE, nil)
@@ -29,6 +59,9 @@ public class SQLiteConnection {
 
         self.open = true
         try self.exec(sql: "PRAGMA cache_size = 0;")
+        if let tempStore = SQLiteConnection.temporaryStoreDirectory {
+            try self.exec(sql: "PRAGMA temp_store_directory = '\(tempStore.path)';")
+        }
     }
 
     public static func inConnection<T>(_ dbURL: URL, _ cb: ((SQLiteConnection) throws -> T)) throws -> T {

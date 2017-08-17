@@ -15,7 +15,7 @@ import JavaScriptCore
 
 @objc class WebSQLTransaction: NSObject, WebSQLTransactionExports {
     
-    let connection:SQLiteConnection
+    unowned let connection:SQLiteConnection
     
     init(in connection: SQLiteConnection, withCallback: JSValue, completeCallback: JSValue) {
         self.connection = connection
@@ -27,7 +27,9 @@ import JavaScriptCore
         
         do {
             try self.connection.beginTransaction()
+
             withCallback.call(withArguments: [self])
+
             try self.connection.commitTransaction()
             completeCallback.call(withArguments: [])
         } catch {
@@ -36,7 +38,7 @@ import JavaScriptCore
             } catch {
                 Log.error?("Couldn't rollback WebSQL transaction: \(error)")
             }
-            
+
             let jsError = JSValue(newErrorFromMessage: "\(error)", in: completeCallback.context)!
             completeCallback.call(withArguments: [jsError])
         }
