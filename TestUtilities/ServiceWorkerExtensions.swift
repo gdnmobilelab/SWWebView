@@ -11,6 +11,6 @@ import ServiceWorker
 
 extension ServiceWorker {
     static func createTestWorker(id: String = "TEST", state: ServiceWorkerInstallState = .activated) -> ServiceWorker {
-        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(id).js")!, registration: DummyServiceWorkerRegistration(), state: state, content: "")
+        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(id).js")!, registration: DummyServiceWorkerRegistration(), state: state.rawValue, content: "")
     }
 }

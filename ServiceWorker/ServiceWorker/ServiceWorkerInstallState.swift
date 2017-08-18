@@ -16,11 +16,11 @@ import Foundation
 /// - Activating: The worker is currently in the process of activating
 /// - Activated: The worker is activated and ready to receive events and messages
 /// - Redundant: The worker has either failed to install or has been superseded by a new version of the worker.
-@objc public enum ServiceWorkerInstallState: Int {
-    case downloading = 0
-    case installing = 1
-    case installed = 2
-    case activating = 3
-    case activated = 4
-    case redundant = 5
+public enum ServiceWorkerInstallState: String {
+//    case downloading = "downloading"
+    case installing = "installing"
+    case installed = "installed"
+    case activating = "activating"
+    case activated = "activated"
+    case redundant = "redundant"
 }

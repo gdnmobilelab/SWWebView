@@ -34,6 +34,7 @@
 		8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360351F35FDF800969268 /* SharedResources.swift */; };
 		8A2360451F35FE1B00969268 /* WorkerInstances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360361F35FDF800969268 /* WorkerInstances.swift */; };
 		8AB72E1D1F35FED70049117E /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A23604D1F35FE4A00969268 /* ServiceWorker.framework */; };
+		8AC7BBBB1F4741340001CD49 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC7BBB91F4741340001CD49 /* PromiseKit.framework */; };
 		8AF85D7D1F3A2815001B0A87 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */; };
 		8AF85D7E1F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */; };
 		8AF85D831F3A28BD001B0A87 /* TestWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D821F3A289B001B0A87 /* TestWeb.swift */; };
@@ -97,6 +98,7 @@
 		8A23603A1F35FDF800969268 /* ServiceWorkerRegistrationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationOptions.swift; sourceTree = "<group>"; };
 		8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
 		8A2360471F35FE4A00969268 /* ServiceWorker.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ServiceWorker.xcodeproj; path = ../ServiceWorker/ServiceWorker.xcodeproj; sourceTree = "<group>"; };
+		8AC7BBB91F4741340001CD49 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PromiseKit.framework; path = ../Carthage/Build/iOS/PromiseKit.framework; sourceTree = "<group>"; };
 		8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationTests.swift; sourceTree = "<group>"; };
 		8AF85D7A1F3A2815001B0A87 /* ImportScriptsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportScriptsTests.swift; sourceTree = "<group>"; };
 		8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bootstrap.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8AC7BBBB1F4741340001CD49 /* PromiseKit.framework in Frameworks */,
 				8AB72E1D1F35FED70049117E /* ServiceWorker.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -204,6 +207,7 @@
 		8A2360461F35FE4900969268 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8AC7BBB91F4741340001CD49 /* PromiseKit.framework */,
 				8A2360471F35FE4A00969268 /* ServiceWorker.xcodeproj */,
 			);
 			name = Frameworks;

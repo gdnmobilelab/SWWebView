@@ -26,8 +26,10 @@ import PromiseKit
             return self._installState
         }
         set(value) {
-            self._installState = value
-            GlobalEventLog.notifyChange(self)
+            if self._installState != value {
+                self._installState = value
+                GlobalEventLog.notifyChange(self)
+            }
         }
     }
 
@@ -39,12 +41,8 @@ import PromiseKit
         self._installState = state
         super.init()
     }
-
-    deinit {
-        NSLog("deinit worker")
-    }
-
-    @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
+    
+    init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url
         self.registration = registration
@@ -52,6 +50,21 @@ import PromiseKit
             content
         }
         self._installState = state
+        super.init()
+    }
+
+    deinit {
+        NSLog("deinit worker")
+    }
+
+    @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: String, content: String) {
+        self.id = id
+        self.url = url
+        self.registration = registration
+        self.loadContent = { _ in
+            content
+        }
+        self._installState = ServiceWorkerInstallState(rawValue: state)!
         super.init()
     }
 

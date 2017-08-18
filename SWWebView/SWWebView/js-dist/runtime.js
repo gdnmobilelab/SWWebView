@@ -166,7 +166,6 @@ var StreamingXHR = (function (_super) {
             // we should look into cutting this off and re-establishing a new
             // link if it gets too big.
             var newData = this.xhr.responseText.substr(this.seenBytes);
-            console.log("new event: ", newData);
             this.seenBytes = this.xhr.responseText.length;
             var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
             var evt = new MessageEvent(event, {
@@ -190,12 +189,46 @@ var StreamingXHR = (function (_super) {
 var eventStream = new StreamingXHR("/events");
 eventStream.addEventListener("serviceworkerregistration", console.info);
 
+var existingWorkers = [];
+var ServiceWorkerImplementation = (function (_super) {
+    __extends(ServiceWorkerImplementation, _super);
+    function ServiceWorkerImplementation(opts) {
+        var _this = _super.call(this) || this;
+        _this.scriptURL = opts.scriptURL;
+        _this.id = opts.id;
+        _this.state = opts.installState;
+        return _this;
+    }
+    ServiceWorkerImplementation.prototype.postMessage = function () { };
+    ServiceWorkerImplementation.getOrCreate = function (opts) {
+        var existing = existingWorkers.find(function (w) { return w.id === opts.id; });
+        if (existing) {
+            return existing;
+        }
+        else {
+            var newWorker = new ServiceWorkerImplementation(opts);
+            existingWorkers.push(newWorker);
+            return newWorker;
+        }
+    };
+    return ServiceWorkerImplementation;
+}(index));
+
 var existingRegistrations = [];
 var ServiceWorkerRegistrationImplementation = (function (_super) {
     __extends(ServiceWorkerRegistrationImplementation, _super);
     function ServiceWorkerRegistrationImplementation(opts) {
         var _this = _super.call(this) || this;
         _this.scope = opts.scope;
+        _this.active = opts.active
+            ? ServiceWorkerImplementation.getOrCreate(opts.active)
+            : null;
+        _this.installing = opts.installing
+            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
+            : null;
+        _this.waiting = opts.waiting
+            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
+            : null;
         return _this;
     }
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {

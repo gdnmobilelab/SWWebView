@@ -26,8 +26,8 @@ CREATE TABLE "workers" (
 "worker_id" text(36,0) NOT NULL,
 "url" text NOT NULL,
 "scope" text NOT NULL,
-"headers" text NOT NULL,
-"content" blob NOT NULL,
+"headers" text NULL,
+"content" blob NULL,
 "install_state" integer NOT NULL,
 PRIMARY KEY("worker_id")
 );

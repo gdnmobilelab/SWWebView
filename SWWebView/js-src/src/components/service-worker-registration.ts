@@ -3,6 +3,7 @@ import { ServiceWorkerRegistrationAPIResponse } from "../responses/api-responses
 import { apiRequest } from "../util/api-request";
 import { BooleanSuccessResponse } from "../responses/api-responses";
 import { eventStream } from "../event-stream";
+import { ServiceWorkerImplementation } from "./service-worker";
 
 const existingRegistrations: ServiceWorkerRegistrationImplementation[] = [];
 
@@ -20,6 +21,15 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     constructor(opts: ServiceWorkerRegistrationAPIResponse) {
         super();
         this.scope = opts.scope;
+        this.active = opts.active
+            ? ServiceWorkerImplementation.getOrCreate(opts.active)
+            : null;
+        this.installing = opts.installing
+            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
+            : null;
+        this.waiting = opts.waiting
+            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
+            : null;
     }
 
     static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {

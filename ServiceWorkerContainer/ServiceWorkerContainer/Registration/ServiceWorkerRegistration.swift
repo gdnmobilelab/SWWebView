@@ -19,14 +19,42 @@ import ServiceWorker
 
     public let scope: URL
     public let id: String
+    
+//    fileprivate var _active: ServiceWorker?
+//    public var active: ServiceWorker? {
+//        get {
+//            return _active;
+//        }
+//        set(value) {
+//            self._active = value
+//            if self.readyFulfill != nil {
+//                self.readyFulfill!(self)
+//                self.readyFulfill = nil
+//            }
+//        }
+//    }
+    
     public var active: ServiceWorker?
     public var waiting: ServiceWorker?
     public var installing: ServiceWorker?
     public var redundant: ServiceWorker?
+    
+//    fileprivate var readyPromise: Promise<ServiceWorkerRegistration>? = nil
+//    fileprivate var readyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
+//
+//    public var ready:Promise<ServiceWorkerRegistration> {
+//        get {
+//            return self.readyPromise!
+//        }
+//    }
 
     fileprivate init(scope: URL, id: String) {
         self.scope = scope
         self.id = id
+        super.init()
+//        self.readyPromise = Promise { [unowned self] fulfill, reject in
+//            self.readyFulfill = fulfill
+//        }
     }
 
     func update() -> Promise<Void> {
@@ -49,6 +77,8 @@ import ServiceWorker
             }
 
             let request = try self.getUpdateRequest(forExistingWorker: worker)
+            
+            let newWorker = try self.createNewInstallingWorker(for: request.url)
 
             return FetchOperation.fetch(request)
                 .then { res in
@@ -62,7 +92,7 @@ import ServiceWorker
                         throw ErrorMessage("Ran update check for \(worker.url), received unknown \(res.status) response")
                     }
 
-                    return self.processHTTPResponse(res, byteCompareWorker: worker)
+                    return self.processHTTPResponse(res, newWorker: newWorker, byteCompareWorker: worker)
                 }
         }
     }
@@ -97,17 +127,59 @@ import ServiceWorker
             return request
         }
     }
+    
+    fileprivate func createNewInstallingWorker(for url: URL) throws -> ServiceWorker {
+        
+        let newWorkerID = UUID().uuidString
+        
+        try CoreDatabase.inConnection { db in
+            _ = try db.insert(sql: """
+                INSERT INTO workers
+                    (worker_id, url, install_state, scope)
+                VALUES
+                    (?,?,?,?)
+            """, values: [
+                newWorkerID,
+                url,
+                ServiceWorkerInstallState.installing.rawValue,
+                self.scope,
+                ])
+        }
+        
+        let worker = try WorkerInstances.get(id: newWorkerID)
+        self.installing = worker
+        return worker
+    }
 
     func register(_ workerURL: URL) -> Promise<Void> {
-        return FetchOperation.fetch(workerURL)
-            .then { res in
+        
+        // The install process is asynchronous and the register call doesn't wait for it.
+        // So we create our stub in the database then return the promise immediately.
+        
+        return firstly {
 
-                if res.ok == false {
-                    throw ErrorMessage("Did not receive a valid response")
-                }
-
-                return self.processHTTPResponse(res)
+            let worker = try self.createNewInstallingWorker(for: workerURL)
+            
+            return FetchOperation.fetch(workerURL)
+                .then { res -> Void in
+                    
+                    if res.ok == false {
+                        // We couldn't fetch the worker JS, so we immediately set the worker to
+                        // redundant and forget about it.
+                        try CoreDatabase.inConnection { db in
+                            try self.updateWorkerStatus(db: db, worker: worker, newState: .redundant)
+                        }
+                        throw ErrorMessage("Received response code \(res.status)")
+                    }
+                    
+                    // This promise is NOT returned, because the register() call does not
+                    // wait for the worker to actually be installed - it returns as soon
+                    // as the process has started.
+                    _ = self.processHTTPResponse(res, newWorker: worker)
             }
+            
+        }
+        
     }
 
     fileprivate func isWorkerByteIdentical(existingWorkerID: String, newHash: Data, db: SQLiteConnection) throws -> Bool {
@@ -123,7 +195,7 @@ import ServiceWorker
         return existingHash == newHash
     }
 
-    fileprivate func insertWorker(fromResponse res: FetchResponseProtocol, intoDatabase db: SQLiteConnection) -> Promise<(String, Data)> {
+    fileprivate func addResponseToWorker(_ res: FetchResponseProtocol, intoDatabase db: SQLiteConnection, withWorkerId id: String) -> Promise<Data> {
 
         // We can't rely on the Content-Length header as some places don't send one. But SQLite requires
         // you to establish a blob with length. So instead, we are streaming the download to disk, then
@@ -134,40 +206,46 @@ import ServiceWorker
             let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
             let size = fileAttributes[.size] as! Int64
 
-            let newWorkerID = UUID().uuidString
-            let rowID = try db.insert(sql: """
-                INSERT INTO workers
-                    (worker_id, url, headers, content, install_state, scope)
-                VALUES
-                    (?,?,?,zeroblob(?),?,?)
+            // ISSUE: do we update the URL here, if the response was redirected? If we do, it'll mean
+            // future update() calls won't check the original URL, which feels wrong. But having this
+            // URL next to content from another URL also feels wrong.
+            
+            try db.update(sql: """
+                UPDATE workers SET
+                    headers = ?,
+                    content = zeroblob(?)
+                WHERE
+                    worker_id = ?
             """, values: [
-                newWorkerID,
-                res.url,
                 try res.headers.toJSON(),
                 size,
-                ServiceWorkerInstallState.downloading.rawValue,
-                self.scope,
+                id
             ])
+
+            let rowID = try db.select(sql: "SELECT rowid FROM workers WHERE worker_id = ?", values: [id]) { rs -> Int64 in
+                _ = rs.next()
+                return try rs.int64("rowid")!
+            }
 
             let inputStream = InputStream(url: url)!
             let writeStream = db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
 
             return writeStream.pipeReadableStream(stream: ReadableStream.fromInputStream(stream: inputStream, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
-                .then { hash -> (String, Data) in
+                .then { hash -> Data in
 
-                    try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, newWorkerID])
+                    try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, id])
 
-                    return (newWorkerID, hash)
+                    return hash
                 }
 
         })
     }
 
-    func processHTTPResponse(_ res: FetchResponseProtocol, byteCompareWorker: ServiceWorker? = nil) -> Promise<Void> {
+    func processHTTPResponse(_ res: FetchResponseProtocol, newWorker: ServiceWorker, byteCompareWorker: ServiceWorker? = nil) -> Promise<Void> {
 
         return CoreDatabase.inConnection { db in
-            self.insertWorker(fromResponse: res, intoDatabase: db)
-                .then { workerID, hash in
+            self.addResponseToWorker(res, intoDatabase: db, withWorkerId: newWorker.id)
+                .then { hash in
 
                     if byteCompareWorker != nil {
                         // In addition to HTTP headers, we also check to see if the content of the worker has
@@ -177,21 +255,20 @@ import ServiceWorker
                         if try self.isWorkerByteIdentical(existingWorkerID: byteCompareWorker!.id, newHash: hash, db: db) {
 
                             // Worker is identical. Delete it and stop any further operations.
-                            try db.update(sql: "DELETE FROM workers WHERE worker_id = ?", values: [workerID])
+                            try db.update(sql: "DELETE FROM workers WHERE worker_id = ?", values: [newWorker.id])
                             return Promise(value: ())
                         }
                     }
 
-                    let worker = try WorkerInstances.get(id: workerID)
-
-                    return self.install(worker: worker, in: db)
+                   
+                    return self.install(worker: newWorker, in: db)
                         .then {
 
                             // Workers move from installed directly to activating if they have called
                             // self.skipWaiting() OR if we have no active worker currently.
 
-                            if worker.skipWaitingStatus == true || self.active == nil {
-                                return self.activate(worker: worker, in: db)
+                            if newWorker.skipWaitingStatus == true || self.active == nil {
+                                return self.activate(worker: newWorker, in: db)
                             } else {
                                 return Promise(value: ())
                             }
@@ -201,8 +278,8 @@ import ServiceWorker
                             // If either the install or activate processes fail, we update the worker
                             // state to redundant and kill it.
 
-                            worker.destroy()
-                            try self.updateWorkerStatus(db: db, worker: worker, newState: .redundant)
+                            newWorker.destroy()
+                            try self.updateWorkerStatus(db: db, worker: newWorker, newState: .redundant)
                             throw error
                         }
                 }
@@ -274,15 +351,6 @@ import ServiceWorker
             existingWorker = self.active
         }
 
-        if existingWorker != nil && existingWorker != worker {
-            // existingWorker != worker because it'll be the same worker when going from activating to activated
-            try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [ServiceWorkerInstallState.redundant.rawValue, existingWorker!.id])
-            existingWorker!.state = .redundant
-            self.redundant = existingWorker
-        }
-
-        try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [newState.rawValue, worker.id])
-        worker.state = newState
         self.clearWorkerFromAllStatuses(worker: worker)
         if newState == .installing {
             self.installing = worker
@@ -292,6 +360,16 @@ import ServiceWorker
             self.active = worker
         } else if newState == .redundant {
             self.redundant = worker
+        }
+        
+        try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [newState.rawValue, worker.id])
+        worker.state = newState
+        
+        if existingWorker != nil && existingWorker != worker {
+            // existingWorker != worker because it'll be the same worker when going from activating to activated
+            try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [ServiceWorkerInstallState.redundant.rawValue, existingWorker!.id])
+            existingWorker!.state = .redundant
+            self.redundant = existingWorker
         }
     }
 

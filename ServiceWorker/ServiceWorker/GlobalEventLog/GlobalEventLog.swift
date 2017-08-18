@@ -14,11 +14,13 @@ import Foundation
 /// these details to our webview.
 public class GlobalEventLog {
 
-    fileprivate static var listeners = Set<NSObject>()
+    // We only keep weak references to our listeners because if the object containing
+    // the listener is disregarded, the listener should be as well.
+    fileprivate static var listeners = NSHashTable<NSObject>.weakObjects()
 
     public static func addListener<T>(_ toRun: @escaping (T) -> Void) -> Listener<T> {
         let wrapper = Listener(toRun)
-        self.listeners.insert(wrapper)
+        self.listeners.add(wrapper)
         return wrapper
     }
 
@@ -27,7 +29,7 @@ public class GlobalEventLog {
     }
 
     public static func notifyChange<T>(_ target: T) {
-        self.listeners.forEach { listener in
+        self.listeners.allObjects.forEach { listener in
 
             if let correctType = listener as? Listener<T> {
                 correctType.funcToRun(target)

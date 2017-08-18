@@ -31,7 +31,7 @@ public class ServiceWorkerContainer: Hashable {
     fileprivate static let activeContainers = NSHashTable<ServiceWorkerContainer>.weakObjects()
 
     public static func get(for url: URL) -> ServiceWorkerContainer {
-
+        
         let existing = self.activeContainers.allObjects.first { $0.containerURL.absoluteString == url.absoluteString }
         if existing != nil {
             return existing!
@@ -100,7 +100,7 @@ public class ServiceWorkerContainer: Hashable {
     }
 
     public func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
-
+        
         return firstly {
             var scopeURL = workerURL
 

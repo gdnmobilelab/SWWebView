@@ -11,7 +11,7 @@ describe("Service Worker Container", () => {
             });
     });
 
-    it("Should register with default scope as JS file directory", () => {
+    it.only("Should register with default scope as JS file directory", () => {
         return navigator.serviceWorker
             .register("/fixtures/test-register-worker.js")
             .then(reg => {
@@ -19,6 +19,9 @@ describe("Service Worker Container", () => {
                     reg.scope,
                     new URL("/fixtures/", window.location.href).href
                 );
+                console.log(reg.installing);
+                // reg.installing!.onstatechange = e =>
+                //     console.log(e.target.state);
             });
     });
 
@@ -35,11 +38,23 @@ describe("Service Worker Container", () => {
             });
     });
 
+    it("Should fail when loading out of scope", () => {
+        return navigator.serviceWorker
+            .register("/fixtures/test-register-worker.js", {
+                scope: "/no-fixtures/"
+            })
+            .catch(err => {
+                return "Errored!";
+            })
+            .then(result => {
+                assert.equal(result, "Errored!");
+            });
+    });
+
     it("Should fail when loading off-domain", () => {
         return navigator.serviceWorker
             .register("https://www.example.com/test-worker.js")
             .catch(err => {
-                console.log(err);
                 return "Errored!";
             })
             .then(result => {
