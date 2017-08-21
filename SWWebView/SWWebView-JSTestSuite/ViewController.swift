@@ -49,13 +49,17 @@ class ViewController: UIViewController {
 
     func addStubs() {
         CommandBridge.routes["/ping"] = { task in
-
-            let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "application/json",
-            ])
-            task.didReceive(response!)
-            task.didReceive("{\"pong\":true}".data(using: String.Encoding.utf8)!)
-            task.didFinish()
+            do {
+                let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
+                ])
+                try task.didReceive(response!)
+                try task.didReceive("{\"pong\":true}".data(using: String.Encoding.utf8)!)
+                try task.didFinish()
+            } catch {
+                fatalError("\(error)")
+            }
         }
 
         CommandBridge.routes["/ping-with-body"] = { task in
@@ -67,30 +71,57 @@ class ViewController: UIViewController {
 
                     responseText = obj!["value"]! as! String
                 }
+                
+                let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
+                    ])
+                try task.didReceive(response!)
+                try task.didReceive("{\"pong\":\"\(responseText)\"}".data(using: String.Encoding.utf8)!)
+                try task.didFinish()
 
             } catch {
                 fatalError("\(error)")
             }
 
-            let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "application/json",
-            ])
-            task.didReceive(response!)
-            task.didReceive("{\"pong\":\"\(responseText)\"}".data(using: String.Encoding.utf8)!)
-            task.didFinish()
+            
         }
 
         CommandBridge.routes["/stream"] = { task in
-
+            do {
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
+                "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
             ])
-            task.didReceive(response!)
-            task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
-            task.didReceive("test-event2: {\"test\":\"hello2\"}".data(using: String.Encoding.utf8)!)
+            try task.didReceive(response!)
+            try task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
+            try task.didReceive("test-event2: {\"test\":\"hello2\"}".data(using: String.Encoding.utf8)!)
 
-            task.didFinish()
+            try task.didFinish()
+            }  catch {
+                fatalError("\(error)")
+        }
+        }
+        
+        CommandBridge.routes["/referer-header"] = { task in
+            do {
+                let response = HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: "1.1", headerFields: [
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache",
+                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "Origin")!
+                    ])
+                try task.didReceive(response!)
+                
+                let header = task.request.value(forHTTPHeaderField: "Referer")
+                let json = header != nil ? "\"\(header!)\"" : "null"
+                
+                try task.didReceive("{\"header\":\(json)}".data(using: String.Encoding.utf8)!)
+                
+                try task.didFinish()
+            }  catch {
+                fatalError("\(error)")
+            }
         }
     }
 

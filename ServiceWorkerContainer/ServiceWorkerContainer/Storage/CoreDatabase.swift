@@ -46,6 +46,9 @@ public class CoreDatabase {
         }
     }
 
+    // OK, running into lock issues so now we're sticking with one connection.
+    static fileprivate var conn:SQLiteConnection?
+    
     public static func inConnection<T>(_ cb: (SQLiteConnection) throws -> T) throws -> T {
 
         if self.dbPath == nil {
@@ -53,17 +56,28 @@ public class CoreDatabase {
         }
 
         try self.doMigrationCheck()
-        return try SQLiteConnection.inConnection(self.dbPath!, cb)
+        
+        if self.conn == nil {
+            self.conn = try SQLiteConnection(self.dbPath!)
+        }
+        
+        return try cb(self.conn!)
+//        return try SQLiteConnection.inConnection(self.dbPath!, cb)
     }
 
     public static func inConnection<T>(_ cb: @escaping (SQLiteConnection) throws -> Promise<T>) -> Promise<T> {
 
         return firstly {
+
             if self.dbPath == nil {
                 throw ErrorMessage("CoreDatabase.dbPath must be set on app startup")
             }
             try self.doMigrationCheck()
-            return SQLiteConnection.inConnection(self.dbPath!, cb)
+            if self.conn == nil {
+                self.conn = try SQLiteConnection(self.dbPath!)
+            }
+            return try cb(self.conn!)
+//            return SQLiteConnection.inConnection(self.dbPath!, cb)
         }
     }
 

@@ -5,13 +5,13 @@ PRAGMA foreign_keys = false;
 -- ----------------------------
 DROP TABLE IF EXISTS "registrations";
 CREATE TABLE "registrations" (
-"id" TEXT NOT NULL,
-"scope" TEXT NOT NULL,
+"registration_id" TEXT NOT NULL,
+"scope" TEXT NOT NULL UNIQUE,
 "active" TEXT,
 "installing" TEXT,
 "waiting" TEXT,
 "redundant" TEXT,
-PRIMARY KEY("scope"),
+PRIMARY KEY("registration_id"),
 CONSTRAINT "active_worker" FOREIGN KEY ("active") REFERENCES "workers" ("worker_id") ON DELETE SET NULL,
 CONSTRAINT "installing_worker" FOREIGN KEY ("installing") REFERENCES "workers" ("worker_id") ON DELETE SET NULL,
 CONSTRAINT "waiting_worker" FOREIGN KEY ("waiting") REFERENCES "workers" ("worker_id") ON DELETE SET NULL,
@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS "workers";
 CREATE TABLE "workers" (
 "worker_id" text(36,0) NOT NULL,
 "url" text NOT NULL,
-"scope" text NOT NULL,
+"registration_id" text NOT NULL,
 "headers" text NULL,
 "content" blob NULL,
 "install_state" integer NOT NULL,

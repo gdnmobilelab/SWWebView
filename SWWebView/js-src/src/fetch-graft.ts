@@ -26,22 +26,26 @@ function graftedFetch(request: RequestInfo, opts?: RequestInit) {
     return originalFetch(request, opts);
 }
 
-(window as any).fetch = graftedFetch;
+(graftedFetch as any).__bodyGrafted = true;
 
-const originalSend = XMLHttpRequest.prototype.send;
-const originalOpen = XMLHttpRequest.prototype.open;
+if ((originalFetch as any).__bodyGrafted !== true) {
+    (window as any).fetch = graftedFetch;
 
-XMLHttpRequest.prototype.open = function(method, url) {
-    let resolvedURL = new URL(url, window.location.href);
-    if (resolvedURL.protocol === SW_PROTOCOL + ":") {
-        this._graftBody = true;
-    }
-    originalOpen.apply(this, arguments);
-};
+    const originalSend = XMLHttpRequest.prototype.send;
+    const originalOpen = XMLHttpRequest.prototype.open;
 
-XMLHttpRequest.prototype.send = function(data) {
-    if (data && this._graftBody === true) {
-        this.setRequestHeader(GRAFTED_REQUEST_HEADER, data);
-    }
-    originalSend.apply(this, arguments);
-};
+    XMLHttpRequest.prototype.open = function(method, url) {
+        let resolvedURL = new URL(url, window.location.href);
+        if (resolvedURL.protocol === SW_PROTOCOL + ":") {
+            this._graftBody = true;
+        }
+        originalOpen.apply(this, arguments);
+    };
+
+    XMLHttpRequest.prototype.send = function(data) {
+        if (data && this._graftBody === true) {
+            this.setRequestHeader(GRAFTED_REQUEST_HEADER, data);
+        }
+        originalSend.apply(this, arguments);
+    };
+}

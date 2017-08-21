@@ -21,6 +21,7 @@ module.exports = {
             preferBuiltins: false
         })
     ],
+    sourceMap: true,
     moduleName: "swwebview",
     external: ["swwebview-settings"],
     globals: {

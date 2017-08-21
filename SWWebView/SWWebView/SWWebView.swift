@@ -64,7 +64,8 @@ public class SWWebView: WKWebView {
         {
         API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
         SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
-        GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)"
+        GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)",
+        SW_API_HOST: "\(SWSchemeHandler.serviceWorkerRequestHost)"
         }
         """
     }

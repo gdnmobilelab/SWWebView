@@ -2,6 +2,8 @@ import { apiRequest, APIError } from "../../src/util/api-request";
 import { assert } from "chai";
 import { StreamingXHR } from "../../src/util/streaming-xhr";
 import { describeIfApp } from "../test-bootstrap";
+import { API_REQUEST_METHOD } from "swwebview-settings";
+import { getFullAPIURL } from "../../src/util/full-api-url";
 
 describeIfApp("Basic HTTP hooks for Service Worker API", () => {
     it("Returns 404 when trying to access a URL we don't know", () => {
@@ -17,7 +19,8 @@ describeIfApp("Basic HTTP hooks for Service Worker API", () => {
     });
 
     it("Can use a streaming XHR request", function(done) {
-        let stream = new StreamingXHR("/stream");
+        let stream = new StreamingXHR(getFullAPIURL("/stream"));
+        stream.open();
         let receivedFirstEvent = false;
 
         stream.addEventListener("test-event", (ev: MessageEvent) => {

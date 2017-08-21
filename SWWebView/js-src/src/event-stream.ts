@@ -1,5 +1,8 @@
 import { StreamingXHR } from "./util/streaming-xhr";
+import { getFullAPIURL } from "./util/full-api-url";
 
-export const eventStream = new StreamingXHR("/events");
+let absoluteURL = getFullAPIURL("/events");
+let eventsURL = new URL(absoluteURL);
+eventsURL.searchParams.append("path", window.location.pathname);
 
-eventStream.addEventListener("serviceworkerregistration", console.info);
+export const eventStream = new StreamingXHR(eventsURL.href);

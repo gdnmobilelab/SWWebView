@@ -24,34 +24,65 @@ class EventStream {
 
     var workerListener: Listener<ServiceWorker>?
     var registrationListener: Listener<ServiceWorkerRegistration>?
-
-    fileprivate init(for task: SWURLSchemeTask) {
+    var containerListener: Listener<ServiceWorkerContainer>?
+    
+    func isScopeMatch(_ url:URL) -> Bool {
+        return url.host == self.container.containerURL.host && url.port == self.container.containerURL.port
+    }
+    
+    fileprivate init(for task: SWURLSchemeTask) throws {
         self.task = task
-        self.container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+       
+        let components = URLComponents(url: task.request.url!, resolvingAgainstBaseURL: true)!
+        let path = components.queryItems?.first(where: { $0.name == "path"})!.value!
+        
+        let fullPageURL = URL(string: path!, relativeTo: task.origin!)
+        
+        self.container = try ServiceWorkerContainer.get(for: fullPageURL!)
 
         self.workerListener = GlobalEventLog.addListener { (worker: ServiceWorker) in
-            if worker.url.host == self.container.containerURL.host {
+            if self.isScopeMatch(worker.url) {
                 self.sendUpdate(identifier: "serviceworker", object: worker)
             }
         }
 
         self.registrationListener = GlobalEventLog.addListener { (reg: ServiceWorkerRegistration) in
-            if reg.scope.host == self.container.containerURL.host {
+            if self.isScopeMatch(reg.scope) {
                 self.sendUpdate(identifier: "serviceworkerregistration", object: reg)
             }
         }
+        
+        self.containerListener = GlobalEventLog.addListener { (container: ServiceWorkerContainer) in
+            if self.isScopeMatch(container.containerURL) {
+                self.sendUpdate(identifier: "serviceworkercontainer", object: container)
+            }
+        }
 
-        let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
+        let response = HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: "1.1", headerFields: [
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
+            "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
         ])!
 
-        task.didReceive(response)
+        try task.didReceive(response)
+        
+        // It's possible that this event stream was interrupted as a result of the page being
+        // shown/hidden/who knows, so the JS objects might be out of date. To make sure we're
+        // clear, we'll send down the details for every relevant object.
+        
+        self.sendUpdate(identifier: "serviceworkercontainer", object: self.container)
+        self.container.getRegistrations()
+            .then { regs in
+                // Registrations send down their corresponding worker objects
+                regs.forEach { self.sendUpdate(identifier: "serviceworkeregistration", object: $0)}
+        }
+        
     }
 
     func shutdown() {
         GlobalEventLog.removeListener(self.workerListener!)
         GlobalEventLog.removeListener(self.registrationListener!)
+        GlobalEventLog.removeListener(self.containerListener!)
         self.workerListener = nil
         self.registrationListener = nil
     }
@@ -62,7 +93,7 @@ class EventStream {
             let jsonString = String(data: json, encoding: .utf8)!
             let str = "\(identifier): \(jsonString)"
 
-            self.task.didReceive(str.data(using: String.Encoding.utf8)!)
+            try self.task.didReceive(str.data(using: String.Encoding.utf8)!)
         } catch {
             Log.error?("Error when trying to send update to webview: \(error)")
         }
@@ -74,13 +105,15 @@ class EventStream {
             task.didFailWithError(ErrorMessage("EventStream already exists for this task"))
             return
         }
-
-        let newStream = EventStream(for: task)
-        EventStream.currentEventStreams[task.hash] = newStream
+        do {
+            let newStream = try EventStream(for: task)
+            EventStream.currentEventStreams[task.hash] = newStream
+        } catch {
+            task.didFailWithError(error)
+        }
     }
 
     static func remove(for task: SWURLSchemeTask) {
-        let h = task.hash
         if EventStream.currentEventStreams[task.hash] == nil {
             Log.error?("Tried to remove an EventStream that does not exist")
         }

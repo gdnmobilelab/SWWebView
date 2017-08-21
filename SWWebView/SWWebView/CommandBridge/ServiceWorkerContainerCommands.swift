@@ -24,7 +24,9 @@ class ServiceWorkerContainerCommands {
                 }
             }
 
-            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+            let pageURL = URL(string: json!["path"] as! String, relativeTo: task.origin!)!
+            
+            let container = try ServiceWorkerContainer.get(for: pageURL)
             return container.getRegistration(scope)
                 .then { reg in
                     reg?.toJSONSuitableObject()
@@ -33,8 +35,9 @@ class ServiceWorkerContainerCommands {
     }
 
     static func getRegistrations(task: SWURLSchemeTask) {
-        CommandBridge.processAsJSON(task: task) { _ in
-            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+        CommandBridge.processAsJSON(task: task) { json in
+            let pageURL = URL(string: json!["path"] as! String, relativeTo: task.origin!)!
+            let container = try ServiceWorkerContainer.get(for: pageURL)
             return container.getRegistrations()
                 .then { regs in
                     regs.map { $0.toJSONSuitableObject() }
@@ -45,24 +48,29 @@ class ServiceWorkerContainerCommands {
     static func register(task: SWURLSchemeTask) {
         CommandBridge.processAsJSON(task: task) { json in
 
+            let pageURL = URL(string: json!["path"] as! String, relativeTo: task.origin!)!
+            
+            
             guard let workerURLString = json!["url"] as? String else {
                 throw ErrorMessage("URL must be provided")
             }
 
-            guard let workerURL = URL(string: workerURLString, relativeTo: task.request.url!) else {
+            guard let workerURL = URL(string: workerURLString, relativeTo: pageURL) else {
                 throw ErrorMessage("Could not parse URL")
             }
 
             var options: ServiceWorkerRegistrationOptions?
 
+            
             if let specifiedScope = json!["scope"] as? String {
-                guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: task.request.mainDocumentURL!) else {
+                
+                guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: pageURL) else {
                     throw ErrorMessage("Could not parse scope URL")
                 }
                 options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)
             }
 
-            let container = ServiceWorkerContainer.get(for: task.request.mainDocumentURL!)
+            let container = try ServiceWorkerContainer.get(for: pageURL)
 
             return container.register(workerURL: workerURL, options: options)
                 .then { result in

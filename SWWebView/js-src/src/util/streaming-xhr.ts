@@ -1,16 +1,38 @@
 import EventEmitter from "tiny-emitter";
 import { API_REQUEST_METHOD } from "swwebview-settings";
 
+interface CustomMessageEvent<T> extends MessageEvent {
+    data: T;
+}
+
 export class StreamingXHR extends EventEmitter {
     private xhr: XMLHttpRequest;
     private seenBytes = 0;
+    private isOpen = false;
+    private url: string;
 
     constructor(url: string) {
         super();
+        this.url = url;
+    }
+
+    open() {
+        if (this.isOpen === true) {
+            throw new Error("Already open");
+        }
+        this.isOpen = true;
         this.xhr = new XMLHttpRequest();
-        this.xhr.open(API_REQUEST_METHOD, url);
+
+        this.xhr.open(API_REQUEST_METHOD, this.url);
         this.xhr.onreadystatechange = this.receiveData.bind(this);
         this.xhr.send();
+    }
+
+    addEventListener<T>(
+        type: string,
+        func: (e: CustomMessageEvent<T>) => void
+    ) {
+        super.addEventListener(type, func);
     }
 
     receiveData() {
@@ -26,7 +48,6 @@ export class StreamingXHR extends EventEmitter {
 
             this.seenBytes = this.xhr.responseText.length;
             let [_, event, data] = /([\w\-]+):(.*)/.exec(newData)!;
-
             let evt = new MessageEvent(event, {
                 data: JSON.parse(data)
             });

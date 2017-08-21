@@ -26,22 +26,25 @@ function graftedFetch(request, opts) {
     opts.headers[swwebviewSettings.GRAFTED_REQUEST_HEADER] = opts.body;
     return originalFetch(request, opts);
 }
-window.fetch = graftedFetch;
-var originalSend = XMLHttpRequest.prototype.send;
-var originalOpen = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function (method, url) {
-    var resolvedURL = new URL(url, window.location.href);
-    if (resolvedURL.protocol === swwebviewSettings.SW_PROTOCOL + ":") {
-        this._graftBody = true;
-    }
-    originalOpen.apply(this, arguments);
-};
-XMLHttpRequest.prototype.send = function (data) {
-    if (data && this._graftBody === true) {
-        this.setRequestHeader(swwebviewSettings.GRAFTED_REQUEST_HEADER, data);
-    }
-    originalSend.apply(this, arguments);
-};
+graftedFetch.__bodyGrafted = true;
+if (originalFetch.__bodyGrafted !== true) {
+    window.fetch = graftedFetch;
+    var originalSend_1 = XMLHttpRequest.prototype.send;
+    var originalOpen_1 = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url) {
+        var resolvedURL = new URL(url, window.location.href);
+        if (resolvedURL.protocol === swwebviewSettings.SW_PROTOCOL + ":") {
+            this._graftBody = true;
+        }
+        originalOpen_1.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.send = function (data) {
+        if (data && this._graftBody === true) {
+            this.setRequestHeader(swwebviewSettings.GRAFTED_REQUEST_HEADER, data);
+        }
+        originalSend_1.apply(this, arguments);
+    };
+}
 
 function E() {
   // Keep this empty so it's easier to inherit from
@@ -116,47 +119,28 @@ E.prototype.removeEventListener = E.prototype.off;
 
 var index = E;
 
-var APIError = (function (_super) {
-    __extends(APIError, _super);
-    function APIError(message, response) {
-        var _this = _super.call(this, message) || this;
-        _this.response = response;
-        return _this;
-    }
-    return APIError;
-}(Error));
-function apiRequest(path, body) {
-    if (body === void 0) { body = undefined; }
-    return fetch(path, {
-        method: swwebviewSettings.API_REQUEST_METHOD,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }).then(function (res) {
-        if (res.ok === false) {
-            if (res.status === 500) {
-                return res.json().then(function (errorJSON) {
-                    throw new Error(errorJSON.error);
-                });
-            }
-            throw new APIError("Received a non-200 response to API request", res);
-        }
-        return res.json();
-    });
-}
-
 var StreamingXHR = (function (_super) {
     __extends(StreamingXHR, _super);
     function StreamingXHR(url) {
         var _this = _super.call(this) || this;
         _this.seenBytes = 0;
-        _this.xhr = new XMLHttpRequest();
-        _this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, url);
-        _this.xhr.onreadystatechange = _this.receiveData.bind(_this);
-        _this.xhr.send();
+        _this.isOpen = false;
+        _this.url = url;
         return _this;
     }
+    StreamingXHR.prototype.open = function () {
+        if (this.isOpen === true) {
+            throw new Error("Already open");
+        }
+        this.isOpen = true;
+        this.xhr = new XMLHttpRequest();
+        this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, this.url);
+        this.xhr.onreadystatechange = this.receiveData.bind(this);
+        this.xhr.send();
+    };
+    StreamingXHR.prototype.addEventListener = function (type, func) {
+        _super.prototype.addEventListener.call(this, type, func);
+    };
     StreamingXHR.prototype.receiveData = function () {
         try {
             if (this.xhr.readyState !== 3) {
@@ -186,8 +170,44 @@ var StreamingXHR = (function (_super) {
     return StreamingXHR;
 }(index));
 
-var eventStream = new StreamingXHR("/events");
-eventStream.addEventListener("serviceworkerregistration", console.info);
+function getFullAPIURL(path) {
+    return new URL(path, swwebviewSettings.SW_PROTOCOL + "://" + swwebviewSettings.SW_API_HOST).href;
+}
+
+var absoluteURL = getFullAPIURL("/events");
+var eventsURL = new URL(absoluteURL);
+eventsURL.searchParams.append("path", window.location.pathname);
+var eventStream = new StreamingXHR(eventsURL.href);
+
+var APIError = (function (_super) {
+    __extends(APIError, _super);
+    function APIError(message, response) {
+        var _this = _super.call(this, message) || this;
+        _this.response = response;
+        return _this;
+    }
+    return APIError;
+}(Error));
+function apiRequest(path, body) {
+    if (body === void 0) { body = undefined; }
+    return fetch(getFullAPIURL(path), {
+        method: swwebviewSettings.API_REQUEST_METHOD,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(function (res) {
+        if (res.ok === false) {
+            if (res.status === 500) {
+                return res.json().then(function (errorJSON) {
+                    throw new Error(errorJSON.error);
+                });
+            }
+            throw new APIError("Received a non-200 response to API request", res);
+        }
+        return res.json();
+    });
+}
 
 var existingWorkers = [];
 var ServiceWorkerImplementation = (function (_super) {
@@ -220,15 +240,8 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     function ServiceWorkerRegistrationImplementation(opts) {
         var _this = _super.call(this) || this;
         _this.scope = opts.scope;
-        _this.active = opts.active
-            ? ServiceWorkerImplementation.getOrCreate(opts.active)
-            : null;
-        _this.installing = opts.installing
-            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
-            : null;
-        _this.waiting = opts.waiting
-            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
-            : null;
+        _this.id = opts.id;
+        _this.updateFromResponse(opts);
         return _this;
     }
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
@@ -239,6 +252,17 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
         }
         return registration;
     };
+    ServiceWorkerRegistrationImplementation.prototype.updateFromResponse = function (opts) {
+        this.active = opts.active
+            ? ServiceWorkerImplementation.getOrCreate(opts.active)
+            : null;
+        this.installing = opts.installing
+            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
+            : null;
+        this.waiting = opts.waiting
+            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
+            : null;
+    };
     ServiceWorkerRegistrationImplementation.prototype.getNotifications = function () {
         throw new Error("not yet");
     };
@@ -247,7 +271,6 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     };
     ServiceWorkerRegistrationImplementation.prototype.unregister = function () {
         return apiRequest("/ServiceWorkerRegistration/unregister", {
-            scope: this.scope,
             id: this.id
         }).then(function (response) {
             return response.success;
@@ -258,13 +281,49 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     };
     return ServiceWorkerRegistrationImplementation;
 }(index));
-eventStream.addEventListener("serviceworkerregistration", console.info);
+eventStream.addEventListener("serviceworkerregistration", function (e) {
+    var reg = existingRegistrations.find(function (r) { return r.id == e.data.id; });
+    if (reg) {
+        reg.updateFromResponse(e.data);
+    }
+});
 
 var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
     function ServiceWorkerContainerImplementation() {
-        var _this = _super.call(this) || this;
+        var _this = this;
+        console.log("CREATED CONTAINER");
+        _this = _super.call(this) || this;
         _this.location = window.location;
+        var readyFulfill;
+        _this.ready = new Promise(function (fulfill, reject) {
+            readyFulfill = fulfill;
+        });
+        eventStream.addEventListener("serviceworkercontainer", function (e) {
+            console.log("container response", e.data);
+            var reg = e.data.readyRegistration
+                ? ServiceWorkerRegistrationImplementation.getOrCreate(e.data.readyRegistration)
+                : undefined;
+            if (readyFulfill) {
+                readyFulfill(reg);
+                readyFulfill = undefined;
+            }
+            else if (reg) {
+                _this.ready = Promise.resolve(reg);
+            }
+            else {
+                _this.ready = new Promise(function (fulfill, reject) {
+                    readyFulfill = fulfill;
+                });
+            }
+            if (e.data.controller) {
+                _this.controller = ServiceWorkerImplementation.getOrCreate(e.data.controller);
+            }
+            else {
+                _this.controller = undefined;
+            }
+        });
+        eventStream.open();
         return _this;
     }
     ServiceWorkerContainerImplementation.prototype.controllerChangeMessage = function (evt) {
@@ -272,6 +331,7 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     };
     ServiceWorkerContainerImplementation.prototype.getRegistration = function (scope) {
         return apiRequest("/ServiceWorkerContainer/getregistration", {
+            path: window.location.pathname,
             scope: scope
         }).then(function (response) {
             if (response === null) {
@@ -281,7 +341,9 @@ var ServiceWorkerContainerImplementation = (function (_super) {
         });
     };
     ServiceWorkerContainerImplementation.prototype.getRegistrations = function () {
-        return apiRequest("/ServiceWorkerContainer/getregistrations").then(function (response) {
+        return apiRequest("/ServiceWorkerContainer/getregistrations", {
+            path: window.location.pathname
+        }).then(function (response) {
             var registrations = [];
             response.forEach(function (r) {
                 if (r) {
@@ -293,16 +355,31 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     };
     ServiceWorkerContainerImplementation.prototype.register = function (url, opts) {
         return apiRequest("/ServiceWorkerContainer/register", {
+            path: window.location.pathname,
             url: url,
             scope: opts ? opts.scope : undefined
         }).then(function (response) {
             return ServiceWorkerRegistrationImplementation.getOrCreate(response);
         });
     };
+    // used for detection
+    ServiceWorkerContainerImplementation.__isSWWebViewImplementation = true;
     return ServiceWorkerContainerImplementation;
 }(index));
-if ("serviceWorker" in navigator === false) {
-    navigator.serviceWorker = new ServiceWorkerContainerImplementation();
+if ("ServiceWorkerContainer" in self === false) {
+    // We lazily initialize this when the client code requests it.
+    console.log("adding");
+    var container_1 = undefined;
+    Object.defineProperty(navigator, "serviceWorker", {
+        configurable: true,
+        get: function () {
+            if (container_1) {
+                return container_1;
+            }
+            return (container_1 = new ServiceWorkerContainerImplementation());
+        }
+    });
 }
 
 }(swwebviewSettings));
+//# sourceMappingURL=runtime.js.map

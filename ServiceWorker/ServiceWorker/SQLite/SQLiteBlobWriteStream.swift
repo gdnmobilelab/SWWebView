@@ -15,14 +15,18 @@ public class SQLiteBlobWriteStream: SQLiteBlobStream {
         return 1
     }
 
-    public func write(_ data: Data) -> Int {
-        return data.withUnsafeBytes { bytes in
-            self.write(bytes, maxLength: data.count)
+    public func write(_ data: Data) throws -> Int {
+        return try data.withUnsafeBytes { bytes in
+            try self.write(bytes, maxLength: data.count)
         }
     }
 
-    public func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
+    public func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) throws -> Int {
 
+        if self.isOpen == false {
+            throw ErrorMessage("Cannot write to a stream that has been closed")
+        }
+        
         let bytesLeft = blobLength! - currentPosition!
         let lengthToWrite = min(Int32(len), bytesLeft)
 

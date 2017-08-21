@@ -26,6 +26,7 @@
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */; };
 		8AF85D531F38BA1D001B0A87 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */; };
 		8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D561F38BB70001B0A87 /* SWWebView.swift */; };
 		8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */; };
@@ -73,6 +74,7 @@
 		8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SWWebViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewTests.swift; sourceTree = "<group>"; };
 		8AA76F5E1F38B81700EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
 		8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorkerContainer.framework; path = "../ServiceWorkerContainer/build/Debug-iphoneos/ServiceWorkerContainer.framework"; sourceTree = "<group>"; };
 		8AF85D561F38BB70001B0A87 /* SWWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebView.swift; sourceTree = "<group>"; };
 		8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewNavigationDelegate.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 				8A5D97FE1F3CC607002E521F /* ToJSON.swift */,
 				8A5D98001F3CC62A002E521F /* ServiceWorker.swift */,
 				8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */,
+				8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */,
 			);
 			path = ToJSONExtensions;
 			sourceTree = "<group>";
@@ -465,6 +468,7 @@
 				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
 				8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */,
 				8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */,
+				8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

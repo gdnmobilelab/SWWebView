@@ -26,15 +26,16 @@ public class CommandBridge {
     ]
 
     static func processSchemeStart(task: SWURLSchemeTask) {
+        
+        if task.request.url!.host != SWSchemeHandler.serviceWorkerRequestHost {
+            return self.send404(for:task)
+        }
 
         let matchingRoute = routes.first(where: { $0.key == task.request.url!.path })
 
         if matchingRoute == nil {
             Log.error?("SW Request sent to unrecognised URL: \(task.request.url!.absoluteString)")
-            let notFound = HTTPURLResponse(url: task.request.url!, statusCode: 404, httpVersion: "1.0", headerFields: nil)!
-            task.didReceive(notFound)
-            task.didFinish()
-            return
+            return self.send404(for: task)
         }
 
         _ = matchingRoute!.value(task)
@@ -49,6 +50,36 @@ public class CommandBridge {
         }
 
         _ = matchingRoute!.value(task)
+    }
+    
+    
+    /// Since these are real HTTP requests being sent, the browser insists on sending an OPTIONS
+    /// request before the actual SW_REQUEST. So we need to make sure we reply with the correct
+    /// CORS headers.
+    static func processOPTIONSTask(task: SWURLSchemeTask) {
+        let response = HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: nil, headerFields: [
+            "Access-Control-Allow-Methods": SWSchemeHandler.serviceWorkerRequestMethod,
+            "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "Origin")!,
+            "Access-Control-Allow-Headers": "content-type, origin, X-Grafted-Request-Body"
+            ])
+        do {
+            try task.didReceive(response!)
+            try task.didFinish()
+        } catch {
+            task.didFailWithError(error)
+        }
+    }
+    
+    fileprivate static func send404(for task: SWURLSchemeTask) {
+        do {
+            let notFound = HTTPURLResponse(url: task.request.url!, statusCode: 404, httpVersion: nil, headerFields: [
+            "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
+            ])!
+        try task.didReceive(notFound)
+        try task.didFinish()
+        } catch {
+            task.didFailWithError(error)
+        }
     }
 
     static func processAsJSON(task: SWURLSchemeTask, _ asJSON: @escaping (AnyObject?) throws -> Promise<Any?>) {
@@ -68,12 +99,13 @@ public class CommandBridge {
                 encodedResponse = try JSONSerialization.data(withJSONObject: response, options: [])
             }
 
-            task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: nil, headerFields: [
+            try task.didReceive(HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: nil, headerFields: [
                 "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
             ])!)
 
-            task.didReceive(encodedResponse)
-            task.didFinish()
+            try task.didReceive(encodedResponse)
+            try task.didFinish()
         }
         .catch { error in
 
@@ -82,9 +114,11 @@ public class CommandBridge {
                     "error": "\(error)",
                 ], options: [])
 
-                task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 500, httpVersion: "1.1", headerFields: nil)!)
-                task.didReceive(encodedResponse)
-                task.didFinish()
+                try task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 500, httpVersion: "1.1", headerFields: [
+                        "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
+                    ])!)
+                try task.didReceive(encodedResponse)
+                try task.didFinish()
 
             } catch {
                 // In case we can't even report errors correctly.

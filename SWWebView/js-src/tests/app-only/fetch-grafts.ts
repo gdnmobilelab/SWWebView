@@ -1,10 +1,11 @@
 import { assert } from "chai";
 import { API_REQUEST_METHOD } from "swwebview-settings";
 import { describeIfApp } from "../test-bootstrap";
+import { getFullAPIURL } from "../../src/util/full-api-url";
 
 describeIfApp("Fetch grafts", () => {
     it("Grafts fetch bodies", () => {
-        return fetch("/ping-with-body", {
+        return fetch(getFullAPIURL("/ping-with-body"), {
             method: API_REQUEST_METHOD,
             body: JSON.stringify({ value: "test-string" })
         })
@@ -27,7 +28,7 @@ describeIfApp("Fetch grafts", () => {
                 done();
             }
         };
-        xhttp.open(API_REQUEST_METHOD, "/ping-with-body", true);
+        xhttp.open(API_REQUEST_METHOD, getFullAPIURL("/ping-with-body"), true);
         xhttp.send(JSON.stringify({ value: "test-string" }));
     });
 });

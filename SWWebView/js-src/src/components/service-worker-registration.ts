@@ -21,6 +21,35 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     constructor(opts: ServiceWorkerRegistrationAPIResponse) {
         super();
         this.scope = opts.scope;
+        this.id = opts.id;
+        this.updateFromResponse(opts);
+    }
+
+    static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {
+        let registration = existingRegistrations.find(reg => reg.id == opts.id);
+        if (!registration) {
+            if (opts.unregistered === true) {
+                throw new Error(
+                    "Trying to create an unregistered registration"
+                );
+            }
+            console.info("Creating new registration:", opts.id, opts);
+            registration = new ServiceWorkerRegistrationImplementation(opts);
+            existingRegistrations.push(registration);
+        }
+        return registration;
+    }
+
+    updateFromResponse(opts: ServiceWorkerRegistrationAPIResponse) {
+        if (opts.unregistered === true) {
+            console.info("Removing inactive registration:", opts.id);
+            // Remove from our array of existing registrations, as we don't
+            // want to refer to this again.
+            let idx = existingRegistrations.indexOf(this);
+            existingRegistrations.splice(idx, 1);
+            return;
+        }
+
         this.active = opts.active
             ? ServiceWorkerImplementation.getOrCreate(opts.active)
             : null;
@@ -30,15 +59,6 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
         this.waiting = opts.waiting
             ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
             : null;
-    }
-
-    static getOrCreate(opts: ServiceWorkerRegistrationAPIResponse) {
-        let registration = existingRegistrations.find(reg => reg.id == opts.id);
-        if (!registration) {
-            registration = new ServiceWorkerRegistrationImplementation(opts);
-            existingRegistrations.push(registration);
-        }
-        return registration;
     }
 
     onupdatefound: () => void;
@@ -58,7 +78,6 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
         return apiRequest<
             BooleanSuccessResponse
         >("/ServiceWorkerRegistration/unregister", {
-            scope: this.scope,
             id: this.id
         }).then(response => {
             return response.success;
@@ -70,4 +89,17 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
     }
 }
 
-eventStream.addEventListener("serviceworkerregistration", console.info);
+eventStream.addEventListener<
+    ServiceWorkerRegistrationAPIResponse
+>("serviceworkerregistration", e => {
+    console.log(e);
+    let reg = existingRegistrations.find(r => r.id == e.data.id);
+    if (reg) {
+        reg.updateFromResponse(e.data);
+    } else {
+        console.info(
+            "Received update for non-existent registration",
+            e.data.id
+        );
+    }
+});

@@ -18,4 +18,16 @@ extension URL {
         components.scheme = SWWebView.ServiceWorkerScheme
         return components.url!.absoluteString
     }
+    
+    init?(swWebViewString: String) {
+        var urlComponents = URLComponents(string: swWebViewString)
+        if urlComponents != nil {
+            urlComponents!.scheme = urlComponents!.host == "localhost" ? "http" : "https"
+        }
+        if urlComponents?.url == nil {
+            return nil
+        } else {
+            self = urlComponents!.url!
+        }
+    }
 }

@@ -50,7 +50,7 @@ public class SQLiteConnection {
 
     public init(_ dbURL: URL) throws {
 
-        let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_SHAREDCACHE, nil)
+        let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
         //        let open = sqlite3_open(dbURL.path.cString(using: String.Encoding.utf8), &db)
 
         if open != SQLITE_OK {
@@ -203,36 +203,30 @@ public class SQLiteConnection {
         return ErrorMessage(errMsg)
     }
 
-    public func multiUpdate(sql: String, values: [[Any]]) throws {
-
+    public func update(sql: String, values: [Any]) throws {
         var statement: OpaquePointer?
-
+        
         if sqlite3_prepare_v2(self.db!, sql + ";", -1, &statement, nil) != SQLITE_OK {
             sqlite3_finalize(statement)
             throw self.getLastError()
         }
-
+        
         do {
             let parameterCount = sqlite3_bind_parameter_count(statement)
-
-            for valueArray in values {
-
-                if valueArray.count != parameterCount {
-                    throw ErrorMessage("Value array length is not equal to the parameter count")
-                }
-
-                for (offset, element) in valueArray.enumerated() {
-                    // SQLite uses non-zero index for parameter numbers
-                    try self.bindValue(statement!, idx: Int32(offset) + 1, value: element)
-                }
-
-                if sqlite3_step(statement) != SQLITE_DONE {
-                    throw self.getLastError()
-                }
-
-                sqlite3_reset(statement)
+        
+            if values.count != parameterCount {
+                throw ErrorMessage("Value array length is not equal to the parameter count")
             }
-
+            
+            for (offset, element) in values.enumerated() {
+                // SQLite uses non-zero index for parameter numbers
+                try self.bindValue(statement!, idx: Int32(offset) + 1, value: element)
+            }
+            let step = sqlite3_step(statement)
+            if step != SQLITE_DONE {
+                throw self.getLastError()
+            }
+        
             sqlite3_finalize(statement)
         } catch {
             sqlite3_finalize(statement)
@@ -240,12 +234,8 @@ public class SQLiteConnection {
         }
     }
 
-    public func update(sql: String, values: [Any]) throws {
-        try self.multiUpdate(sql: sql, values: [values])
-    }
-
     public func insert(sql: String, values: [Any]) throws -> Int64 {
-        try self.multiUpdate(sql: sql, values: [values])
+        try self.update(sql: sql, values: values)
 
         return self.lastInsertRowId
     }

@@ -1,5 +1,5 @@
 import { API_REQUEST_METHOD } from "swwebview-settings";
-
+import { getFullAPIURL } from "./full-api-url";
 export class APIError extends Error {
     response: Response;
 
@@ -10,7 +10,7 @@ export class APIError extends Error {
 }
 
 export function apiRequest<T>(path: string, body: any = undefined): Promise<T> {
-    return fetch(path, {
+    return fetch(getFullAPIURL(path), {
         method: API_REQUEST_METHOD,
         body: body === undefined ? undefined : JSON.stringify(body),
         headers: {

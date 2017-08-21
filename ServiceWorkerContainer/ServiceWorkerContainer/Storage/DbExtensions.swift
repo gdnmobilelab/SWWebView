@@ -13,20 +13,24 @@ import PromiseKit
 
 extension SQLiteBlobWriteStream {
 
-    func pipeReadableStream(stream: ReadableStream, _ cb: @escaping (Data) -> Void) {
+    func pipeReadableStream(stream: ReadableStream, _ cb: @escaping (Error?, Data?) -> Void) {
         open()
         self.streamToDB(stream: stream, cb)
     }
 
     func pipeReadableStream(stream: ReadableStream) -> Promise<Data> {
-        return Promise { fulfill, _ in
-            self.pipeReadableStream(stream: stream) { hash in
-                fulfill(hash)
+        return Promise { fulfill, reject in
+            self.pipeReadableStream(stream: stream) { err, hash in
+                if err != nil {
+                    reject(err!)
+                } else {
+                    fulfill(hash!)
+                }
             }
         }
     }
 
-    fileprivate func streamToDB(stream: ReadableStream, hash: CC_SHA256_CTX? = nil, _ cb: @escaping (Data) -> Void) {
+    fileprivate func streamToDB(stream: ReadableStream, hash: CC_SHA256_CTX? = nil, _ cb: @escaping (Error?, Data?) -> Void) {
 
         var hashToUse: CC_SHA256_CTX
 
@@ -43,14 +47,15 @@ extension SQLiteBlobWriteStream {
 
                 var hashData: [UInt8] = Array(repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
                 CC_SHA256_Final(&hashData, &hashToUse)
-                cb(Data(bytes: hashData))
+                cb(nil, Data(bytes: hashData))
             } else {
-                if self.isOpen == false {
-                    NSLog("no?")
-                }
-                _ = result.value!.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Int in
-                    CC_SHA256_Update(&hashToUse, bytes, CC_LONG(result.value!.count))
-                    return self.write(bytes, maxLength: result.value!.count)
+                do {
+                    _ = try result.value!.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Int in
+                        CC_SHA256_Update(&hashToUse, bytes, CC_LONG(result.value!.count))
+                        return try self.write(bytes, maxLength: result.value!.count)
+                    }
+                } catch {
+                    cb(error, nil)
                 }
                 self.streamToDB(stream: stream, hash: hashToUse, cb)
             }

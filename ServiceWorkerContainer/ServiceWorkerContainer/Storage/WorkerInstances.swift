@@ -22,12 +22,14 @@ class WorkerInstances {
         }
 
         let dbWorker = try CoreDatabase.inConnection { db -> ServiceWorker in
-            return try db.select(sql: "SELECT scope, url, install_state FROM workers WHERE worker_id = ?", values: [id]) { (resultSet) -> ServiceWorker in
+            return try db.select(sql: "SELECT registration_id, url, install_state FROM workers WHERE worker_id = ?", values: [id]) { (resultSet) -> ServiceWorker in
                 if resultSet.next() == false {
                     throw ErrorMessage("Worker does not exist")
                 }
 
-                let registration = try ServiceWorkerRegistration.getOrCreate(scope: try resultSet.url("scope")!)
+                let registrationId = try resultSet.string("registration_id")!
+                
+                let registration = try ServiceWorkerRegistration.get(byId: registrationId)!
                 let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
 
                 return ServiceWorker(id: id, url: try resultSet.url("url")!, registration: registration, state: state, loadContent: ServiceWorkerHooks.loadContent)

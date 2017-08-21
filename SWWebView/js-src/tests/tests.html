@@ -3,6 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="mocha.css" type="text/css" rel="stylesheet" />
+
 </head>
 
 <body>
@@ -10,19 +11,14 @@
     <div id="mocha"></div>
     <script src="mocha.js"></script>
     <script>
-        if (!window.swwebviewSettings) {
-            window.swwebviewSettings = {};
-            window.NOT_APP = true;
-        }
-
         mocha.setup({
             ui: "bdd"
         });
     </script>
+    <script src="lib.js"></script>
     <script src="tests.js"></script>
     <script>
         mocha.run();
-
     </script>
     <script src="http://localhost:35729/livereload.js"></script>
 </body>

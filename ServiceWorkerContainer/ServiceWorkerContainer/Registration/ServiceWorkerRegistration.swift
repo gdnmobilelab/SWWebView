@@ -96,6 +96,33 @@ import ServiceWorker
                 }
         }
     }
+    
+    static func getReadyRegistration(for containerURL: URL) throws -> ServiceWorkerRegistration? {
+        
+        return try CoreDatabase.inConnection { db in
+            let like = "\(containerURL.scheme!)://\(containerURL.host!)/%"
+            
+            return try db.select(sql: """
+                SELECT registration_id FROM registrations
+                WHERE scope LIKE ?
+                AND active NOT NULL
+                ORDER BY length(scope) DESC
+                LIMIT 1
+            """, values: [like]) { resultSet in
+                
+                if resultSet.next() == false {
+                    return nil
+                }
+                
+                let id = try resultSet.string("registration_id")!
+                
+                return try ServiceWorkerRegistration.get(byId: id)
+                
+            }
+            
+        }
+        
+    }
 
     fileprivate func getUpdateRequest(forExistingWorker worker: ServiceWorker) throws -> FetchRequest {
 
@@ -135,14 +162,14 @@ import ServiceWorker
         try CoreDatabase.inConnection { db in
             _ = try db.insert(sql: """
                 INSERT INTO workers
-                    (worker_id, url, install_state, scope)
+                    (worker_id, url, install_state, registration_id)
                 VALUES
                     (?,?,?,?)
             """, values: [
                 newWorkerID,
                 url,
                 ServiceWorkerInstallState.installing.rawValue,
-                self.scope,
+                self.id,
                 ])
         }
         
@@ -371,80 +398,88 @@ import ServiceWorker
             existingWorker!.state = .redundant
             self.redundant = existingWorker
         }
+        GlobalEventLog.notifyChange(self)
     }
 
     fileprivate static let activeInstances = NSHashTable<ServiceWorkerRegistration>.weakObjects()
-
-    public static func get(scope: URL, id: String? = nil) throws -> ServiceWorkerRegistration? {
-
-        let active = activeInstances.allObjects.filter { $0.scope == scope }.first
-
+    
+    fileprivate static func fromResultSet(_ rs: SQLiteResultSet) throws -> ServiceWorkerRegistration? {
+        if rs.next() == false {
+            // If we don't already have a registration, return nil (get() doesn't create one)
+            return nil
+        }
+        let id = try rs.string("registration_id")!
+        let reg = ServiceWorkerRegistration(scope: try rs.url("scope")!, id: id)
+        
+        // Need to add this now, as WorkerInstances.get() uses our static storage and
+        // we don't want to get into a loop
+        self.activeInstances.add(reg)
+        
+        if let activeId = try rs.string("active") {
+            reg.active = try WorkerInstances.get(id: activeId)
+        }
+        if let waitingId = try rs.string("waiting") {
+            reg.waiting = try WorkerInstances.get(id: waitingId)
+        }
+        if let installingId = try rs.string("installing") {
+            reg.installing = try WorkerInstances.get(id: installingId)
+        }
+        if let redundantId = try rs.string("redundant") {
+            reg.redundant = try WorkerInstances.get(id: redundantId)
+        }
+        
+        return reg
+    }
+    
+    public static func get(byId id: String) throws -> ServiceWorkerRegistration? {
+        let active = activeInstances.allObjects.filter { $0.id == id }.first
+        
         if active != nil {
             return active
         }
-
+        
         return try CoreDatabase.inConnection { connection in
-
-            var query = "SELECT * FROM registrations WHERE scope = ?"
-            var values: [Any] = [scope.absoluteString]
-
-            if let specificId = id {
-                // Sometimes (usually when interfacing with the web view) we want to
-                // make sure we are fetching a specific registration, which might have
-                // been deleted and replaced
-
-                query += " AND id = ?"
-                values.append(specificId)
+            
+            return try connection.select(sql: "SELECT * FROM registrations WHERE id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
+                
+                return try self.fromResultSet(rs)
             }
-
-            return try connection.select(sql: query, values: values) { rs -> ServiceWorkerRegistration? in
-
-                if rs.next() == false {
-                    // If we don't already have a registration, return nil (get() doesn't create one)
-                    return nil
-                }
-
-                let reg = ServiceWorkerRegistration(scope: scope, id: try rs.string("id")!)
-
-                // Need to add this now, as WorkerInstances.get() uses our static storage and
-                // we don't want to get into a loop
-                self.activeInstances.add(reg)
-
-                if let activeId = try rs.string("active") {
-                    reg.active = try WorkerInstances.get(id: activeId)
-                }
-                if let waitingId = try rs.string("waiting") {
-                    reg.waiting = try WorkerInstances.get(id: waitingId)
-                }
-                if let installingId = try rs.string("installing") {
-                    reg.installing = try WorkerInstances.get(id: installingId)
-                }
-                if let redundantId = try rs.string("redundant") {
-                    reg.redundant = try WorkerInstances.get(id: redundantId)
-                }
-
-                return reg
+        }
+    }
+    
+    public static func getOrCreate(byScope scope: URL) throws -> ServiceWorkerRegistration {
+        let existing = try self.get(byScope: scope)
+        if existing != nil {
+            return existing!
+        } else {
+            return try self.create(scope: scope)
+        }
+    }
+    
+    public static func get(byScope scope: URL) throws -> ServiceWorkerRegistration? {
+        let active = activeInstances.allObjects.filter { $0.scope == scope }.first
+        
+        if active != nil {
+            return active
+        }
+        
+        return try CoreDatabase.inConnection { connection in
+            
+            return try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope]) { rs -> ServiceWorkerRegistration? in
+                
+                return try self.fromResultSet(rs)
             }
         }
     }
 
-    public static func create(scope: URL) throws -> ServiceWorkerRegistration {
+    fileprivate static func create(scope: URL) throws -> ServiceWorkerRegistration {
 
         return try CoreDatabase.inConnection { connection in
             let newRegID = UUID().uuidString
-            _ = try connection.insert(sql: "INSERT INTO registrations (id, scope) VALUES (?, ?)", values: [newRegID, scope])
+            _ = try connection.insert(sql: "INSERT INTO registrations (registration_id, scope) VALUES (?, ?)", values: [newRegID, scope])
             let reg = ServiceWorkerRegistration(scope: scope, id: newRegID)
             self.activeInstances.add(reg)
             return reg
-        }
-    }
-
-    public static func getOrCreate(scope: URL) throws -> ServiceWorkerRegistration {
-
-        if let existing = try self.get(scope: scope) {
-            return existing
-        } else {
-            return try self.create(scope: scope)
         }
     }
 
@@ -464,13 +499,13 @@ import ServiceWorker
                     }
                 }
 
-                try db.update(sql: "DELETE FROM registrations WHERE scope = ?", values: [self.scope])
+                try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [self.id])
             }
 
             self.unregistered = true
-
+            
             GlobalEventLog.notifyChange(self)
-
+            ServiceWorkerRegistration.activeInstances.remove(self)
             return Promise(value: ())
         }
     }

@@ -4,10 +4,15 @@ export interface ServiceWorkerAPIResponse {
     installState: ServiceWorkerState;
 }
 
+export interface ServiceWorkerContainerAPIResponse {
+    readyRegistration?: ServiceWorkerRegistrationAPIResponse;
+    controller?: ServiceWorkerAPIResponse;
+}
+
 export interface ServiceWorkerRegistrationAPIResponse {
     scope: string;
     id: string;
-    unregsistered: boolean;
+    unregistered: boolean;
     active?: ServiceWorkerAPIResponse;
     waiting?: ServiceWorkerAPIResponse;
     installing?: ServiceWorkerAPIResponse;

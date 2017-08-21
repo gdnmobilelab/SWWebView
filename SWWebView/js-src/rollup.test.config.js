@@ -1,4 +1,4 @@
-let baseConfig = require("./rollup.config.js");
+let baseConfig = Object.assign({}, require("./rollup.config.js"));
 const fs = require("fs");
 const recursiveReadSync = require("recursive-readdir-sync");
 const path = require("path");
@@ -35,7 +35,7 @@ function loadAllTests() {
         }
     };
 }
-baseConfig.entry = "tests/test-bootstrap.ts";
+baseConfig.entry = "test-bootstrap.ts";
 baseConfig.dest = "tests.js";
 baseConfig.plugins.push(loadAllTests());
 baseConfig.format = "umd";
