@@ -6,9 +6,11 @@ export function withIframe(
         let iframe = document.createElement("iframe");
 
         iframe.onload = () => {
+            console.log("LOAD?");
             fulfill(
                 cb(iframe.contentWindow)
                     .then(errorOrNothing => {
+                        console.log("FULFILLED");
                         return iframe.contentWindow.navigator.serviceWorker.getRegistrations();
                     })
                     .then((regs: ServiceWorkerRegistration[]) => {
@@ -16,11 +18,12 @@ export function withIframe(
                         return Promise.all(mapped);
                     })
                     .then(() => {
+                        console.log("here?");
                         setTimeout(() => {
                             // No idea why this has to be in a timeout, but the promise stops
                             // if it isn't.
                             document.body.removeChild(iframe);
-                        }, 1);
+                        }, 100);
                     })
             );
         };

@@ -40,6 +40,36 @@ class GlobalScopeTests: XCTestCase {
         }
         .assertResolves()
     }
+    
+    func testEventListenersHandleErrors() {
+        
+        let sw = ServiceWorker.createTestWorker()
+        sw.withJSContext { context in
+            
+            // should be accessible globally and in self.
+            context.evaluateScript("""
+                self.addEventListener("activate", function () {
+                    throw new Error("oh no")
+                });
+            """)
+            }
+            .then {
+                let ev = ExtendableEvent(type: "activate")
+                return sw.dispatchEvent(ev)
+            }
+            .then { () -> Int in
+                return 1
+            }
+            .recover { error -> Int in
+                XCTAssertEqual((error as! ErrorMessage).message, "oh no")
+                return 0
+            }
+            .then { val in
+                XCTAssertEqual(val, 0)
+            }
+            
+            .assertResolves()
+    }
 
     func testAllEventFunctionsAreAdded() {
         let sw = ServiceWorker.createTestWorker()

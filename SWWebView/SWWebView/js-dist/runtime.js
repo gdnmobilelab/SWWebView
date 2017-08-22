@@ -142,27 +142,28 @@ var StreamingXHR = (function (_super) {
         _super.prototype.addEventListener.call(this, type, func);
     };
     StreamingXHR.prototype.receiveData = function () {
-        try {
-            if (this.xhr.readyState !== 3) {
-                return;
-            }
-            // This means the responseText keeps growing and growing. Perhaps
-            // we should look into cutting this off and re-establishing a new
-            // link if it gets too big.
-            var newData = this.xhr.responseText.substr(this.seenBytes);
-            this.seenBytes = this.xhr.responseText.length;
-            var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
-            var evt = new MessageEvent(event, {
-                data: JSON.parse(data)
-            });
-            this.dispatchEvent(evt);
+        // try {
+        if (this.xhr.readyState !== 3) {
+            return;
         }
-        catch (err) {
-            var errEvt = new ErrorEvent("error", {
-                error: err
-            });
-            this.dispatchEvent(errEvt);
-        }
+        // This means the responseText keeps growing and growing. Perhaps
+        // we should look into cutting this off and re-establishing a new
+        // link if it gets too big.
+        var newData = this.xhr.responseText.substr(this.seenBytes);
+        this.seenBytes = this.xhr.responseText.length;
+        var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
+        var evt = new MessageEvent(event, {
+            data: JSON.parse(data)
+        });
+        // console.info("EVENT:", event, evt.data);
+        this.dispatchEvent(evt);
+        // } catch (err) {
+        //     console.error(err);
+        //     let errEvt = new ErrorEvent("error", {
+        //         error: err
+        //     });
+        //     this.dispatchEvent(errEvt);
+        // }
     };
     StreamingXHR.prototype.close = function () {
         this.xhr.abort();
@@ -247,12 +248,24 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     ServiceWorkerRegistrationImplementation.getOrCreate = function (opts) {
         var registration = existingRegistrations.find(function (reg) { return reg.id == opts.id; });
         if (!registration) {
+            if (opts.unregistered === true) {
+                throw new Error("Trying to create an unregistered registration");
+            }
+            console.info("Creating new registration:", opts.id, opts);
             registration = new ServiceWorkerRegistrationImplementation(opts);
             existingRegistrations.push(registration);
         }
         return registration;
     };
     ServiceWorkerRegistrationImplementation.prototype.updateFromResponse = function (opts) {
+        if (opts.unregistered === true) {
+            console.info("Removing inactive registration:", opts.id);
+            // Remove from our array of existing registrations, as we don't
+            // want to refer to this again.
+            var idx = existingRegistrations.indexOf(this);
+            existingRegistrations.splice(idx, 1);
+            return;
+        }
         this.active = opts.active
             ? ServiceWorkerImplementation.getOrCreate(opts.active)
             : null;
@@ -282,9 +295,13 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     return ServiceWorkerRegistrationImplementation;
 }(index));
 eventStream.addEventListener("serviceworkerregistration", function (e) {
+    console.log(e);
     var reg = existingRegistrations.find(function (r) { return r.id == e.data.id; });
     if (reg) {
         reg.updateFromResponse(e.data);
+    }
+    else {
+        console.info("Received update for non-existent registration", e.data.id);
     }
 });
 
@@ -292,35 +309,54 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
     function ServiceWorkerContainerImplementation() {
         var _this = this;
-        console.log("CREATED CONTAINER");
+        console.info("Created new ServiceWorkerContainer for", window.location.pathname);
         _this = _super.call(this) || this;
         _this.location = window.location;
+        _this.controller = null;
         var readyFulfill;
         _this.ready = new Promise(function (fulfill, reject) {
             readyFulfill = fulfill;
         });
+        _this.addEventListener("controllerchange", function (e) {
+            if (_this.oncontrollerchange) {
+                _this.oncontrollerchange(e);
+            }
+        });
         eventStream.addEventListener("serviceworkercontainer", function (e) {
-            console.log("container response", e.data);
+            console.info("container change", e.data);
             var reg = e.data.readyRegistration
                 ? ServiceWorkerRegistrationImplementation.getOrCreate(e.data.readyRegistration)
                 : undefined;
-            if (readyFulfill) {
+            console.log("container response", e.data, reg);
+            if (reg && readyFulfill) {
+                console.log("fulfill existing pending");
                 readyFulfill(reg);
                 readyFulfill = undefined;
             }
             else if (reg) {
+                console.log("set new resolved promise");
                 _this.ready = Promise.resolve(reg);
             }
-            else {
+            else if (!readyFulfill) {
+                console.log("set empty promise");
                 _this.ready = new Promise(function (fulfill, reject) {
                     readyFulfill = fulfill;
                 });
             }
+            var newControllerInstance;
             if (e.data.controller) {
-                _this.controller = ServiceWorkerImplementation.getOrCreate(e.data.controller);
+                newControllerInstance = ServiceWorkerImplementation.getOrCreate(e.data.controller);
             }
             else {
-                _this.controller = undefined;
+                newControllerInstance = null;
+            }
+            if (newControllerInstance !== _this.controller) {
+                console.info("Set new controller from", _this.controller, "to", newControllerInstance);
+                // Have to do 'as any' because TypeScript definition doesn't
+                // allow null service workers
+                _this.controller = newControllerInstance;
+                var evt = new CustomEvent("controllerchange");
+                _this.dispatchEvent(evt);
             }
         });
         eventStream.open();
@@ -354,6 +390,7 @@ var ServiceWorkerContainerImplementation = (function (_super) {
         });
     };
     ServiceWorkerContainerImplementation.prototype.register = function (url, opts) {
+        console.info("Registering new worker at:", url);
         return apiRequest("/ServiceWorkerContainer/register", {
             path: window.location.pathname,
             url: url,
@@ -368,7 +405,6 @@ var ServiceWorkerContainerImplementation = (function (_super) {
 }(index));
 if ("ServiceWorkerContainer" in self === false) {
     // We lazily initialize this when the client code requests it.
-    console.log("adding");
     var container_1 = undefined;
     Object.defineProperty(navigator, "serviceWorker", {
         configurable: true,

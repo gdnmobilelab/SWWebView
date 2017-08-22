@@ -15,9 +15,11 @@ import PromiseKit
     internal let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
+    
+    fileprivate static var virtualMachine = JSVirtualMachine()!
 
     @objc public init(_ worker: ServiceWorker) throws {
-        self.jsContext = JSContext()
+        self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
 
         super.init()
@@ -37,19 +39,20 @@ import PromiseKit
         NSLog("Deinit execution environment: Garbage collect.")
         self.currentException = nil
         JSGarbageCollect(self.jsContext.jsGlobalContextRef)
+//        JSGlobalContextRelease(self.jsContext.jsGlobalContextRef)
     }
 
     // Thrown errors don't error on the evaluateScript call (necessarily?), so after
     // evaluating, we need to check whether there is a new exception.
     internal var currentException: JSValue?
-    fileprivate func grabException(context _: JSContext?, error: JSValue?) {
-        self.currentException = error
-    }
 
     fileprivate func throwExceptionIfExists() throws {
         if self.currentException != nil {
             let exc = self.currentException!
             self.currentException = nil
+            if let msg = exc.objectForKeyedSubscript("message") {
+                throw ErrorMessage(msg.toString())
+            }
             throw ErrorMessage(exc.toString())
         }
     }
@@ -85,8 +88,9 @@ import PromiseKit
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
         return Promise(value: ())
-            .then(on: self.dispatchQueue, execute: {
+            .then(on: self.dispatchQueue, execute: { () -> Void in
                 self.globalScope.dispatchEvent(event)
+                try self.throwExceptionIfExists()
             })
     }
 }

@@ -53,7 +53,7 @@ class EventStream {
         }
         
         self.containerListener = GlobalEventLog.addListener { (container: ServiceWorkerContainer) in
-            if self.isScopeMatch(container.containerURL) {
+            if container == self.container {
                 self.sendUpdate(identifier: "serviceworkercontainer", object: container)
             }
         }

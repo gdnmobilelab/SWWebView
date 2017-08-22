@@ -3,6 +3,7 @@ import { withIframe } from "../util/with-iframe";
 
 describe("Service Worker Container", () => {
     afterEach(() => {
+        console.groupCollapsed("Unregister calls");
         return navigator.serviceWorker
             .getRegistrations()
             .then((regs: ServiceWorkerRegistration[]) => {
@@ -12,6 +13,9 @@ describe("Service Worker Container", () => {
                 let mapped = regs.map(r => r.unregister());
 
                 return Promise.all(mapped);
+            })
+            .then(() => {
+                console.groupEnd();
             });
     });
 
@@ -29,16 +33,35 @@ describe("Service Worker Container", () => {
             });
     });
 
-    it.only("Should fire ready promise", () => {
+    it("Should fire ready promise", function() {
         // have to use iframe as none of the fixture JS files are in this
         // page's scope
         return withIframe("/fixtures/blank.html", ({ navigator }) => {
             navigator.serviceWorker.register("./test-register-worker.js");
             return navigator.serviceWorker.ready.then(reg => {
                 return navigator.serviceWorker.getRegistration().then(reg2 => {
-                    console.log(reg, reg2);
                     assert.equal(reg, reg2);
                 });
+            });
+        });
+    });
+
+    it.only("Should fire oncontrollerchange promise", function() {
+        // have to use iframe as none of the fixture JS files are in this
+        // page's scope
+        return withIframe("/fixtures/blank.html", ({ navigator }) => {
+            return new Promise((fulfill, reject) => {
+                navigator.serviceWorker.oncontrollerchange = fulfill;
+                navigator.serviceWorker
+                    .register("./test-take-control-worker.js")
+                    .then(reg => {
+                        console.log(reg.active.state);
+                    });
+            }).then(() => {
+                assert.equal(
+                    navigator.serviceWorker.controller.state,
+                    "activated"
+                );
             });
         });
     });

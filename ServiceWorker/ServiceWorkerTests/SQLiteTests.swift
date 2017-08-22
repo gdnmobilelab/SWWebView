@@ -21,7 +21,7 @@ class SQLiteTests: XCTestCase {
         
         do {
             
-            if try FileManager.default.fileExists(atPath: self.dbPath.path) {
+            if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(at: self.dbPath)
             }
 
@@ -35,7 +35,7 @@ class SQLiteTests: XCTestCase {
 
         do {
             
-            if try FileManager.default.fileExists(atPath: self.dbPath.path) {
+            if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(at: self.dbPath)
             }
             
@@ -141,75 +141,6 @@ class SQLiteTests: XCTestCase {
         }())
     }
 
-    func testMultiInsertQuery() {
-
-        XCTAssertNoThrow(try {
-            let conn = try SQLiteConnection(self.dbPath)
-            try conn.exec(sql: """
-                CREATE TABLE "testtable" (
-                    "val" TEXT NOT NULL
-                )
-            """)
-
-            try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], ["there"]])
-
-            try conn.close()
-
-            let fm = FMDatabase(url: self.dbPath)
-            fm.open()
-            let rs = try fm.executeQuery("SELECT * from testtable;", values: nil)
-
-            XCTAssert(rs.next() == true)
-
-            XCTAssert(rs.string(forColumn: "val")! == "hello")
-
-            XCTAssert(rs.next() == true)
-
-            XCTAssert(rs.string(forColumn: "val")! == "there")
-            rs.close()
-            fm.close()
-        }())
-    }
-
-    func testMultiInsertRollback() {
-
-        XCTAssertNoThrow(try {
-
-            XCTAssertThrowsError(try SQLiteConnection.inConnection(self.dbPath, { conn in
-
-                try conn.exec(sql: """
-                    CREATE TABLE "testtable" (
-                        "val" TEXT NOT NULL
-                    )
-                """)
-
-                try conn.inTransaction {
-
-                    // Don't support booleans
-
-                    try conn.multiUpdate(sql: "INSERT INTO testtable (val) VALUES (?)", values: [["hello"], [true]])
-                }
-
-            }))
-
-            let fm = FMDatabase(url: self.dbPath)
-            fm.open()
-            let rs = try fm.executeQuery("SELECT * from testtable;", values: nil)
-
-            let hasRow = rs.next()
-
-            //            if hasRow == true {
-            //                let val = rs.string(forColumn: "val")!
-            //                NSLog(val)
-            //            }
-
-            XCTAssert(hasRow == false)
-            rs.close()
-
-            fm.close()
-        }())
-    }
-
     func testSelect() {
 
         XCTAssertNoThrow(try {
@@ -222,7 +153,8 @@ class SQLiteTests: XCTestCase {
                 );
             """)
 
-            try conn.multiUpdate(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: [["hello", 1, "blobtest"], ["there", 2, "blobtest2"]])
+            _ = try conn.insert(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: ["hello", 1, "blobtest"])
+            _ = try conn.insert(sql: "INSERT INTO testtable (val, num, blobtexttest) VALUES (?,?,?);", values: ["there", 2, "blobtest2"])
 
             let returnedValue = try conn.select(sql: "SELECT * FROM testtable", values: []) { rs -> Int in
 
@@ -343,16 +275,16 @@ class SQLiteTests: XCTestCase {
 
             let stream = conn.openBlobWriteStream(table: "testtable", column: "val", row: rowId)
             stream.open()
-            _ = "abc".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                XCTAssert(stream.write(body, maxLength: 3) == 3)
+            _ = try "abc".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                XCTAssert(try stream.write(body, maxLength: 3) == 3)
             }
 
-            _ = "def".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                stream.write(body, maxLength: 3)
+            _ = try "def".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                try stream.write(body, maxLength: 3)
             }
 
-            _ = "ghijk".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                stream.write(body, maxLength: 5)
+            _ = try "ghijk".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                try stream.write(body, maxLength: 5)
             }
 
             stream.close()
@@ -473,50 +405,6 @@ class SQLiteTests: XCTestCase {
             }
             
             try conn.close()
-
-        }())
-    }
-
-    func testSimultaneousOperationsShouldWork() {
-
-        XCTAssertNoThrow(try {
-            let conn = try SQLiteConnection(self.dbPath)
-
-            try conn.exec(sql: """
-                CREATE TABLE "testtable" (
-                    "val" TEXT NOT NULL
-                );
-            """)
-
-            try conn.close()
-
-            var keepInserting = true
-            var errorFound: Error?
-            DispatchQueue.global(qos: DispatchQoS.QoSClass.userInteractive).async {
-
-                do {
-                    let db = try SQLiteConnection(self.dbPath)
-                    try db.update(sql: "DELETE FROM testtable", values: [])
-                    try db.close()
-                    keepInserting = false
-                } catch {
-                    keepInserting = false
-                    errorFound = error
-                }
-            }
-
-            let db = try SQLiteConnection(self.dbPath)
-            var i = 0
-            while i < 10000 && keepInserting == true {
-                //                    NSLog("RUN INSERT")
-                _ = try db.insert(sql: "INSERT INTO testtable (val) VALUES (1)", values: [])
-                i = i + 1
-            }
-            if errorFound != nil {
-                throw errorFound!
-            }
-            NSLog("\(i) rows")
-            try db.close()
 
         }())
     }

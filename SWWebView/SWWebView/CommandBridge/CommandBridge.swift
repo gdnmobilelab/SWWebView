@@ -101,6 +101,7 @@ public class CommandBridge {
 
             try task.didReceive(HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: nil, headerFields: [
                 "Content-Type": "application/json",
+                "Cache-Control": "no-cache",
                 "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
             ])!)
 
@@ -115,6 +116,7 @@ public class CommandBridge {
                 ], options: [])
 
                 try task.didReceive(HTTPURLResponse(url: task.request.url!, statusCode: 500, httpVersion: "1.1", headerFields: [
+                    "Cache-Control": "no-cache",
                         "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
                     ])!)
                 try task.didReceive(encodedResponse)

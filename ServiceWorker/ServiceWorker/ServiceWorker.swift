@@ -16,7 +16,7 @@ import PromiseKit
     public let id: String
     let registration: ServiceWorkerRegistrationProtocol
     let loadContent: (ServiceWorker) -> String
-
+    
     public static var storageURL: URL?
 
     fileprivate var _installState: ServiceWorkerInstallState
@@ -131,11 +131,11 @@ import PromiseKit
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
         return self.getExecutionEnvironment()
-            .then { exec -> Void in
+            .then { exec in
                 if exec.currentException != nil {
                     throw ErrorMessage("Cannot dispatch event: context is in error state")
                 }
-                exec.globalScope.dispatchEvent(event)
+                return exec.dispatchEvent(event)
             }
     }
 

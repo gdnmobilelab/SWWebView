@@ -13,7 +13,7 @@ class ServiceWorkerContainerImplementation extends EventEmitter
     // used for detection
     static __isSWWebViewImplementation = true;
 
-    controller?: ServiceWorker;
+    controller: ServiceWorker;
     oncontrollerchange: (ev: Event) => void;
     onmessage: (ev: Event) => void;
     ready: Promise<ServiceWorkerRegistration>;
@@ -21,42 +21,74 @@ class ServiceWorkerContainerImplementation extends EventEmitter
     location: Location;
 
     constructor() {
-        console.log("CREATED CONTAINER");
+        console.info(
+            "Created new ServiceWorkerContainer for",
+            window.location.pathname
+        );
         super();
         this.location = window.location;
+
+        (this as any).controller = null;
 
         let readyFulfill: ((ServiceWorkerRegistration) => void) | undefined;
         this.ready = new Promise((fulfill, reject) => {
             readyFulfill = fulfill;
         });
 
+        this.addEventListener("controllerchange", e => {
+            if (this.oncontrollerchange) {
+                this.oncontrollerchange(e);
+            }
+        });
+
         eventStream.addEventListener<
             ServiceWorkerContainerAPIResponse
         >("serviceworkercontainer", e => {
-            console.log("container response", e.data);
+            console.info("container change", e.data);
             let reg = e.data.readyRegistration
                 ? ServiceWorkerRegistrationImplementation.getOrCreate(
                       e.data.readyRegistration
                   )
                 : undefined;
 
-            if (readyFulfill) {
+            console.log("container response", e.data, reg);
+
+            if (reg && readyFulfill) {
+                console.log("fulfill existing pending");
                 readyFulfill!(reg);
                 readyFulfill = undefined;
             } else if (reg) {
+                console.log("set new resolved promise");
                 this.ready = Promise.resolve(reg);
-            } else {
+            } else if (!readyFulfill) {
+                console.log("set empty promise");
                 this.ready = new Promise((fulfill, reject) => {
                     readyFulfill = fulfill;
                 });
             }
 
+            let newControllerInstance: ServiceWorker | null;
+
             if (e.data.controller) {
-                this.controller = ServiceWorkerImplementation.getOrCreate(
+                newControllerInstance = ServiceWorkerImplementation.getOrCreate(
                     e.data.controller
                 );
             } else {
-                this.controller = undefined;
+                newControllerInstance = null;
+            }
+
+            if (newControllerInstance !== this.controller) {
+                console.info(
+                    "Set new controller from",
+                    this.controller,
+                    "to",
+                    newControllerInstance
+                );
+                // Have to do 'as any' because TypeScript definition doesn't
+                // allow null service workers
+                (this as any).controller = newControllerInstance;
+                let evt = new CustomEvent("controllerchange");
+                this.dispatchEvent(evt);
             }
         });
         eventStream.open();
@@ -109,6 +141,7 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         url: string,
         opts?: RegistrationOptions
     ): Promise<ServiceWorkerRegistration> {
+        console.info("Registering new worker at:", url);
         return apiRequest<
             ServiceWorkerRegistrationAPIResponse
         >("/ServiceWorkerContainer/register", {
@@ -124,7 +157,6 @@ class ServiceWorkerContainerImplementation extends EventEmitter
 }
 if ("ServiceWorkerContainer" in self === false) {
     // We lazily initialize this when the client code requests it.
-    console.log("adding");
     let container: ServiceWorkerContainerImplementation | undefined = undefined;
 
     Object.defineProperty(navigator, "serviceWorker", {

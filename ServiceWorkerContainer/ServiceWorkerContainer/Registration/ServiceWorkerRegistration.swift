@@ -100,15 +100,14 @@ import ServiceWorker
     static func getReadyRegistration(for containerURL: URL) throws -> ServiceWorkerRegistration? {
         
         return try CoreDatabase.inConnection { db in
-            let like = "\(containerURL.scheme!)://\(containerURL.host!)/%"
             
             return try db.select(sql: """
                 SELECT registration_id FROM registrations
-                WHERE scope LIKE ?
+                WHERE ? LIKE (scope || '%')
                 AND active NOT NULL
                 ORDER BY length(scope) DESC
                 LIMIT 1
-            """, values: [like]) { resultSet in
+            """, values: [containerURL]) { resultSet in
                 
                 if resultSet.next() == false {
                     return nil
@@ -440,7 +439,7 @@ import ServiceWorker
         
         return try CoreDatabase.inConnection { connection in
             
-            return try connection.select(sql: "SELECT * FROM registrations WHERE id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
+            return try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
                 
                 return try self.fromResultSet(rs)
             }
@@ -483,7 +482,13 @@ import ServiceWorker
         }
     }
 
-    public var unregistered = false
+    fileprivate var _unregistered = false
+    
+    public var unregistered: Bool {
+        get {
+            return self._unregistered
+        }
+    }
 
     public func unregister() -> Promise<Void> {
 
@@ -502,7 +507,7 @@ import ServiceWorker
                 try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [self.id])
             }
 
-            self.unregistered = true
+            self._unregistered = true
             
             GlobalEventLog.notifyChange(self)
             ServiceWorkerRegistration.activeInstances.remove(self)

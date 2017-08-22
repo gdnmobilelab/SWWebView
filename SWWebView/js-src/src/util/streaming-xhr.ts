@@ -36,28 +36,30 @@ export class StreamingXHR extends EventEmitter {
     }
 
     receiveData() {
-        try {
-            if (this.xhr.readyState !== 3) {
-                return;
-            }
-
-            // This means the responseText keeps growing and growing. Perhaps
-            // we should look into cutting this off and re-establishing a new
-            // link if it gets too big.
-            let newData = this.xhr.responseText.substr(this.seenBytes);
-
-            this.seenBytes = this.xhr.responseText.length;
-            let [_, event, data] = /([\w\-]+):(.*)/.exec(newData)!;
-            let evt = new MessageEvent(event, {
-                data: JSON.parse(data)
-            });
-            this.dispatchEvent(evt);
-        } catch (err) {
-            let errEvt = new ErrorEvent("error", {
-                error: err
-            });
-            this.dispatchEvent(errEvt);
+        // try {
+        if (this.xhr.readyState !== 3) {
+            return;
         }
+
+        // This means the responseText keeps growing and growing. Perhaps
+        // we should look into cutting this off and re-establishing a new
+        // link if it gets too big.
+        let newData = this.xhr.responseText.substr(this.seenBytes);
+
+        this.seenBytes = this.xhr.responseText.length;
+        let [_, event, data] = /([\w\-]+):(.*)/.exec(newData)!;
+        let evt = new MessageEvent(event, {
+            data: JSON.parse(data)
+        });
+        // console.info("EVENT:", event, evt.data);
+        this.dispatchEvent(evt);
+        // } catch (err) {
+        //     console.error(err);
+        //     let errEvt = new ErrorEvent("error", {
+        //         error: err
+        //     });
+        //     this.dispatchEvent(errEvt);
+        // }
     }
 
     close() {

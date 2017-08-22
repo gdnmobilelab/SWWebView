@@ -10,17 +10,10 @@ import Foundation
 import PromiseKit
 import ServiceWorker
 
-public class ServiceWorkerContainer: Hashable {
-
-    public static func ==(lhs: ServiceWorkerContainer, rhs: ServiceWorkerContainer) -> Bool {
-        return lhs.hashValue != rhs.hashValue
-    }
-
-    public var hashValue: Int {
-        return self.containerURL.absoluteString.hashValue
-    }
+@objc public class ServiceWorkerContainer: NSObject {
 
     public let containerURL: URL
+    public let origin: URL
     public var readyRegistration:ServiceWorkerRegistration?
     fileprivate var _ready:Promise<ServiceWorkerRegistration>? = nil
     fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
@@ -34,10 +27,8 @@ public class ServiceWorkerContainer: Hashable {
             return self._ready!
         }
     }
-
-    init(forURL: URL) throws {
-        self.containerURL = forURL
-        
+    
+    func resetReadyRegistration() throws {
         /// ServiceWorkerContainer.ready is a promise that resolves when a registration
         /// under the scope of the container has an active worker. It's quite possible that
         /// there will already be an active worker when the container is created, so we check
@@ -51,39 +42,71 @@ public class ServiceWorkerContainer: Hashable {
                 self._readyFulfill = fulfill
             }
         }
+    }
+
+    init(forURL: URL) throws {
+        self.containerURL = forURL
+        
+        var components = URLComponents(url: forURL, resolvingAgainstBaseURL: true)!
+        components.path = "/"
+        self.origin = components.url!
+        
+        super.init()
+        try self.resetReadyRegistration()
         
         // No matter if we have an active registration already, we need to listen if a new
         // one comes along - if its scope is more specific than our currently active one,
         // we need to replace it.
         self.registrationChangeListener = GlobalEventLog.addListener { [unowned self] (reg: ServiceWorkerRegistration) in
-            NSLog("\(self.containerURL.absoluteString) // \(reg.scope.absoluteString)")
+            
+            if reg.unregistered == true && reg == self.readyRegistration {
+                // if this is already our active registration, the only thing we
+                // care about is if it has become unregistered.
+            
+                do {
+                    try self.resetReadyRegistration()
+                } catch {
+                    Log.error?("Unable to reset ready registration: \(error)")
+                }
+                
+                GlobalEventLog.notifyChange(self)
+                
+                return
+            } else if reg == self.readyRegistration || reg.unregistered == true {
+                return
+            }
+            
             if self.containerURL.absoluteString.hasPrefix(reg.scope.absoluteString) == false {
                 // not in scope, disregard
                 return
             }
             
             if self.readyRegistration != nil && reg.scope.absoluteString.count <= self.readyRegistration!.scope.absoluteString.count {
+                NSLog("Scope of \(reg.scope.absoluteString) does not replace \(self.readyRegistration!.scope.absoluteString)")
                 // scope is less specific than the one we currently have, disregard
                 return
             }
             
             self.readyRegistration = reg
-            self._ready = Promise(value: reg)
-            if reg.active?.state == .activated {
-                // If our worker is already active, then great, add it. If it's still
-                // activating, we'll catch it below.
-                self.controller = reg.active
+            if let fulfill = self._readyFulfill {
+                fulfill(self.readyRegistration!)
+                self._readyFulfill = nil
             }
+            self._ready = Promise(value: reg)
+            
             GlobalEventLog.notifyChange(self)
             
         }
         
-        self.workerChangeListener = GlobalEventLog.addListener { [unowned self] (worker:ServiceWorker) in
-            if self.readyRegistration?.active == worker && worker.state == .activated {
-                self.controller = worker
-                GlobalEventLog.notifyChange(self)
-            }
-        }
+//        self.workerChangeListener = GlobalEventLog.addListener { [unowned self] (worker:ServiceWorker) in
+//            if self.readyRegistration?.active == worker && worker.state == .activated {
+//                self.controller = worker
+//                GlobalEventLog.notifyChange(self)
+//            } else if self.controller == worker && worker.state == .redundant {
+//                self.controller = nil
+//                GlobalEventLog.notifyChange(self)
+//            }
+//        }
         
     }
 
