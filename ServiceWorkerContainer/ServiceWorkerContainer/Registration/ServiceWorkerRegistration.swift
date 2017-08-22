@@ -202,6 +202,9 @@ import ServiceWorker
                     // wait for the worker to actually be installed - it returns as soon
                     // as the process has started.
                     _ = self.processHTTPResponse(res, newWorker: worker)
+                        .catch { error in
+                            Log.error?("Failed to register worker")
+                    }
             }
             
         }
