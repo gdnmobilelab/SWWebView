@@ -6,7 +6,6 @@ export function withIframe(
         let iframe = document.createElement("iframe");
 
         iframe.onload = () => {
-            console.log("LOAD?");
             fulfill(
                 cb(iframe.contentWindow)
                     .then(errorOrNothing => {

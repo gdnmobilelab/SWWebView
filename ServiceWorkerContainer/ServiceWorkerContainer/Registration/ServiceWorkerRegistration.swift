@@ -177,17 +177,18 @@ import ServiceWorker
         return worker
     }
 
-    func register(_ workerURL: URL) -> Promise<Void> {
+    typealias RegisterReturn = (ServiceWorker, Promise<Void>)
+    func register(_ workerURL: URL) -> Promise<RegisterReturn> {
         
         // The install process is asynchronous and the register call doesn't wait for it.
         // So we create our stub in the database then return the promise immediately.
         
-        return firstly {
+        return firstly { () -> Promise<RegisterReturn> in
 
             let worker = try self.createNewInstallingWorker(for: workerURL)
             
             return FetchOperation.fetch(workerURL)
-                .then { res -> Void in
+                .then { res  -> RegisterReturn in
                     
                     if res.ok == false {
                         // We couldn't fetch the worker JS, so we immediately set the worker to
@@ -198,13 +199,16 @@ import ServiceWorker
                         throw ErrorMessage("Received response code \(res.status)")
                     }
                     
+                    // Very weird layout here, but installation is a two-tiered process. We return
+                    // immediately when we've created the stub worker, but we also want to return
+                    // any errors to the webview even though it runs asynchronously.
+                    
+                    return (worker, self.processHTTPResponse(res, newWorker: worker))
+                    
                     // This promise is NOT returned, because the register() call does not
                     // wait for the worker to actually be installed - it returns as soon
                     // as the process has started.
-                    _ = self.processHTTPResponse(res, newWorker: worker)
-                        .catch { error in
-                            Log.error?("Failed to register worker")
-                    }
+//                    _ = self.processHTTPResponse(res, newWorker: worker)
             }
             
         }

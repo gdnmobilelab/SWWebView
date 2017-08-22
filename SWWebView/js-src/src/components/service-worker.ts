@@ -1,5 +1,9 @@
 import EventEmitter from "tiny-emitter";
-import { ServiceWorkerAPIResponse } from "../responses/api-responses";
+import {
+    ServiceWorkerAPIResponse,
+    WorkerInstallErrorAPIResponse
+} from "../responses/api-responses";
+import { eventStream } from "../event-stream";
 
 const existingWorkers: ServiceWorkerImplementation[] = [];
 
@@ -31,3 +35,12 @@ export class ServiceWorkerImplementation extends EventEmitter
         }
     }
 }
+
+eventStream.addEventListener<
+    WorkerInstallErrorAPIResponse
+>("workerinstallerror", e => {
+    console.error(
+        `Worker installation failed: ${e.data.error} (in ${e.data.worker
+            .scriptURL})`
+    );
+});

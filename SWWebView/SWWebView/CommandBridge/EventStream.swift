@@ -25,6 +25,7 @@ class EventStream {
     var workerListener: Listener<ServiceWorker>?
     var registrationListener: Listener<ServiceWorkerRegistration>?
     var containerListener: Listener<ServiceWorkerContainer>?
+    var workerInstallErrorListener: Listener<WorkerInstallationError>?
     
     func isScopeMatch(_ url:URL) -> Bool {
         return url.host == self.container.containerURL.host && url.port == self.container.containerURL.port
@@ -55,6 +56,12 @@ class EventStream {
         self.containerListener = GlobalEventLog.addListener { (container: ServiceWorkerContainer) in
             if container == self.container {
                 self.sendUpdate(identifier: "serviceworkercontainer", object: container)
+            }
+        }
+        
+        self.workerInstallErrorListener = GlobalEventLog.addListener { workerError in
+            if workerError.container == self.container {
+                self.sendUpdate(identifier: "workerinstallerror", object: workerError)
             }
         }
 

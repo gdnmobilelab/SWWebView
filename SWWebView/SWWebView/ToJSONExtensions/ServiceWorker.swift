@@ -10,6 +10,7 @@ import Foundation
 import ServiceWorker
 
 extension ServiceWorker: ToJSON {
+    
     func toJSONSuitableObject() -> Any {
         return [
             "id": self.id,

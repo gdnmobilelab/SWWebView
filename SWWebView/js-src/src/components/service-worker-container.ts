@@ -44,24 +44,18 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         eventStream.addEventListener<
             ServiceWorkerContainerAPIResponse
         >("serviceworkercontainer", e => {
-            console.info("container change", e.data);
             let reg = e.data.readyRegistration
                 ? ServiceWorkerRegistrationImplementation.getOrCreate(
                       e.data.readyRegistration
                   )
                 : undefined;
 
-            console.log("container response", e.data, reg);
-
             if (reg && readyFulfill) {
-                console.log("fulfill existing pending");
                 readyFulfill!(reg);
                 readyFulfill = undefined;
             } else if (reg) {
-                console.log("set new resolved promise");
                 this.ready = Promise.resolve(reg);
             } else if (!readyFulfill) {
-                console.log("set empty promise");
                 this.ready = new Promise((fulfill, reject) => {
                     readyFulfill = fulfill;
                 });

@@ -33,6 +33,7 @@
 		8A2360431F35FE1B00969268 /* DbExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360341F35FDF800969268 /* DbExtensions.swift */; };
 		8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360351F35FDF800969268 /* SharedResources.swift */; };
 		8A2360451F35FE1B00969268 /* WorkerInstances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360361F35FDF800969268 /* WorkerInstances.swift */; };
+		8A43C1721F4C91EA001221C1 /* WorkerInstallationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1711F4C91EA001221C1 /* WorkerInstallationError.swift */; };
 		8AB72E1D1F35FED70049117E /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A23604D1F35FE4A00969268 /* ServiceWorker.framework */; };
 		8AC7BBBB1F4741340001CD49 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC7BBB91F4741340001CD49 /* PromiseKit.framework */; };
 		8AF85D7D1F3A2815001B0A87 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D7B1F3A2815001B0A87 /* Bootstrap.swift */; };
@@ -98,6 +99,7 @@
 		8A23603A1F35FDF800969268 /* ServiceWorkerRegistrationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationOptions.swift; sourceTree = "<group>"; };
 		8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
 		8A2360471F35FE4A00969268 /* ServiceWorker.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ServiceWorker.xcodeproj; path = ../ServiceWorker/ServiceWorker.xcodeproj; sourceTree = "<group>"; };
+		8A43C1711F4C91EA001221C1 /* WorkerInstallationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerInstallationError.swift; sourceTree = "<group>"; };
 		8AC7BBB91F4741340001CD49 /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PromiseKit.framework; path = ../Carthage/Build/iOS/PromiseKit.framework; sourceTree = "<group>"; };
 		8AF85D781F3A2815001B0A87 /* ServiceWorkerRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationTests.swift; sourceTree = "<group>"; };
 		8AF85D7A1F3A2815001B0A87 /* ImportScriptsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportScriptsTests.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 		8A2360131F35FDCC00969268 /* ServiceWorkerContainer */ = {
 			isa = PBXGroup;
 			children = (
+				8A43C16F1F4C91DD001221C1 /* Events */,
 				8AF85D8D1F3A3134001B0A87 /* DatabaseMigrations */,
 				8A23602B1F35FDF800969268 /* Interop */,
 				8A2360371F35FDF800969268 /* Registration */,
@@ -220,6 +223,14 @@
 				8A23604F1F35FE4A00969268 /* ServiceWorkerTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8A43C16F1F4C91DD001221C1 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				8A43C1711F4C91EA001221C1 /* WorkerInstallationError.swift */,
+			);
+			path = Events;
 			sourceTree = "<group>";
 		};
 		8AF85D791F3A2815001B0A87 /* Interop */ = {
@@ -419,6 +430,7 @@
 			files = (
 				8A23603D1F35FE1B00969268 /* ServiceWorkerHooks.swift in Sources */,
 				8A23603F1F35FE1B00969268 /* ServiceWorkerRegistration.swift in Sources */,
+				8A43C1721F4C91EA001221C1 /* WorkerInstallationError.swift in Sources */,
 				8A2360401F35FE1B00969268 /* ServiceWorkerRegistrationOptions.swift in Sources */,
 				8A2360411F35FE1B00969268 /* ServiceWorkerContainer.swift in Sources */,
 				8A2360421F35FE1B00969268 /* CoreDatabase.swift in Sources */,

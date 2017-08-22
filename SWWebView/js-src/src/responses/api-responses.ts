@@ -22,3 +22,8 @@ export interface ServiceWorkerRegistrationAPIResponse {
 export interface BooleanSuccessResponse {
     success: boolean;
 }
+
+export interface WorkerInstallErrorAPIResponse {
+    error: string;
+    worker: ServiceWorkerAPIResponse;
+}

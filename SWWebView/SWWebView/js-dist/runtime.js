@@ -234,6 +234,9 @@ var ServiceWorkerImplementation = (function (_super) {
     };
     return ServiceWorkerImplementation;
 }(index));
+eventStream.addEventListener("workerinstallerror", function (e) {
+    console.error(e.data);
+});
 
 var existingRegistrations = [];
 var ServiceWorkerRegistrationImplementation = (function (_super) {

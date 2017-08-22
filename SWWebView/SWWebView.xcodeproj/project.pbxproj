@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */; };
 		8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97FE1F3CC607002E521F /* ToJSON.swift */; };
 		8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98001F3CC62A002E521F /* ServiceWorker.swift */; };
 		8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */; };
@@ -51,6 +52,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerInstallationError.swift; sourceTree = "<group>"; };
 		8A5D97FE1F3CC607002E521F /* ToJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToJSON.swift; sourceTree = "<group>"; };
 		8A5D98001F3CC62A002E521F /* ServiceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorker.swift; sourceTree = "<group>"; };
 		8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistration.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 				8A5D98001F3CC62A002E521F /* ServiceWorker.swift */,
 				8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */,
 				8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */,
+				8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */,
 			);
 			path = ToJSONExtensions;
 			sourceTree = "<group>";
@@ -468,6 +471,7 @@
 				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
 				8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */,
 				8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */,
+				8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */,
 				8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -227,8 +227,14 @@ import ServiceWorker
 
             let registration = try ServiceWorkerRegistration.getOrCreate(byScope: scopeURL)
             return registration.register(workerURL)
-                .then {
-                    registration
+                .then { (worker, installationPromise) -> ServiceWorkerRegistration in
+                    
+                    installationPromise
+                        .catch { error in
+                            GlobalEventLog.notifyChange(WorkerInstallationError(worker: worker, container: self, error: error))
+                    }
+                    
+                    return registration
                 }
         }
     }
