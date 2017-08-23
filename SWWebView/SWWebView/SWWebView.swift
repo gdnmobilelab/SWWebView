@@ -15,9 +15,8 @@ public class SWWebView: WKWebView {
     static let ServiceWorkerScheme = "sw"
 
     public var serviceWorkerPermittedDomains: [String] = []
-    var swNavigationDelegate: SWWebViewNavigationDelegate?
-
-    //    var containerBridge: WebViewServiceWorkerBridge?
+    fileprivate var swNavigationDelegate: SWWebViewNavigationDelegate!
+    fileprivate var bridge:SWWebViewBridge!
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -34,7 +33,7 @@ public class SWWebView: WKWebView {
         }
     }
 
-    fileprivate static func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration) {
+    fileprivate static func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration, bridge :SWWebViewBridge) {
 
         let pathToJS = Bundle(for: SWWebView.self).bundleURL
             .appendingPathComponent("js-dist", isDirectory: true)
@@ -56,16 +55,16 @@ public class SWWebView: WKWebView {
 
         configuration.userContentController.addUserScript(userScript)
 
-        configuration.setURLSchemeHandler(SWSchemeHandler(), forURLScheme: SWWebView.ServiceWorkerScheme)
+        configuration.setURLSchemeHandler(bridge, forURLScheme: SWWebView.ServiceWorkerScheme)
     }
 
     public static var javascriptConfigDictionary: String {
         return """
         {
-        API_REQUEST_METHOD: "\(SWSchemeHandler.serviceWorkerRequestMethod)",
+        API_REQUEST_METHOD: "\(SWWebViewBridge.serviceWorkerRequestMethod)",
         SW_PROTOCOL: "\(SWWebView.ServiceWorkerScheme)",
-        GRAFTED_REQUEST_HEADER: "\(SWSchemeHandler.graftedRequestBodyHeader)",
-        SW_API_HOST: "\(SWSchemeHandler.serviceWorkerRequestHost)"
+        GRAFTED_REQUEST_HEADER: "\(SWWebViewBridge.graftedRequestBodyHeader)",
+        EVENT_STREAM_PATH: "\(SWWebViewBridge.eventStreamPath)"
         }
         """
     }
@@ -80,11 +79,16 @@ public class SWWebView: WKWebView {
     }
 
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
-        SWWebView.addSWHooksToConfiguration(configuration)
+        
+        self.bridge = SWWebViewBridge()
+        SWWebView.addSWHooksToConfiguration(configuration, bridge: self.bridge)
+        
         super.init(frame: frame, configuration: configuration)
+        
 
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
-        //        self.containerBridge = WebViewServiceWorkerBridge(for: self)
+        
+        
         super.navigationDelegate = self.swNavigationDelegate
     }
 

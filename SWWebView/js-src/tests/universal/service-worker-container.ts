@@ -46,7 +46,54 @@ describe("Service Worker Container", () => {
         });
     });
 
-    it.only("Should fire oncontrollerchange promise", function() {
+    it("Should be controller on a newly created client", function() {
+        return withIframe("/fixtures/blank.html", ({ navigator }) => {
+            navigator.serviceWorker.register("./test-register-worker.js");
+            return navigator.serviceWorker.ready
+                .then(reg => {
+                    if (reg.active.state === "activated") {
+                        return;
+                    }
+                    return new Promise((fulfill, reject) => {
+                        reg.active.onstatechange = () => {
+                            reg.active.onstatechange = null;
+                            if (reg.active.state == "activated") {
+                                fulfill();
+                            }
+                        };
+                    });
+                })
+                .then(() => {
+                    // we now have a fully installed worker.
+                    return withIframe(
+                        "/fixtures/blank.html?page2",
+                        childWindow => {
+                            // shouldn't be necessary, but it is
+                            return childWindow.navigator.serviceWorker.ready.then(
+                                () => {
+                                    let regURL = new URL(
+                                        "./test-register-worker.js",
+                                        childWindow.location.href
+                                    );
+
+                                    assert.equal(
+                                        childWindow.navigator.serviceWorker
+                                            .controller.scriptURL,
+                                        regURL.href
+                                    );
+
+                                    assert.notExists(
+                                        navigator.serviceWorker.controller
+                                    );
+                                }
+                            );
+                        }
+                    );
+                });
+        });
+    });
+
+    xit("Should fire oncontrollerchange promise", function() {
         // have to use iframe as none of the fixture JS files are in this
         // page's scope
         return withIframe("/fixtures/blank.html", ({ navigator }) => {
@@ -77,20 +124,7 @@ describe("Service Worker Container", () => {
             })
             .then(regs => {
                 assert.equal(regs.length, 0);
-                // check registering a new one has no old workers
-                return navigator.serviceWorker.register(
-                    "/fixtures/test-register-worker.js"
-                );
-            })
-            .then(reg => {
-                console.log("reg2", Object.assign({}, reg));
-                assert.notEqual(
-                    reg.installing,
-                    null,
-                    "New installing worker should exist"
-                );
-                assert.equal(reg.waiting, null, "Waiting should be null");
-                assert.equal(reg.active, null, "Active should be null");
+                assert.notExists(navigator.serviceWorker.controller);
             });
     });
 

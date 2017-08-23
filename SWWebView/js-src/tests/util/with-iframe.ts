@@ -1,15 +1,14 @@
 export function withIframe(
     src: string = "/fixtures/blank.html",
-    cb: (Window) => Promise<void>
+    cb: (Window) => Promise<void> | void
 ): Promise<void> {
     return new Promise((fulfill, reject) => {
         let iframe = document.createElement("iframe");
 
         iframe.onload = () => {
             fulfill(
-                cb(iframe.contentWindow)
-                    .then(errorOrNothing => {
-                        console.log("FULFILLED");
+                Promise.resolve(cb(iframe.contentWindow))
+                    .then(() => {
                         return iframe.contentWindow.navigator.serviceWorker.getRegistrations();
                     })
                     .then((regs: ServiceWorkerRegistration[]) => {
@@ -17,7 +16,6 @@ export function withIframe(
                         return Promise.all(mapped);
                     })
                     .then(() => {
-                        console.log("here?");
                         setTimeout(() => {
                             // No idea why this has to be in a timeout, but the promise stops
                             // if it isn't.

@@ -3,7 +3,6 @@ import { assert } from "chai";
 import { StreamingXHR } from "../../src/util/streaming-xhr";
 import { describeIfApp } from "../test-bootstrap";
 import { API_REQUEST_METHOD } from "swwebview-settings";
-import { getFullAPIURL } from "../../src/util/full-api-url";
 
 describeIfApp("Basic HTTP hooks for Service Worker API", () => {
     it("Returns 404 when trying to access a URL we don't know", () => {
@@ -19,24 +18,24 @@ describeIfApp("Basic HTTP hooks for Service Worker API", () => {
     });
 
     it("Can use a streaming XHR request", function(done) {
-        let stream = new StreamingXHR(getFullAPIURL("/stream"));
+        let stream = new StreamingXHR("/events?path=/");
         stream.open();
-        let receivedFirstEvent = false;
-
-        stream.addEventListener("test-event", (ev: MessageEvent) => {
-            assert.equal(ev.data.test, "hello");
-            receivedFirstEvent = true;
-        });
-
-        stream.addEventListener("test-event2", (ev: MessageEvent) => {
-            assert.equal(ev.data.test, "hello2");
-            assert.equal(receivedFirstEvent, true);
-            stream.close();
-            done();
-        });
-
-        stream.addEventListener("error", (ev: ErrorEvent) => {
-            done(ev.error);
-        });
+        stream.addEventListener(
+            "serviceworkercontainer",
+            (ev: MessageEvent) => {
+                assert.equal(ev.data.readyRegistration, null);
+                stream.close();
+                done();
+            }
+        );
+        // stream.addEventListener("test-event2", (ev: MessageEvent) => {
+        //     assert.equal(ev.data.test, "hello2");
+        //     assert.equal(receivedFirstEvent, true);
+        //     stream.close();
+        //     done();
+        // });
+        // stream.addEventListener("error", (ev: ErrorEvent) => {
+        //     done(ev.error);
+        // });
     });
 });

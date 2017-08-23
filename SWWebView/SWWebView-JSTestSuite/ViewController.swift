@@ -11,6 +11,7 @@ import SWWebView
 import WebKit
 import GCDWebServers
 import ServiceWorkerContainer
+import PromiseKit
 
 class ViewController: UIViewController {
 
@@ -47,82 +48,26 @@ class ViewController: UIViewController {
         swView.load(URLRequest(url: url.url!))
     }
 
+
     func addStubs() {
-        CommandBridge.routes["/ping"] = { task in
-            do {
-                let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
-                ])
-                try task.didReceive(response!)
-                try task.didReceive("{\"pong\":true}".data(using: String.Encoding.utf8)!)
-                try task.didFinish()
-            } catch {
-                fatalError("\(error)")
-            }
+        SWWebViewBridge.routes["/ping"] = { container, json in
+            
+            return Promise(value: [
+                "pong": true
+            ])
+         
         }
 
-        CommandBridge.routes["/ping-with-body"] = { task in
+        SWWebViewBridge.routes["/ping-with-body"] = { container, json in
 
-            var responseText = "no body found"
-            do {
-                if task.request.httpBody != nil {
-                    let obj = try JSONSerialization.jsonObject(with: task.request.httpBody!, options: []) as? AnyObject
-
-                    responseText = obj!["value"]! as! String
-                }
-                
-                let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
-                    ])
-                try task.didReceive(response!)
-                try task.didReceive("{\"pong\":\"\(responseText)\"}".data(using: String.Encoding.utf8)!)
-                try task.didFinish()
-
-            } catch {
-                fatalError("\(error)")
-            }
-
+            var responseText = json?["value"] as? String ?? "no body found"
+            
+            return Promise(value: [
+                "pong": responseText
+            ])
             
         }
 
-        CommandBridge.routes["/stream"] = { task in
-            do {
-            let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "origin")!
-            ])
-            try task.didReceive(response!)
-            try task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
-            try task.didReceive("test-event2: {\"test\":\"hello2\"}".data(using: String.Encoding.utf8)!)
-
-            try task.didFinish()
-            }  catch {
-                fatalError("\(error)")
-        }
-        }
-        
-        CommandBridge.routes["/referer-header"] = { task in
-            do {
-                let response = HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: "1.1", headerFields: [
-                    "Content-Type": "application/json",
-                    "Cache-Control": "no-cache",
-                    "Access-Control-Allow-Origin": task.request.value(forHTTPHeaderField: "Origin")!
-                    ])
-                try task.didReceive(response!)
-                
-                let header = task.request.value(forHTTPHeaderField: "Referer")
-                let json = header != nil ? "\"\(header!)\"" : "null"
-                
-                try task.didReceive("{\"header\":\(json)}".data(using: String.Encoding.utf8)!)
-                
-                try task.didFinish()
-            }  catch {
-                fatalError("\(error)")
-            }
-        }
     }
 
     override func didReceiveMemoryWarning() {

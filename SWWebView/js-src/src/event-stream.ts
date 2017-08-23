@@ -1,8 +1,9 @@
 import { StreamingXHR } from "./util/streaming-xhr";
-import { getFullAPIURL } from "./util/full-api-url";
 
-let absoluteURL = getFullAPIURL("/events");
-let eventsURL = new URL(absoluteURL);
-eventsURL.searchParams.append("path", window.location.pathname);
+let eventsURL = new URL("/events", window.location.href);
+eventsURL.searchParams.append(
+    "path",
+    window.location.pathname + window.location.search
+);
 
 export const eventStream = new StreamingXHR(eventsURL.href);

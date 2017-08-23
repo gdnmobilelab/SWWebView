@@ -98,13 +98,18 @@ import ServiceWorker
     }
     
     static func getReadyRegistration(for containerURL: URL) throws -> ServiceWorkerRegistration? {
-        
         return try CoreDatabase.inConnection { db in
             
+            // Not enough to just have an 'active' worker, it also needs to be in an 'activated'
+            // state (i.e. not 'activating')
+            
             return try db.select(sql: """
-                SELECT registration_id FROM registrations
-                WHERE ? LIKE (scope || '%')
-                AND active NOT NULL
+                SELECT r.registration_id
+                FROM registrations AS r
+                INNER JOIN workers AS w
+                    ON r.active = w.worker_id
+                WHERE ? LIKE (r.scope || '%')
+                AND w.install_state == "activated"
                 ORDER BY length(scope) DESC
                 LIMIT 1
             """, values: [containerURL]) { resultSet in
@@ -387,12 +392,16 @@ import ServiceWorker
         self.clearWorkerFromAllStatuses(worker: worker)
         if newState == .installing {
             self.installing = worker
+            try db.update(sql: "UPDATE registrations SET installing = ? WHERE registration_id = ?", values: [worker.id, self.id])
         } else if newState == .installed {
             self.waiting = worker
+            try db.update(sql: "UPDATE registrations SET waiting = ? WHERE registration_id = ?", values: [worker.id, self.id])
         } else if newState == .activating || newState == .activated {
             self.active = worker
+            try db.update(sql: "UPDATE registrations SET active = ? WHERE registration_id = ?", values: [worker.id, self.id])
         } else if newState == .redundant {
             self.redundant = worker
+            try db.update(sql: "UPDATE registrations SET redundant = ? WHERE registration_id = ?", values: [worker.id, self.id])
         }
         
         try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [newState.rawValue, worker.id])

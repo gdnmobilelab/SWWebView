@@ -128,10 +128,28 @@ var StreamingXHR = (function (_super) {
         _this.url = url;
         return _this;
     }
+    Object.defineProperty(StreamingXHR.prototype, "ready", {
+        get: function () {
+            if (this.isOpen === false) {
+                // We try to lazy-load this stream if at all possible - that way
+                // we don't have any overhead if a page doesn't use any of the
+                // SW APIs.
+                this.open();
+            }
+            return this.readyPromise;
+        },
+        enumerable: true,
+        configurable: true
+    });
     StreamingXHR.prototype.open = function () {
+        var _this = this;
         if (this.isOpen === true) {
             throw new Error("Already open");
         }
+        console.info("Opening stream for:" + this.url);
+        this.readyPromise = new Promise(function (fulfill) {
+            _this.readyFulfill = fulfill;
+        });
         this.isOpen = true;
         this.xhr = new XMLHttpRequest();
         this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, this.url);
@@ -142,28 +160,35 @@ var StreamingXHR = (function (_super) {
         _super.prototype.addEventListener.call(this, type, func);
     };
     StreamingXHR.prototype.receiveData = function () {
+        var _this = this;
         // try {
         if (this.xhr.readyState !== 3) {
             return;
+        }
+        if (this.readyFulfill) {
+            this.readyFulfill();
+            this.readyFulfill = undefined;
         }
         // This means the responseText keeps growing and growing. Perhaps
         // we should look into cutting this off and re-establishing a new
         // link if it gets too big.
         var newData = this.xhr.responseText.substr(this.seenBytes);
         this.seenBytes = this.xhr.responseText.length;
-        var _a = /([\w\-]+):(.*)/.exec(newData), _ = _a[0], event = _a[1], data = _a[2];
-        var evt = new MessageEvent(event, {
-            data: JSON.parse(data)
+        var events = newData.split("\n");
+        events.filter(function (s) { return s !== ""; }).forEach(function (dataSlice) {
+            var _a = /([\w\-]+):(.*)/.exec(dataSlice), _ = _a[0], event = _a[1], data = _a[2];
+            var parsedData;
+            try {
+                parsedData = JSON.parse(data);
+            }
+            catch (err) {
+                throw new Error("Could not parse: " + dataSlice + err.toString());
+            }
+            var evt = new MessageEvent(event, {
+                data: parsedData
+            });
+            _this.dispatchEvent(evt);
         });
-        // console.info("EVENT:", event, evt.data);
-        this.dispatchEvent(evt);
-        // } catch (err) {
-        //     console.error(err);
-        //     let errEvt = new ErrorEvent("error", {
-        //         error: err
-        //     });
-        //     this.dispatchEvent(errEvt);
-        // }
     };
     StreamingXHR.prototype.close = function () {
         this.xhr.abort();
@@ -171,13 +196,8 @@ var StreamingXHR = (function (_super) {
     return StreamingXHR;
 }(index));
 
-function getFullAPIURL(path) {
-    return new URL(path, swwebviewSettings.SW_PROTOCOL + "://" + swwebviewSettings.SW_API_HOST).href;
-}
-
-var absoluteURL = getFullAPIURL("/events");
-var eventsURL = new URL(absoluteURL);
-eventsURL.searchParams.append("path", window.location.pathname);
+var eventsURL = new URL("/events", window.location.href);
+eventsURL.searchParams.append("path", window.location.pathname + window.location.search);
 var eventStream = new StreamingXHR(eventsURL.href);
 
 var APIError = (function (_super) {
@@ -191,13 +211,17 @@ var APIError = (function (_super) {
 }(Error));
 function apiRequest(path, body) {
     if (body === void 0) { body = undefined; }
-    return fetch(getFullAPIURL(path), {
-        method: swwebviewSettings.API_REQUEST_METHOD,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }).then(function (res) {
+    return eventStream.ready
+        .then(function () {
+        return fetch(path, {
+            method: swwebviewSettings.API_REQUEST_METHOD,
+            body: body === undefined ? undefined : JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    })
+        .then(function (res) {
         if (res.ok === false) {
             if (res.status === 500) {
                 return res.json().then(function (errorJSON) {
@@ -215,14 +239,30 @@ var ServiceWorkerImplementation = (function (_super) {
     __extends(ServiceWorkerImplementation, _super);
     function ServiceWorkerImplementation(opts) {
         var _this = _super.call(this) || this;
-        _this.scriptURL = opts.scriptURL;
+        _this.updateFromAPIResponse(opts);
         _this.id = opts.id;
-        _this.state = opts.installState;
+        _this.addEventListener("statechange", function (e) {
+            if (_this.onstatechange) {
+                _this.onstatechange(e);
+            }
+        });
         return _this;
     }
+    ServiceWorkerImplementation.prototype.updateFromAPIResponse = function (opts) {
+        this.scriptURL = opts.scriptURL;
+        var oldState = this.state;
+        this.state = opts.installState;
+        if (oldState !== this.state) {
+            var evt = new CustomEvent("statechange");
+            this.dispatchEvent(evt);
+        }
+    };
     ServiceWorkerImplementation.prototype.postMessage = function () { };
+    ServiceWorkerImplementation.get = function (opts) {
+        return existingWorkers.find(function (w) { return w.id === opts.id; });
+    };
     ServiceWorkerImplementation.getOrCreate = function (opts) {
-        var existing = existingWorkers.find(function (w) { return w.id === opts.id; });
+        var existing = this.get(opts);
         if (existing) {
             return existing;
         }
@@ -234,8 +274,15 @@ var ServiceWorkerImplementation = (function (_super) {
     };
     return ServiceWorkerImplementation;
 }(index));
+eventStream.addEventListener("serviceworker", function (e) {
+    var existingWorker = ServiceWorkerImplementation.get(e.data);
+    if (existingWorker) {
+        existingWorker.updateFromAPIResponse(e.data);
+    }
+});
 eventStream.addEventListener("workerinstallerror", function (e) {
-    console.error(e.data);
+    console.error("Worker installation failed: " + e.data.error + " (in " + e.data.worker
+        .scriptURL + ")");
 });
 
 var existingRegistrations = [];
@@ -298,7 +345,6 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     return ServiceWorkerRegistrationImplementation;
 }(index));
 eventStream.addEventListener("serviceworkerregistration", function (e) {
-    console.log(e);
     var reg = existingRegistrations.find(function (r) { return r.id == e.data.id; });
     if (reg) {
         reg.updateFromResponse(e.data);
@@ -311,60 +357,72 @@ eventStream.addEventListener("serviceworkerregistration", function (e) {
 var ServiceWorkerContainerImplementation = (function (_super) {
     __extends(ServiceWorkerContainerImplementation, _super);
     function ServiceWorkerContainerImplementation() {
-        var _this = this;
-        console.info("Created new ServiceWorkerContainer for", window.location.pathname);
-        _this = _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this._controller = null;
+        _this.receivedInitialProperties = false;
+        console.info("Created new ServiceWorkerContainer for", window.location.href);
         _this.location = window.location;
-        _this.controller = null;
         var readyFulfill;
         _this.ready = new Promise(function (fulfill, reject) {
-            readyFulfill = fulfill;
+            _this.readyFulfill = fulfill;
         });
         _this.addEventListener("controllerchange", function (e) {
             if (_this.oncontrollerchange) {
                 _this.oncontrollerchange(e);
             }
         });
-        eventStream.addEventListener("serviceworkercontainer", function (e) {
-            console.info("container change", e.data);
-            var reg = e.data.readyRegistration
-                ? ServiceWorkerRegistrationImplementation.getOrCreate(e.data.readyRegistration)
-                : undefined;
-            console.log("container response", e.data, reg);
-            if (reg && readyFulfill) {
-                console.log("fulfill existing pending");
-                readyFulfill(reg);
-                readyFulfill = undefined;
-            }
-            else if (reg) {
-                console.log("set new resolved promise");
-                _this.ready = Promise.resolve(reg);
-            }
-            else if (!readyFulfill) {
-                console.log("set empty promise");
-                _this.ready = new Promise(function (fulfill, reject) {
-                    readyFulfill = fulfill;
-                });
-            }
-            var newControllerInstance;
-            if (e.data.controller) {
-                newControllerInstance = ServiceWorkerImplementation.getOrCreate(e.data.controller);
-            }
-            else {
-                newControllerInstance = null;
-            }
-            if (newControllerInstance !== _this.controller) {
-                console.info("Set new controller from", _this.controller, "to", newControllerInstance);
-                // Have to do 'as any' because TypeScript definition doesn't
-                // allow null service workers
-                _this.controller = newControllerInstance;
-                var evt = new CustomEvent("controllerchange");
-                _this.dispatchEvent(evt);
-            }
-        });
-        eventStream.open();
+        if (eventStream.isOpen === false) {
+            eventStream.open();
+        }
         return _this;
     }
+    Object.defineProperty(ServiceWorkerContainerImplementation.prototype, "controller", {
+        get: function () {
+            if (this.receivedInitialProperties == false) {
+                throw new Error("You have attempted to access the controller property before it is ready. " +
+                    "SWWebView has an initialisation delay - please access after using navigator.serviceWorker.ready");
+            }
+            return this._controller;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ServiceWorkerContainerImplementation.prototype.updateFromAPIResponse = function (opts) {
+        var _this = this;
+        // set this so that client code can now successfully access controller
+        this.receivedInitialProperties = true;
+        if (opts.readyRegistration) {
+            var reg = ServiceWorkerRegistrationImplementation.getOrCreate(opts.readyRegistration);
+            reg.updateFromResponse(opts.readyRegistration);
+            if (this.readyFulfill) {
+                this.readyFulfill(reg);
+                this.readyFulfill = undefined;
+            }
+            else {
+                this.ready = Promise.resolve(reg);
+            }
+        }
+        else if (!this.readyFulfill) {
+            this.ready = new Promise(function (fulfill, reject) {
+                _this.readyFulfill = fulfill;
+            });
+        }
+        var newControllerInstance;
+        if (opts.controller) {
+            newControllerInstance = ServiceWorkerImplementation.getOrCreate(opts.controller);
+        }
+        else {
+            newControllerInstance = null;
+        }
+        if (newControllerInstance !== this._controller) {
+            console.info("Set new controller from", this._controller, "to", newControllerInstance);
+            // Have to do 'as any' because TypeScript definition doesn't
+            // allow null service workers
+            this._controller = newControllerInstance;
+            var evt = new CustomEvent("controllerchange");
+            this.dispatchEvent(evt);
+        }
+    };
     ServiceWorkerContainerImplementation.prototype.controllerChangeMessage = function (evt) {
         console.log(evt);
     };
@@ -406,6 +464,10 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     ServiceWorkerContainerImplementation.__isSWWebViewImplementation = true;
     return ServiceWorkerContainerImplementation;
 }(index));
+eventStream.addEventListener("serviceworkercontainer", function (e) {
+    console.log("update?", e.data);
+    navigator.serviceWorker.updateFromAPIResponse(e.data);
+});
 if ("ServiceWorkerContainer" in self === false) {
     // We lazily initialize this when the client code requests it.
     var container_1 = undefined;

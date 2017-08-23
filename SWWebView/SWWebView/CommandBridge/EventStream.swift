@@ -11,9 +11,7 @@ import WebKit
 import ServiceWorker
 import ServiceWorkerContainer
 
-class EventStream {
-
-    fileprivate static var currentEventStreams: [Int: EventStream] = [:]
+class EventStream : NSObject {
 
     // We add a strong reference to the container here, so that we retain
     // any workers relevant to this webview. The rest of the operations rely
@@ -31,16 +29,11 @@ class EventStream {
         return url.host == self.container.containerURL.host && url.port == self.container.containerURL.port
     }
     
-    fileprivate init(for task: SWURLSchemeTask) throws {
+    init(for task: SWURLSchemeTask, withContainer container: ServiceWorkerContainer) throws {
         self.task = task
        
-        let components = URLComponents(url: task.request.url!, resolvingAgainstBaseURL: true)!
-        let path = components.queryItems?.first(where: { $0.name == "path"})!.value!
-        
-        let fullPageURL = URL(string: path!, relativeTo: task.origin!)
-        
-        self.container = try ServiceWorkerContainer.get(for: fullPageURL!)
-
+        self.container = container
+        super.init()
         self.workerListener = GlobalEventLog.addListener { (worker: ServiceWorker) in
             if self.isScopeMatch(worker.url) {
                 self.sendUpdate(identifier: "serviceworker", object: worker)
@@ -65,22 +58,23 @@ class EventStream {
             }
         }
 
-        let response = HTTPURLResponse(url: task.originalServiceWorkerURL, statusCode: 200, httpVersion: "1.1", headerFields: [
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Access-Control-Allow-Origin": task.origin!.sWWebviewSuitableAbsoluteString
-        ])!
 
-        try task.didReceive(response)
+        try task.didReceiveHeaders(statusCode: 200, headers: [
+            "Content-Type": "text/event-stream"
+        ])
         
         // It's possible that this event stream was interrupted as a result of the page being
         // shown/hidden/who knows, so the JS objects might be out of date. To make sure we're
         // clear, we'll send down the details for every relevant object.
         
         self.sendUpdate(identifier: "serviceworkercontainer", object: self.container)
+        
+        // Because the container doesn't contain a direct reference to its registrations,
+        // we manually grab them, and send them down as well.
         self.container.getRegistrations()
             .then { regs in
-                // Registrations send down their corresponding worker objects
+                // Registrations send down their corresponding worker objects, so we don't
+                // need to push those too.
                 regs.forEach { self.sendUpdate(identifier: "serviceworkeregistration", object: $0)}
         }
         
@@ -98,7 +92,7 @@ class EventStream {
         do {
             let json = try JSONSerialization.data(withJSONObject: object.toJSONSuitableObject(), options: [])
             let jsonString = String(data: json, encoding: .utf8)!
-            let str = "\(identifier): \(jsonString)"
+            let str = "\(identifier): \(jsonString)\n"
 
             try self.task.didReceive(str.data(using: String.Encoding.utf8)!)
         } catch {
@@ -106,25 +100,25 @@ class EventStream {
         }
     }
 
-    static func create(for task: SWURLSchemeTask) {
-        if EventStream.currentEventStreams[task.hash] != nil {
-            Log.error?("Tried to create an EventStream for a task when it already exists")
-            task.didFailWithError(ErrorMessage("EventStream already exists for this task"))
-            return
-        }
-        do {
-            let newStream = try EventStream(for: task)
-            EventStream.currentEventStreams[task.hash] = newStream
-        } catch {
-            task.didFailWithError(error)
-        }
-    }
-
-    static func remove(for task: SWURLSchemeTask) {
-        if EventStream.currentEventStreams[task.hash] == nil {
-            Log.error?("Tried to remove an EventStream that does not exist")
-        }
-        EventStream.currentEventStreams[task.hash]!.shutdown()
-        EventStream.currentEventStreams[task.hash] = nil
-    }
+//    static func create(for task: SWURLSchemeTask) {
+//        if EventStream.currentEventStreams[task.hash] != nil {
+//            Log.error?("Tried to create an EventStream for a task when it already exists")
+//            task.didFailWithError(ErrorMessage("EventStream already exists for this task"))
+//            return
+//        }
+//        do {
+//            let newStream = try EventStream(for: task)
+//            EventStream.currentEventStreams[task.hash] = newStream
+//        } catch {
+//            task.didFailWithError(error)
+//        }
+//    }
+//
+//    static func remove(for task: SWURLSchemeTask) {
+//        if EventStream.currentEventStreams[task.hash] == nil {
+//            Log.error?("Tried to remove an EventStream that does not exist")
+//        }
+//        EventStream.currentEventStreams[task.hash]!.shutdown()
+//        EventStream.currentEventStreams[task.hash] = nil
+//    }
 }

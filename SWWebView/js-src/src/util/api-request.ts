@@ -1,5 +1,6 @@
 import { API_REQUEST_METHOD } from "swwebview-settings";
-import { getFullAPIURL } from "./full-api-url";
+import { eventStream } from "../event-stream";
+
 export class APIError extends Error {
     response: Response;
 
@@ -10,24 +11,28 @@ export class APIError extends Error {
 }
 
 export function apiRequest<T>(path: string, body: any = undefined): Promise<T> {
-    return fetch(getFullAPIURL(path), {
-        method: API_REQUEST_METHOD,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }).then(res => {
-        if (res.ok === false) {
-            if (res.status === 500) {
-                return res.json().then(errorJSON => {
-                    throw new Error(errorJSON.error);
-                });
+    return eventStream.ready
+        .then(() => {
+            return fetch(path, {
+                method: API_REQUEST_METHOD,
+                body: body === undefined ? undefined : JSON.stringify(body),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+        })
+        .then(res => {
+            if (res.ok === false) {
+                if (res.status === 500) {
+                    return res.json().then(errorJSON => {
+                        throw new Error(errorJSON.error);
+                    });
+                }
+                throw new APIError(
+                    "Received a non-200 response to API request",
+                    res
+                );
             }
-            throw new APIError(
-                "Received a non-200 response to API request",
-                res
-            );
-        }
-        return res.json();
-    });
+            return res.json();
+        });
 }

@@ -36,19 +36,22 @@ import ServiceWorker
         self.readyRegistration = try ServiceWorkerRegistration.getReadyRegistration(for: self.containerURL)
         
         if self.readyRegistration != nil {
+            self.controller = self.readyRegistration?.active
             self._ready = Promise(value: self.readyRegistration!)
         } else {
+            self.controller = nil
             self._ready = Promise { fulfill, reject in
                 self._readyFulfill = fulfill
             }
         }
     }
 
-    init(forURL: URL) throws {
+    public init(forURL: URL) throws {
         self.containerURL = forURL
         
         var components = URLComponents(url: forURL, resolvingAgainstBaseURL: true)!
         components.path = "/"
+        components.queryItems = nil
         self.origin = components.url!
         
         super.init()
@@ -72,7 +75,7 @@ import ServiceWorker
                 GlobalEventLog.notifyChange(self)
                 
                 return
-            } else if reg == self.readyRegistration || reg.unregistered == true {
+            } else if reg == self.readyRegistration || reg.unregistered == true || reg.active == nil {
                 return
             }
             
@@ -112,19 +115,19 @@ import ServiceWorker
 
     // We don't ever want to have more than one container for a URL, so we keep this weak map internally,
     // then, when running get(), we return an existing instance if it exists.
-    fileprivate static let activeContainers = NSHashTable<ServiceWorkerContainer>.weakObjects()
-
-    public static func get(for url: URL) throws -> ServiceWorkerContainer {
-        
-        let existing = self.activeContainers.allObjects.first { $0.containerURL.absoluteString == url.absoluteString }
-        if existing != nil {
-            return existing!
-        } else {
-            let newContainer = try ServiceWorkerContainer(forURL: url)
-            self.activeContainers.add(newContainer)
-            return newContainer
-        }
-    }
+//    fileprivate static let activeContainers = NSHashTable<ServiceWorkerContainer>.weakObjects()
+//
+//    public static func get(for url: URL) throws -> ServiceWorkerContainer {
+//        
+//        let existing = self.activeContainers.allObjects.first { $0.containerURL.absoluteString == url.absoluteString }
+//        if existing != nil {
+//            return existing!
+//        } else {
+//            let newContainer = try ServiceWorkerContainer(forURL: url)
+//            self.activeContainers.add(newContainer)
+//            return newContainer
+//        }
+//    }
 
     fileprivate var defaultScope: URL {
         if self.containerURL.absoluteString.hasSuffix("/") == false {

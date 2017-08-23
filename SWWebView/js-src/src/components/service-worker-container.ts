@@ -13,26 +13,39 @@ class ServiceWorkerContainerImplementation extends EventEmitter
     // used for detection
     static __isSWWebViewImplementation = true;
 
-    controller: ServiceWorker;
+    private _controller: ServiceWorker | null = null;
+
+    get controller() {
+        if (this.receivedInitialProperties == false) {
+            throw new Error(
+                "You have attempted to access the controller property before it is ready. " +
+                    "SWWebView has an initialisation delay - please access after using navigator.serviceWorker.ready"
+            );
+        }
+        return this._controller!;
+    }
+
     oncontrollerchange: (ev: Event) => void;
     onmessage: (ev: Event) => void;
+
     ready: Promise<ServiceWorkerRegistration>;
+    private readyFulfill?: (ServiceWorkerRegistration) => void;
 
     location: Location;
 
+    private receivedInitialProperties = false;
+
     constructor() {
+        super();
         console.info(
             "Created new ServiceWorkerContainer for",
-            window.location.pathname
+            window.location.href
         );
-        super();
         this.location = window.location;
-
-        (this as any).controller = null;
 
         let readyFulfill: ((ServiceWorkerRegistration) => void) | undefined;
         this.ready = new Promise((fulfill, reject) => {
-            readyFulfill = fulfill;
+            this.readyFulfill = fulfill;
         });
 
         this.addEventListener("controllerchange", e => {
@@ -41,51 +54,49 @@ class ServiceWorkerContainerImplementation extends EventEmitter
             }
         });
 
-        eventStream.addEventListener<
-            ServiceWorkerContainerAPIResponse
-        >("serviceworkercontainer", e => {
-            let reg = e.data.readyRegistration
-                ? ServiceWorkerRegistrationImplementation.getOrCreate(
-                      e.data.readyRegistration
-                  )
-                : undefined;
+        if (eventStream.isOpen === false) {
+            eventStream.open();
+        }
+    }
 
-            if (reg && readyFulfill) {
-                readyFulfill!(reg);
-                readyFulfill = undefined;
-            } else if (reg) {
-                this.ready = Promise.resolve(reg);
-            } else if (!readyFulfill) {
-                this.ready = new Promise((fulfill, reject) => {
-                    readyFulfill = fulfill;
-                });
-            }
+    updateFromAPIResponse(opts: ServiceWorkerContainerAPIResponse) {
+        // set this so that client code can now successfully access controller
+        this.receivedInitialProperties = true;
 
-            let newControllerInstance: ServiceWorker | null;
+        if (opts.readyRegistration) {
+            let reg = ServiceWorkerRegistrationImplementation.getOrCreate(
+                opts.readyRegistration
+            );
 
-            if (e.data.controller) {
-                newControllerInstance = ServiceWorkerImplementation.getOrCreate(
-                    e.data.controller
-                );
+            reg.updateFromResponse(opts.readyRegistration!);
+
+            if (this.readyFulfill) {
+                this.readyFulfill(reg);
+                this.readyFulfill = undefined;
             } else {
-                newControllerInstance = null;
+                this.ready = Promise.resolve(reg);
             }
+        } else if (!this.readyFulfill) {
+            this.ready = new Promise((fulfill, reject) => {
+                this.readyFulfill = fulfill;
+            });
+        }
 
-            if (newControllerInstance !== this.controller) {
-                console.info(
-                    "Set new controller from",
-                    this.controller,
-                    "to",
-                    newControllerInstance
-                );
-                // Have to do 'as any' because TypeScript definition doesn't
-                // allow null service workers
-                (this as any).controller = newControllerInstance;
-                let evt = new CustomEvent("controllerchange");
-                this.dispatchEvent(evt);
-            }
-        });
-        eventStream.open();
+        let newControllerInstance: ServiceWorker | null;
+
+        if (opts.controller) {
+            newControllerInstance = ServiceWorkerImplementation.getOrCreate(
+                opts.controller
+            );
+        } else {
+            newControllerInstance = null;
+        }
+
+        if (newControllerInstance !== this._controller) {
+            this._controller = newControllerInstance;
+            let evt = new CustomEvent("controllerchange");
+            this.dispatchEvent(evt);
+        }
     }
 
     controllerChangeMessage(evt: MessageEvent) {
@@ -149,6 +160,15 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         });
     }
 }
+
+eventStream.addEventListener<
+    ServiceWorkerContainerAPIResponse
+>("serviceworkercontainer", e => {
+    (navigator.serviceWorker as ServiceWorkerContainerImplementation).updateFromAPIResponse(
+        e.data
+    );
+});
+
 if ("ServiceWorkerContainer" in self === false) {
     // We lazily initialize this when the client code requests it.
     let container: ServiceWorkerContainerImplementation | undefined = undefined;

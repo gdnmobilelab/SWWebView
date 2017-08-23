@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */; };
+		8A43C17A1F4DD889001221C1 /* SWWebViewBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */; };
 		8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97FE1F3CC607002E521F /* ToJSON.swift */; };
 		8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98001F3CC62A002E521F /* ServiceWorker.swift */; };
 		8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */; };
@@ -33,11 +34,8 @@
 		8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */; };
 		8AF85D5C1F38E4EF001B0A87 /* SWNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D5B1F38E4EF001B0A87 /* SWNavigationAction.swift */; };
 		8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D611F38F5E5001B0A87 /* SWNavigationResponse.swift */; };
-		8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D651F3A08CA001B0A87 /* SWSchemeHandler.swift */; };
-		8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D681F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift */; };
 		8AF85D751F3A2747001B0A87 /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */; };
 		8AF85D941F3A3A39001B0A87 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8AF85D931F3A39D3001B0A87 /* js-dist */; };
-		8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */; };
 		8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85DB31F3B6900001B0A87 /* EventStream.swift */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +51,7 @@
 
 /* Begin PBXFileReference section */
 		8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerInstallationError.swift; sourceTree = "<group>"; };
+		8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewBridge.swift; sourceTree = "<group>"; };
 		8A5D97FE1F3CC607002E521F /* ToJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToJSON.swift; sourceTree = "<group>"; };
 		8A5D98001F3CC62A002E521F /* ServiceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorker.swift; sourceTree = "<group>"; };
 		8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistration.swift; sourceTree = "<group>"; };
@@ -82,11 +81,8 @@
 		8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewNavigationDelegate.swift; sourceTree = "<group>"; };
 		8AF85D5B1F38E4EF001B0A87 /* SWNavigationAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWNavigationAction.swift; sourceTree = "<group>"; };
 		8AF85D611F38F5E5001B0A87 /* SWNavigationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWNavigationResponse.swift; sourceTree = "<group>"; };
-		8AF85D651F3A08CA001B0A87 /* SWSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWSchemeHandler.swift; sourceTree = "<group>"; };
-		8AF85D681F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewServiceWorkerBridge.swift; sourceTree = "<group>"; };
 		8AF85D741F3A2747001B0A87 /* ServiceWorker.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorker.framework; path = "../../../Library/Developer/Xcode/DerivedData/SWWebView-asilpmvykkqkfehhurjnoakeivko/Build/Products/Debug-iphonesimulator/ServiceWorker.framework"; sourceTree = "<group>"; };
 		8AF85D931F3A39D3001B0A87 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = "<group>"; };
-		8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBridge.swift; sourceTree = "<group>"; };
 		8AF85DB31F3B6900001B0A87 /* EventStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStream.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -122,6 +118,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A43C1781F4DD87D001221C1 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
 		8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -172,16 +176,15 @@
 		8AA76F501F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXGroup;
 			children = (
+				8A43C1781F4DD87D001221C1 /* Bridge */,
 				8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */,
 				8AF85DB01F3B6848001B0A87 /* CommandBridge */,
 				8AF85D931F3A39D3001B0A87 /* js-dist */,
-				8AF85D641F3A08B6001B0A87 /* URLSchemeHandler */,
 				8AF85D601F38F5CF001B0A87 /* SubstituteWKComponents */,
 				8AA76F511F38B81600EFB4E1 /* SWWebView.h */,
 				8AA76F521F38B81600EFB4E1 /* Info.plist */,
 				8AF85D561F38BB70001B0A87 /* SWWebView.swift */,
 				8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */,
-				8AF85D681F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift */,
 			);
 			path = SWWebView;
 			sourceTree = "<group>";
@@ -217,18 +220,9 @@
 			path = SubstituteWKComponents;
 			sourceTree = "<group>";
 		};
-		8AF85D641F3A08B6001B0A87 /* URLSchemeHandler */ = {
-			isa = PBXGroup;
-			children = (
-				8AF85D651F3A08CA001B0A87 /* SWSchemeHandler.swift */,
-			);
-			path = URLSchemeHandler;
-			sourceTree = "<group>";
-		};
 		8AF85DB01F3B6848001B0A87 /* CommandBridge */ = {
 			isa = PBXGroup;
 			children = (
-				8AF85DB11F3B6853001B0A87 /* CommandBridge.swift */,
 				8AF85DB31F3B6900001B0A87 /* EventStream.swift */,
 				8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */,
 				8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */,
@@ -457,20 +451,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A43C17A1F4DD889001221C1 /* SWWebViewBridge.swift in Sources */,
 				8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */,
 				8AF85D5C1F38E4EF001B0A87 /* SWNavigationAction.swift in Sources */,
 				8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */,
 				8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */,
 				8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */,
-				8AF85D691F3A0B07001B0A87 /* WebViewServiceWorkerBridge.swift in Sources */,
 				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
 				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,
 				8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */,
 				8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */,
 				8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */,
 				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
-				8AF85D661F3A08CA001B0A87 /* SWSchemeHandler.swift in Sources */,
-				8AF85DB21F3B6853001B0A87 /* CommandBridge.swift in Sources */,
 				8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */,
 				8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */,
 			);

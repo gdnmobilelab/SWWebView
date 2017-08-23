@@ -12,20 +12,40 @@ export class ServiceWorkerImplementation extends EventEmitter
     id: string;
     scriptURL: string;
     state: ServiceWorkerState;
-    onstatechange: () => void;
+    onstatechange: (e) => void;
     onerror: (Error) => void;
 
     constructor(opts: ServiceWorkerAPIResponse) {
         super();
-        this.scriptURL = opts.scriptURL;
+        this.updateFromAPIResponse(opts);
         this.id = opts.id;
+
+        this.addEventListener("statechange", e => {
+            if (this.onstatechange) {
+                this.onstatechange(e);
+            }
+        });
+    }
+
+    updateFromAPIResponse(opts: ServiceWorkerAPIResponse) {
+        this.scriptURL = opts.scriptURL;
+        let oldState = this.state;
         this.state = opts.installState;
+
+        if (oldState !== this.state) {
+            let evt = new CustomEvent("statechange");
+            this.dispatchEvent(evt);
+        }
     }
 
     postMessage() {}
 
+    static get(opts: ServiceWorkerAPIResponse) {
+        return existingWorkers.find(w => w.id === opts.id);
+    }
+
     static getOrCreate(opts: ServiceWorkerAPIResponse) {
-        let existing = existingWorkers.find(w => w.id === opts.id);
+        let existing = this.get(opts);
         if (existing) {
             return existing;
         } else {
@@ -35,6 +55,13 @@ export class ServiceWorkerImplementation extends EventEmitter
         }
     }
 }
+
+eventStream.addEventListener<ServiceWorkerAPIResponse>("serviceworker", e => {
+    let existingWorker = ServiceWorkerImplementation.get(e.data);
+    if (existingWorker) {
+        existingWorker.updateFromAPIResponse(e.data);
+    }
+});
 
 eventStream.addEventListener<
     WorkerInstallErrorAPIResponse
