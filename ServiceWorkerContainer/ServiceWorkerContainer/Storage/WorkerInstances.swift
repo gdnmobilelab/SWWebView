@@ -28,7 +28,7 @@ class WorkerInstances {
                 }
 
                 let registrationId = try resultSet.string("registration_id")!
-                
+
                 let registration = try ServiceWorkerRegistration.get(byId: registrationId)!
                 let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
 

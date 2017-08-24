@@ -13,7 +13,7 @@ import PromiseKit
 class JSPromise {
 
     unowned let context: JSContext
-    let virtualMachine:JSVirtualMachine
+    let virtualMachine: JSVirtualMachine
     fileprivate var fulfill: JSManagedValue?
     fileprivate var reject: JSManagedValue?
     fileprivate var promiseJSValue: JSManagedValue?
@@ -45,7 +45,7 @@ class JSPromise {
     deinit {
         self.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
         self.virtualMachine.removeManagedReference(self.reject, withOwner: self)
-        self.virtualMachine.removeManagedReference(self.jsValue, withOwner: self)
+        self.virtualMachine.removeManagedReference(self.promiseJSValue, withOwner: self)
     }
 
     public func fulfill(_ value: Any?) {
@@ -67,16 +67,16 @@ class JSPromise {
 
         reject!.value.call(withArguments: [err!])
     }
-    
-    public func processCallback(_ error:Error?, _ returnObject: Any?) {
+
+    public func processCallback(_ error: Error?, _ returnObject: Any?) {
         if error != nil {
             self.reject(error!)
         } else {
             self.fulfill(returnObject!)
         }
     }
-    
-    public func processCallback(_ error:Error?) {
+
+    public func processCallback(_ error: Error?) {
         if error != nil {
             self.reject(error!)
         } else {

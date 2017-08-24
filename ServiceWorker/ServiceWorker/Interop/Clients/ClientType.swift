@@ -8,7 +8,7 @@
 
 import Foundation
 
-@objc public enum ClientType : Int {
+@objc public enum ClientType: Int {
     case Window
     case Worker
     case SharedWorker
@@ -16,18 +16,15 @@ import Foundation
 
 // Can't use string enums because Objective C doesn't like them
 extension ClientType {
-    
-    var stringValue:String {
-        get {
-            switch self {
-            case .SharedWorker:
-                return "sharedworker"
-            case .Window:
-                return "window"
-            case .Worker:
-                return "worker"
-            }
-            
+
+    var stringValue: String {
+        switch self {
+        case .SharedWorker:
+            return "sharedworker"
+        case .Window:
+            return "window"
+        case .Worker:
+            return "worker"
         }
     }
 }

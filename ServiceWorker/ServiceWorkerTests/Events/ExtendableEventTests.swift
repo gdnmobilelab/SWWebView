@@ -48,7 +48,7 @@ class ExtendableEventTests: XCTestCase {
     func testPromiseRejection() {
 
         let sw = ServiceWorker.createTestWorker()
-        
+
         let ev = ExtendableEvent(type: "test")
 
         return sw.withJSContext { context in

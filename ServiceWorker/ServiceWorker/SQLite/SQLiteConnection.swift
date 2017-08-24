@@ -205,19 +205,19 @@ public class SQLiteConnection {
 
     public func update(sql: String, values: [Any]) throws {
         var statement: OpaquePointer?
-        
+
         if sqlite3_prepare_v2(self.db!, sql + ";", -1, &statement, nil) != SQLITE_OK {
             sqlite3_finalize(statement)
             throw self.getLastError()
         }
-        
+
         do {
             let parameterCount = sqlite3_bind_parameter_count(statement)
-        
+
             if values.count != parameterCount {
                 throw ErrorMessage("Value array length is not equal to the parameter count")
             }
-            
+
             for (offset, element) in values.enumerated() {
                 // SQLite uses non-zero index for parameter numbers
                 try self.bindValue(statement!, idx: Int32(offset) + 1, value: element)
@@ -226,7 +226,7 @@ public class SQLiteConnection {
             if step != SQLITE_DONE {
                 throw self.getLastError()
             }
-        
+
             sqlite3_finalize(statement)
         } catch {
             sqlite3_finalize(statement)

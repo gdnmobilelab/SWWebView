@@ -15,7 +15,7 @@ class EventTargetTests: XCTestCase {
     func testShouldFireEvents() {
 
         let testEvents = EventTarget()
-        
+
         let sw = ServiceWorker.createTestWorker()
 
         let expect = expectation(description: "Code ran")

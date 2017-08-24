@@ -16,7 +16,7 @@ public class SWWebView: WKWebView {
 
     public var serviceWorkerPermittedDomains: [String] = []
     fileprivate var swNavigationDelegate: SWWebViewNavigationDelegate!
-    fileprivate var bridge:SWWebViewBridge!
+    fileprivate var bridge: SWWebViewBridge!
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -33,7 +33,7 @@ public class SWWebView: WKWebView {
         }
     }
 
-    fileprivate static func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration, bridge :SWWebViewBridge) {
+    fileprivate static func addSWHooksToConfiguration(_ configuration: WKWebViewConfiguration, bridge: SWWebViewBridge) {
 
         let pathToJS = Bundle(for: SWWebView.self).bundleURL
             .appendingPathComponent("js-dist", isDirectory: true)
@@ -79,16 +79,14 @@ public class SWWebView: WKWebView {
     }
 
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
-        
+
         self.bridge = SWWebViewBridge()
         SWWebView.addSWHooksToConfiguration(configuration, bridge: self.bridge)
-        
+
         super.init(frame: frame, configuration: configuration)
-        
 
         self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
-        
-        
+
         super.navigationDelegate = self.swNavigationDelegate
     }
 

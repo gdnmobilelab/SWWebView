@@ -11,7 +11,7 @@ import JavaScriptCore
 
 @objc public protocol ClientProtocol {
     func postMessage(message: Any?, transferable: [Any]?) -> Void
-    var id: String {get}
-    var type:ClientType {get}
-    var url: URL {get}
+    var id: String { get }
+    var type: ClientType { get }
+    var url: URL { get }
 }

@@ -14,58 +14,54 @@ import PromiseKit
 
 class ServiceWorkerContainerCommands {
 
-    static func getRegistration(container: ServiceWorkerContainer, json:AnyObject?) throws -> Promise<Any?>? {
-        
+    static func getRegistration(container: ServiceWorkerContainer, json: AnyObject?) throws -> Promise<Any?>? {
+
         var scope: URL?
         if let scopeString = json?["scope"] as? String {
-            
+
             guard let specifiedScope = URL(string: scopeString) else {
                 throw ErrorMessage("Did not understand passed in scope argument")
             }
-            
-            scope = specifiedScope
 
+            scope = specifiedScope
         }
-   
-         return container.getRegistration(scope)
+
+        return container.getRegistration(scope)
             .then { reg in
                 reg?.toJSONSuitableObject()
             }
-        
     }
 
-    static func getRegistrations(container: ServiceWorkerContainer, json:AnyObject?) throws -> Promise<Any?>? {
+    static func getRegistrations(container: ServiceWorkerContainer, json _: AnyObject?) throws -> Promise<Any?>? {
         return container.getRegistrations()
             .then { regs in
                 regs.map { $0.toJSONSuitableObject() }
             }
     }
 
-    static func register(container: ServiceWorkerContainer, json:AnyObject?) throws -> Promise<Any?>? {
-        
-            
-            guard let workerURLString = json?["url"] as? String else {
-                throw ErrorMessage("URL must be provided")
-            }
+    static func register(container: ServiceWorkerContainer, json: AnyObject?) throws -> Promise<Any?>? {
 
-            guard let workerURL = URL(string: workerURLString, relativeTo: container.containerURL) else {
-                throw ErrorMessage("Could not parse URL")
-            }
+        guard let workerURLString = json?["url"] as? String else {
+            throw ErrorMessage("URL must be provided")
+        }
 
-            var options: ServiceWorkerRegistrationOptions?
-            
-            if let specifiedScope = json?["scope"] as? String {
-                
-                guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: container.containerURL) else {
-                    throw ErrorMessage("Could not parse scope URL")
-                }
-                options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)
-            }
+        guard let workerURL = URL(string: workerURLString, relativeTo: container.containerURL) else {
+            throw ErrorMessage("Could not parse URL")
+        }
 
-            return container.register(workerURL: workerURL, options: options)
-                .then { result in
-                    result.toJSONSuitableObject()
-                }
-        
+        var options: ServiceWorkerRegistrationOptions?
+
+        if let specifiedScope = json?["scope"] as? String {
+
+            guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: container.containerURL) else {
+                throw ErrorMessage("Could not parse scope URL")
+            }
+            options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)
+        }
+
+        return container.register(workerURL: workerURL, options: options)
+            .then { result in
+                result.toJSONSuitableObject()
+            }
     }
 }

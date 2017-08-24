@@ -13,7 +13,7 @@ import JavaScriptCore
 class ServiceWorkerTests: XCTestCase {
 
     func testLoadContentFunction() {
-        
+
         let sw = ServiceWorker.createTestWorker(content: "var testValue = 'hello';")
 
         return sw.evaluateScript("testValue")

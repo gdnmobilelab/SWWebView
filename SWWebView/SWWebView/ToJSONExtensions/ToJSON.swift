@@ -18,7 +18,7 @@ extension URL {
         components.scheme = SWWebView.ServiceWorkerScheme
         return components.url!.absoluteString
     }
-    
+
     init?(swWebViewString: String) {
         var urlComponents = URLComponents(string: swWebViewString)
         if urlComponents != nil {

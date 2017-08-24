@@ -70,14 +70,14 @@ public class SQLiteResultSet {
         let result = sqlite3_column_int(statement, idx)
         return Int(result)
     }
-    
+
     public func int64(_ name: String) throws -> Int64? {
         let idx = try idxForColumnName(name)
-        
+
         if self.nullCheck(idx) {
             return nil
         }
-        
+
         let result = sqlite3_column_int64(statement, idx)
         return Int64(result)
     }

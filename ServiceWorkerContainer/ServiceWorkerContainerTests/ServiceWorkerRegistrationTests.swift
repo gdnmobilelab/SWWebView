@@ -96,7 +96,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
             let reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL)
             return reg.register(TestWeb.serverURL.appendingPathComponent("test.js"))
                 .then {
-                    return reg.ready
+                    reg.ready
                 }
                 .then { (_) -> Promise<JSValue?> in
                     XCTAssertNotNil(reg.active)
@@ -109,35 +109,35 @@ class ServiceWorkerRegistrationTests: XCTestCase {
         .assertResolves()
     }
 
-//    func testShouldStayWaitingWhenActiveWorkerExists() {
-//        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.js", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
-//            GCDWebServerDataResponse(text: "console.log('load')")
-//        }
-//
-//        TestWeb.server!.addHandler(forMethod: "GET", path: "/test2.js", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
-//            GCDWebServerDataResponse(text: "console.log('load2')")
-//        }
-//
-//        firstly { () -> Promise<Void> in
-//            let reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL)
-//            return reg.register(TestWeb.serverURL.appendingPathComponent("test.js"))
-//                .then {
-//                    return reg.ready
-//                }
-//                .then { (_) -> Promise<Void> in
-//                    let currentActive = reg.active
-//                    XCTAssertNotNil(currentActive)
-//                    return reg.register(TestWeb.serverURL.appendingPathComponent("test2.js"))
-//                        .then { () -> Void in
-//                            XCTAssertEqual(currentActive, reg.active)
-//                            XCTAssertNotNil(reg.waiting)
-//                            XCTAssertEqual(reg.active!.url.absoluteString, TestWeb.serverURL.appendingPathComponent("test.js").absoluteString)
-//                            XCTAssertEqual(reg.waiting!.url.absoluteString, TestWeb.serverURL.appendingPathComponent("test2.js").absoluteString)
-//                        }
-//                }
-//        }
-//        .assertResolves()
-//    }
+    //    func testShouldStayWaitingWhenActiveWorkerExists() {
+    //        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.js", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+    //            GCDWebServerDataResponse(text: "console.log('load')")
+    //        }
+    //
+    //        TestWeb.server!.addHandler(forMethod: "GET", path: "/test2.js", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+    //            GCDWebServerDataResponse(text: "console.log('load2')")
+    //        }
+    //
+    //        firstly { () -> Promise<Void> in
+    //            let reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL)
+    //            return reg.register(TestWeb.serverURL.appendingPathComponent("test.js"))
+    //                .then {
+    //                    return reg.ready
+    //                }
+    //                .then { (_) -> Promise<Void> in
+    //                    let currentActive = reg.active
+    //                    XCTAssertNotNil(currentActive)
+    //                    return reg.register(TestWeb.serverURL.appendingPathComponent("test2.js"))
+    //                        .then { () -> Void in
+    //                            XCTAssertEqual(currentActive, reg.active)
+    //                            XCTAssertNotNil(reg.waiting)
+    //                            XCTAssertEqual(reg.active!.url.absoluteString, TestWeb.serverURL.appendingPathComponent("test.js").absoluteString)
+    //                            XCTAssertEqual(reg.waiting!.url.absoluteString, TestWeb.serverURL.appendingPathComponent("test2.js").absoluteString)
+    //                        }
+    //                }
+    //        }
+    //        .assertResolves()
+    //    }
 
     func testShouldReplaceWhenSkipWaitingCalled() {
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.js", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
@@ -156,7 +156,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
             let reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL)
             return reg.register(TestWeb.serverURL.appendingPathComponent("test.js"))
                 .then {
-                    return reg.ready
+                    reg.ready
                 }
                 .then { (_) -> Promise<Void> in
                     let currentActive = reg.active
@@ -164,20 +164,19 @@ class ServiceWorkerRegistrationTests: XCTestCase {
                     return reg.register(TestWeb.serverURL.appendingPathComponent("test2.js"))
                         .then {
 
-                            return Promise<Void> { fulfill, reject in
-                                var listener:Listener<ServiceWorker>? = nil
-                                listener = GlobalEventLog.addListener { (sw:ServiceWorker) in
+                            Promise<Void> { fulfill, _ in
+                                var listener: Listener<ServiceWorker>?
+                                listener = GlobalEventLog.addListener { (sw: ServiceWorker) in
                                     if sw.id != currentActive!.id {
                                         return
                                     }
-                                    
+
                                     XCTAssertEqual(sw.state, ServiceWorkerInstallState.redundant)
                                     XCTAssertEqual(reg.active?.url.absoluteString, TestWeb.serverURL.appendingPathComponent("test2.js").absoluteString)
                                     GlobalEventLog.removeListener(listener!)
                                     fulfill(())
                                 }
                             }
-                            
                         }
                 }
         }
@@ -195,33 +194,28 @@ class ServiceWorkerRegistrationTests: XCTestCase {
             """.data(using: String.Encoding.utf8)!, contentType: "text/javascript")
         }
 
-        
         firstly { () -> Promise<Void> in
             let reg = try ServiceWorkerRegistration.create(scope: TestWeb.serverURL)
-            
+
             return reg.register(TestWeb.serverURL.appendingPathComponent("test.js"))
                 .then { () -> Promise<Void> in
                     let installing = reg.installing!
-                    var listener:Listener<ServiceWorker>? = nil
-                    
-                    return Promise<Void> {fulfill, reject in
-                        
-                        listener = GlobalEventLog.addListener { (sw:ServiceWorker) in
-                            if (sw.id != installing.id) {
+                    var listener: Listener<ServiceWorker>?
+
+                    return Promise<Void> { fulfill, _ in
+
+                        listener = GlobalEventLog.addListener { (sw: ServiceWorker) in
+                            if sw.id != installing.id {
                                 return
                             }
                             XCTAssertEqual(sw.state, ServiceWorkerInstallState.redundant)
                             fulfill(())
                             GlobalEventLog.removeListener(listener!)
-                            
                         }
-                        
                     }
-            }
-            
+                }
         }
         .assertResolves()
-    
     }
 
     func testActiveShouldRemainWhenInstallingWorkerFails() {

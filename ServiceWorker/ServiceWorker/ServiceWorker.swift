@@ -14,16 +14,15 @@ import PromiseKit
 
     public let url: URL
     public let id: String
-    
-    internal let implementations:WorkerImplementations
-    
+
+    internal let implementations: WorkerImplementations
+
     var registration: ServiceWorkerRegistrationProtocol {
-        get {
-            return self.implementations.registration
-        }
+        return self.implementations.registration
     }
+
     let loadContent: (ServiceWorker) -> String
-    
+
     public static var storageURL: URL?
 
     fileprivate var _installState: ServiceWorkerInstallState
@@ -41,7 +40,7 @@ import PromiseKit
     }
 
     public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
-        
+
         self.implementations = implementations ?? WorkerImplementations()
         self.id = id
         self.url = url
@@ -49,7 +48,7 @@ import PromiseKit
         self._installState = state
         super.init()
     }
-    
+
     init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url

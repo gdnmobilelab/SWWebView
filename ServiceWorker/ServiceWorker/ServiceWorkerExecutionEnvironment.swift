@@ -15,15 +15,15 @@ import PromiseKit
     internal let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
-    
+
     fileprivate static var virtualMachine = JSVirtualMachine()!
 
     @objc public init(_ worker: ServiceWorker) throws {
-        
+
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
-        
+
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
-        
+
         super.init()
         self.jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after

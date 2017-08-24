@@ -19,42 +19,42 @@ import ServiceWorker
 
     public let scope: URL
     public let id: String
-    
-//    fileprivate var _active: ServiceWorker?
-//    public var active: ServiceWorker? {
-//        get {
-//            return _active;
-//        }
-//        set(value) {
-//            self._active = value
-//            if self.readyFulfill != nil {
-//                self.readyFulfill!(self)
-//                self.readyFulfill = nil
-//            }
-//        }
-//    }
-    
+
+    //    fileprivate var _active: ServiceWorker?
+    //    public var active: ServiceWorker? {
+    //        get {
+    //            return _active;
+    //        }
+    //        set(value) {
+    //            self._active = value
+    //            if self.readyFulfill != nil {
+    //                self.readyFulfill!(self)
+    //                self.readyFulfill = nil
+    //            }
+    //        }
+    //    }
+
     public var active: ServiceWorker?
     public var waiting: ServiceWorker?
     public var installing: ServiceWorker?
     public var redundant: ServiceWorker?
-    
-//    fileprivate var readyPromise: Promise<ServiceWorkerRegistration>? = nil
-//    fileprivate var readyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
-//
-//    public var ready:Promise<ServiceWorkerRegistration> {
-//        get {
-//            return self.readyPromise!
-//        }
-//    }
+
+    //    fileprivate var readyPromise: Promise<ServiceWorkerRegistration>? = nil
+    //    fileprivate var readyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
+    //
+    //    public var ready:Promise<ServiceWorkerRegistration> {
+    //        get {
+    //            return self.readyPromise!
+    //        }
+    //    }
 
     fileprivate init(scope: URL, id: String) {
         self.scope = scope
         self.id = id
         super.init()
-//        self.readyPromise = Promise { [unowned self] fulfill, reject in
-//            self.readyFulfill = fulfill
-//        }
+        //        self.readyPromise = Promise { [unowned self] fulfill, reject in
+        //            self.readyFulfill = fulfill
+        //        }
     }
 
     func update() -> Promise<Void> {
@@ -77,7 +77,7 @@ import ServiceWorker
             }
 
             let request = try self.getUpdateRequest(forExistingWorker: worker)
-            
+
             let newWorker = try self.createNewInstallingWorker(for: request.url)
 
             return FetchOperation.fetch(request)
@@ -96,14 +96,14 @@ import ServiceWorker
                 }
         }
     }
-    
+
     static func getReadyRegistration(for containerURL: URL) throws -> ServiceWorkerRegistration? {
         return try CoreDatabase.inConnection { db in
-            
+
             // Not enough to just have an 'active' worker, it also needs to be in an 'activated'
             // state (i.e. not 'activating')
-            
-            return try db.select(sql: """
+
+            try db.select(sql: """
                 SELECT r.registration_id
                 FROM registrations AS r
                 INNER JOIN workers AS w
@@ -113,19 +113,16 @@ import ServiceWorker
                 ORDER BY length(scope) DESC
                 LIMIT 1
             """, values: [containerURL]) { resultSet in
-                
+
                 if resultSet.next() == false {
                     return nil
                 }
-                
+
                 let id = try resultSet.string("registration_id")!
-                
+
                 return try ServiceWorkerRegistration.get(byId: id)
-                
             }
-            
         }
-        
     }
 
     fileprivate func getUpdateRequest(forExistingWorker worker: ServiceWorker) throws -> FetchRequest {
@@ -158,11 +155,11 @@ import ServiceWorker
             return request
         }
     }
-    
+
     fileprivate func createNewInstallingWorker(for url: URL) throws -> ServiceWorker {
-        
+
         let newWorkerID = UUID().uuidString
-        
+
         try CoreDatabase.inConnection { db in
             _ = try db.insert(sql: """
                 INSERT INTO workers
@@ -174,9 +171,9 @@ import ServiceWorker
                 url,
                 ServiceWorkerInstallState.installing.rawValue,
                 self.id,
-                ])
+            ])
         }
-        
+
         let worker = try WorkerInstances.get(id: newWorkerID)
         self.installing = worker
         return worker
@@ -184,17 +181,17 @@ import ServiceWorker
 
     typealias RegisterReturn = (ServiceWorker, Promise<Void>)
     func register(_ workerURL: URL) -> Promise<RegisterReturn> {
-        
+
         // The install process is asynchronous and the register call doesn't wait for it.
         // So we create our stub in the database then return the promise immediately.
-        
+
         return firstly { () -> Promise<RegisterReturn> in
 
             let worker = try self.createNewInstallingWorker(for: workerURL)
-            
+
             return FetchOperation.fetch(workerURL)
-                .then { res  -> RegisterReturn in
-                    
+                .then { res -> RegisterReturn in
+
                     if res.ok == false {
                         // We couldn't fetch the worker JS, so we immediately set the worker to
                         // redundant and forget about it.
@@ -203,21 +200,19 @@ import ServiceWorker
                         }
                         throw ErrorMessage("Received response code \(res.status)")
                     }
-                    
+
                     // Very weird layout here, but installation is a two-tiered process. We return
                     // immediately when we've created the stub worker, but we also want to return
                     // any errors to the webview even though it runs asynchronously.
-                    
+
                     return (worker, self.processHTTPResponse(res, newWorker: worker))
-                    
+
                     // This promise is NOT returned, because the register() call does not
                     // wait for the worker to actually be installed - it returns as soon
                     // as the process has started.
-//                    _ = self.processHTTPResponse(res, newWorker: worker)
-            }
-            
+                    //                    _ = self.processHTTPResponse(res, newWorker: worker)
+                }
         }
-        
     }
 
     fileprivate func isWorkerByteIdentical(existingWorkerID: String, newHash: Data, db: SQLiteConnection) throws -> Bool {
@@ -247,7 +242,7 @@ import ServiceWorker
             // ISSUE: do we update the URL here, if the response was redirected? If we do, it'll mean
             // future update() calls won't check the original URL, which feels wrong. But having this
             // URL next to content from another URL also feels wrong.
-            
+
             try db.update(sql: """
                 UPDATE workers SET
                     headers = ?,
@@ -257,7 +252,7 @@ import ServiceWorker
             """, values: [
                 try res.headers.toJSON(),
                 size,
-                id
+                id,
             ])
 
             let rowID = try db.select(sql: "SELECT rowid FROM workers WHERE worker_id = ?", values: [id]) { rs -> Int64 in
@@ -298,7 +293,6 @@ import ServiceWorker
                         }
                     }
 
-                   
                     return self.install(worker: newWorker, in: db)
                         .then {
 
@@ -403,10 +397,10 @@ import ServiceWorker
             self.redundant = worker
             try db.update(sql: "UPDATE registrations SET redundant = ? WHERE registration_id = ?", values: [worker.id, self.id])
         }
-        
+
         try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [newState.rawValue, worker.id])
         worker.state = newState
-        
+
         if existingWorker != nil && existingWorker != worker {
             // existingWorker != worker because it'll be the same worker when going from activating to activated
             try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [ServiceWorkerInstallState.redundant.rawValue, existingWorker!.id])
@@ -417,7 +411,7 @@ import ServiceWorker
     }
 
     fileprivate static let activeInstances = NSHashTable<ServiceWorkerRegistration>.weakObjects()
-    
+
     fileprivate static func fromResultSet(_ rs: SQLiteResultSet) throws -> ServiceWorkerRegistration? {
         if rs.next() == false {
             // If we don't already have a registration, return nil (get() doesn't create one)
@@ -425,11 +419,11 @@ import ServiceWorker
         }
         let id = try rs.string("registration_id")!
         let reg = ServiceWorkerRegistration(scope: try rs.url("scope")!, id: id)
-        
+
         // Need to add this now, as WorkerInstances.get() uses our static storage and
         // we don't want to get into a loop
         self.activeInstances.add(reg)
-        
+
         if let activeId = try rs.string("active") {
             reg.active = try WorkerInstances.get(id: activeId)
         }
@@ -442,26 +436,26 @@ import ServiceWorker
         if let redundantId = try rs.string("redundant") {
             reg.redundant = try WorkerInstances.get(id: redundantId)
         }
-        
+
         return reg
     }
-    
+
     public static func get(byId id: String) throws -> ServiceWorkerRegistration? {
         let active = activeInstances.allObjects.filter { $0.id == id }.first
-        
+
         if active != nil {
             return active
         }
-        
+
         return try CoreDatabase.inConnection { connection in
-            
-            return try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
-                
+
+            try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
+
                 return try self.fromResultSet(rs)
             }
         }
     }
-    
+
     public static func getOrCreate(byScope scope: URL) throws -> ServiceWorkerRegistration {
         let existing = try self.get(byScope: scope)
         if existing != nil {
@@ -470,18 +464,18 @@ import ServiceWorker
             return try self.create(scope: scope)
         }
     }
-    
+
     public static func get(byScope scope: URL) throws -> ServiceWorkerRegistration? {
         let active = activeInstances.allObjects.filter { $0.scope == scope }.first
-        
+
         if active != nil {
             return active
         }
-        
+
         return try CoreDatabase.inConnection { connection in
-            
-            return try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope]) { rs -> ServiceWorkerRegistration? in
-                
+
+            try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope]) { rs -> ServiceWorkerRegistration? in
+
                 return try self.fromResultSet(rs)
             }
         }
@@ -499,11 +493,9 @@ import ServiceWorker
     }
 
     fileprivate var _unregistered = false
-    
+
     public var unregistered: Bool {
-        get {
-            return self._unregistered
-        }
+        return self._unregistered
     }
 
     public func unregister() -> Promise<Void> {
@@ -524,7 +516,7 @@ import ServiceWorker
             }
 
             self._unregistered = true
-            
+
             GlobalEventLog.notifyChange(self)
             ServiceWorkerRegistration.activeInstances.remove(self)
             return Promise(value: ())

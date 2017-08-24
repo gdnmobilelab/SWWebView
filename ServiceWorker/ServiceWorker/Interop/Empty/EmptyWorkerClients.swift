@@ -9,26 +9,23 @@
 import Foundation
 import JavaScriptCore
 
-@objc public class EmptyWorkerClients : NSObject, WorkerClientsProtocol {
-    
+@objc public class EmptyWorkerClients: NSObject, WorkerClientsProtocol {
+
     let error = ErrorMessage("Empty stub worker client implementation")
-    
-    public func get(id: String, worker: ServiceWorker, _ cb: (Error?, ClientProtocol?) -> Void) {
+
+    public func get(id _: String, worker _: ServiceWorker, _ cb: (Error?, ClientProtocol?) -> Void) {
         cb(self.error, nil)
     }
-    
-    public func matchAll(options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
+
+    public func matchAll(options _: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
         cb(self.error, nil)
     }
-    
+
     public func openWindow(_: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
         cb(self.error, nil)
     }
-    
+
     public func claim(_ cb: (Error?) -> Void) {
         cb(self.error)
     }
-    
-
-    
 }

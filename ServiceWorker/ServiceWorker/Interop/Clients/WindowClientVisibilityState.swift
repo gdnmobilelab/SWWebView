@@ -8,7 +8,7 @@
 
 import Foundation
 
-@objc enum WindowClientVisibilityState : Int {
+@objc enum WindowClientVisibilityState: Int {
     case Hidden
     case Visible
     case Prerender
@@ -16,18 +16,16 @@ import Foundation
 }
 
 extension WindowClientVisibilityState {
-    var stringValue:String {
-        get {
-            switch self {
-            case .Hidden:
-                return "hidden"
-            case .Prerender:
-                return "prerender"
-            case .Unloaded:
-                return "unloaded"
-            case .Visible:
-                return "visible"
-            }
+    var stringValue: String {
+        switch self {
+        case .Hidden:
+            return "hidden"
+        case .Prerender:
+            return "prerender"
+        case .Unloaded:
+            return "unloaded"
+        case .Visible:
+            return "visible"
         }
     }
 }

@@ -13,9 +13,7 @@ extension ServiceWorkerContainer: ToJSON {
     func toJSONSuitableObject() -> Any {
         return [
             "readyRegistration": self.readyRegistration?.toJSONSuitableObject(),
-            "controller": self.controller?.toJSONSuitableObject()
+            "controller": self.controller?.toJSONSuitableObject(),
         ]
     }
-    
-    
 }

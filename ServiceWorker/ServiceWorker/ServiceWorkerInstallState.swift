@@ -17,10 +17,10 @@ import Foundation
 /// - Activated: The worker is activated and ready to receive events and messages
 /// - Redundant: The worker has either failed to install or has been superseded by a new version of the worker.
 public enum ServiceWorkerInstallState: String {
-//    case downloading = "downloading"
-    case installing = "installing"
-    case installed = "installed"
-    case activating = "activating"
-    case activated = "activated"
-    case redundant = "redundant"
+    //    case downloading = "downloading"
+    case installing
+    case installed
+    case activating
+    case activated
+    case redundant
 }

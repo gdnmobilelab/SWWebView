@@ -18,9 +18,9 @@ class SQLiteTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        
+
         do {
-            
+
             if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(at: self.dbPath)
             }
@@ -29,24 +29,24 @@ class SQLiteTests: XCTestCase {
             fatalError("\(error)")
         }
     }
-    
+
     override func tearDown() {
         super.tearDown()
 
         do {
-            
+
             if FileManager.default.fileExists(atPath: self.dbPath.path) {
                 try FileManager.default.removeItem(at: self.dbPath)
             }
-            
-//            try SQLiteConnection.inConnection(self.dbPath) { db in
-//                try db.exec(sql: """
-//                    PRAGMA writable_schema = 1;
-//                    delete from sqlite_master where type in ('table', 'index', 'trigger');
-//                    PRAGMA writable_schema = 0;
-//                    VACUUM;
-//                """)
-//            }
+
+            //            try SQLiteConnection.inConnection(self.dbPath) { db in
+            //                try db.exec(sql: """
+            //                    PRAGMA writable_schema = 1;
+            //                    delete from sqlite_master where type in ('table', 'index', 'trigger');
+            //                    PRAGMA writable_schema = 0;
+            //                    VACUUM;
+            //                """)
+            //            }
         } catch {
             fatalError("\(error)")
         }
@@ -378,7 +378,7 @@ class SQLiteTests: XCTestCase {
                 XCTAssertEqual(resultSet.next(), true)
                 XCTAssertEqual(try resultSet.int("val"), 100)
             }
-            
+
             try conn.close()
 
         }())
@@ -403,7 +403,7 @@ class SQLiteTests: XCTestCase {
                 _ = resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Float)
             }
-            
+
             try conn.close()
 
         }())

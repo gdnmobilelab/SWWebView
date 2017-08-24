@@ -8,10 +8,10 @@
 
 import Foundation
 
-@objc public class WorkerImplementations : NSObject {
+@objc public class WorkerImplementations: NSObject {
     let registration: ServiceWorkerRegistrationProtocol
     let clients: WorkerClientsProtocol
-    
+
     init(registration: ServiceWorkerRegistrationProtocol? = nil, clients: WorkerClientsProtocol? = nil) {
         self.registration = registration ?? EmptyServiceWorkerRegistration()
         self.clients = clients ?? EmptyWorkerClients()

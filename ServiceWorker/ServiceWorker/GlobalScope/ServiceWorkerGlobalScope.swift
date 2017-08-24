@@ -13,7 +13,7 @@ import JavaScriptCore
     var registration: ServiceWorkerRegistrationProtocol { get }
     func skipWaiting()
     func importScripts(_: JSValue)
-    var clients:Clients {get}
+    var clients: Clients { get }
 }
 
 @objc class ServiceWorkerGlobalScope: EventTarget, ServiceWorkerGlobalScopeExports {
@@ -54,7 +54,7 @@ import JavaScriptCore
         self.context.globalObject.setValue(self, forProperty: "self")
         self.context.globalObject.setValue(Event.self, forProperty: "Event")
         self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
-        self.context.globalObject.setValue(self.clients, forProperty: "clients")
+//        self.context.globalObject.setValue(self.clients, forProperty: "clients")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")

@@ -26,7 +26,7 @@ public class SQLiteBlobWriteStream: SQLiteBlobStream {
         if self.isOpen == false {
             throw ErrorMessage("Cannot write to a stream that has been closed")
         }
-        
+
         let bytesLeft = blobLength! - currentPosition!
         let lengthToWrite = min(Int32(len), bytesLeft)
 

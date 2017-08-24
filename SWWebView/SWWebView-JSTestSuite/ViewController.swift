@@ -48,26 +48,22 @@ class ViewController: UIViewController {
         swView.load(URLRequest(url: url.url!))
     }
 
-
     func addStubs() {
-        SWWebViewBridge.routes["/ping"] = { container, json in
-            
-            return Promise(value: [
-                "pong": true
+        SWWebViewBridge.routes["/ping"] = { _, _ in
+
+            Promise(value: [
+                "pong": true,
             ])
-         
         }
 
-        SWWebViewBridge.routes["/ping-with-body"] = { container, json in
+        SWWebViewBridge.routes["/ping-with-body"] = { _, json in
 
             var responseText = json?["value"] as? String ?? "no body found"
-            
-            return Promise(value: [
-                "pong": responseText
-            ])
-            
-        }
 
+            return Promise(value: [
+                "pong": responseText,
+            ])
+        }
     }
 
     override func didReceiveMemoryWarning() {
