@@ -13,6 +13,7 @@ import JavaScriptCore
     var registration: ServiceWorkerRegistrationProtocol { get }
     func skipWaiting()
     func importScripts(_: JSValue)
+    var clients:Clients {get}
 }
 
 @objc class ServiceWorkerGlobalScope: EventTarget, ServiceWorkerGlobalScopeExports {
@@ -20,6 +21,7 @@ import JavaScriptCore
     let console: ConsoleMirror
     unowned let worker: ServiceWorker
     unowned let context: JSContext
+    let clients: Clients
 
     var skipWaitingStatus = false
 
@@ -36,6 +38,7 @@ import JavaScriptCore
         self.console = ConsoleMirror(console: context.objectForKeyedSubscript("console"))
         self.worker = worker
         self.context = context
+        self.clients = Clients(for: worker, in: context)
 
         super.init()
 
@@ -51,6 +54,7 @@ import JavaScriptCore
         self.context.globalObject.setValue(self, forProperty: "self")
         self.context.globalObject.setValue(Event.self, forProperty: "Event")
         self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
+        self.context.globalObject.setValue(self.clients, forProperty: "clients")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")

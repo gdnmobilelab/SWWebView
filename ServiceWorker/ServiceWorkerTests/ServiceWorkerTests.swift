@@ -13,10 +13,8 @@ import JavaScriptCore
 class ServiceWorkerTests: XCTestCase {
 
     func testLoadContentFunction() {
-
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/test.js")!, registration: DummyServiceWorkerRegistration(), state: .activated, loadContent: { (_) -> String in
-            "var testValue = 'hello';"
-        })
+        
+        let sw = ServiceWorker.createTestWorker(content: "var testValue = 'hello';")
 
         return sw.evaluateScript("testValue")
             .then { val in
@@ -27,7 +25,7 @@ class ServiceWorkerTests: XCTestCase {
 
     func testLoadContentDirectly() {
 
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/test.js")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: "var testValue = 'hello';")
+        let sw = ServiceWorker.createTestWorker(content: "var testValue = 'hello';")
 
         sw.evaluateScript("testValue")
             .then { jsVal in

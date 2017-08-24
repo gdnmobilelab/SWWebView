@@ -14,7 +14,7 @@ class ExecutionTests: XCTestCase {
     func testAsyncDispatch() {
         // Trying to work out why variables sometimes don't exist
 
-        let worker = ServiceWorker(id: "TEST", url: URL(string: "http://example.com")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: """
+        let worker = ServiceWorker.createTestWorker(content: """
             var test = "hello"
         """)
 

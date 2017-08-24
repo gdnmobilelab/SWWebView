@@ -56,23 +56,7 @@ public class SWWebViewBridge : NSObject, WKURLSchemeHandler {
             if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
                 return try self.startServiceWorkerTask(modifiedTask)
             }
-//            else if modifiedTask.request.httpMethod == "OPTIONS" && modifiedTask.request.url?.host == SWWebViewBridge.serviceWorkerRequestHost {
-//                // The browser will send CORS preflight requests for SW API calls. We need to reply
-//                // appropriately.
-//
-//                try modifiedTask.didReceiveHeaders(statusCode: 200, headers: [
-//                    "Access-Control-Allow-Methods": SWWebViewBridge.serviceWorkerRequestMethod,
-//                    "Access-Control-Allow-Headers": [
-//                        "content-type",
-//                        "origin",
-//                        "referer",
-//                        SWWebViewBridge.graftedRequestBodyHeader
-//                    ].joined(separator: ",")
-//                ])
-//                try modifiedTask.didFinish()
-//                return Promise(value: ())
-//            }
-            
+
             // Need to flesh this out, but for now we're using this for tests
             let req = FetchRequest(url: modifiedTask.request.url!)
             req.cache = .NoCache

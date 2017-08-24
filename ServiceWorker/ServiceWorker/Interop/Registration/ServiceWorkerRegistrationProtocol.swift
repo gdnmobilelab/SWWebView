@@ -7,7 +7,8 @@
 //
 
 import Foundation
+import JavaScriptCore
 
 @objc public protocol ServiceWorkerRegistrationProtocol {
-    func showNotification(title: String)
+    func showNotification(_: JSValue) -> JSValue
 }

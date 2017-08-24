@@ -15,7 +15,7 @@ class ExtendableEventTests: XCTestCase {
 
     func testExtendingAnEvent() {
 
-        let sw = ServiceWorker(id: "test", url: URL(string: "http://www.example.com")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: "")
+        let sw = ServiceWorker.createTestWorker()
 
         let ev = ExtendableEvent(type: "test")
 
@@ -47,8 +47,8 @@ class ExtendableEventTests: XCTestCase {
 
     func testPromiseRejection() {
 
-        let sw = ServiceWorker(id: "test", url: URL(string: "http://www.example.com")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: "")
-
+        let sw = ServiceWorker.createTestWorker()
+        
         let ev = ExtendableEvent(type: "test")
 
         return sw.withJSContext { context in
@@ -77,7 +77,7 @@ class ExtendableEventTests: XCTestCase {
 
     func testMultiplePromises() {
 
-        let sw = ServiceWorker(id: "test", url: URL(string: "http://www.example.com")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: "")
+        let sw = ServiceWorker.createTestWorker()
 
         let ev = ExtendableEvent(type: "test")
 
@@ -119,7 +119,7 @@ class ExtendableEventTests: XCTestCase {
     }
 
     func testNoPromises() {
-        let sw = ServiceWorker(id: "test", url: URL(string: "http://www.example.com")!, registration: DummyServiceWorkerRegistration(), state: .activated, content: "")
+        let sw = ServiceWorker.createTestWorker()
 
         let ev = ExtendableEvent(type: "test")
 

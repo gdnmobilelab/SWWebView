@@ -15,8 +15,8 @@ class EventTargetTests: XCTestCase {
     func testShouldFireEvents() {
 
         let testEvents = EventTarget()
-
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "https://www.example.com")!, registration: ServiceWorkerRegistrationPlaceholder(), state: .activated, content: "")
+        
+        let sw = ServiceWorker.createTestWorker()
 
         let expect = expectation(description: "Code ran")
 
@@ -48,7 +48,7 @@ class EventTargetTests: XCTestCase {
 
         let testEvents = EventTarget()
 
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "https://www.example.com")!, registration: ServiceWorkerRegistrationPlaceholder(), state: .activated, content: "")
+        let sw = ServiceWorker.createTestWorker()
 
         let expect = expectation(description: "Code ran")
 

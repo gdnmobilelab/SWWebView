@@ -67,6 +67,22 @@ class JSPromise {
 
         reject!.value.call(withArguments: [err!])
     }
+    
+    public func processCallback(_ error:Error?, _ returnObject: Any?) {
+        if error != nil {
+            self.reject(error!)
+        } else {
+            self.fulfill(returnObject!)
+        }
+    }
+    
+    public func processCallback(_ error:Error?) {
+        if error != nil {
+            self.reject(error!)
+        } else {
+            self.fulfill(nil)
+        }
+    }
 
     public static func fromJSValue(_ promise: JSValue) -> Promise<JSManagedValue?> {
 

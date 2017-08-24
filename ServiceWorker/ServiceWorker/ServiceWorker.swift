@@ -14,7 +14,14 @@ import PromiseKit
 
     public let url: URL
     public let id: String
-    let registration: ServiceWorkerRegistrationProtocol
+    
+    internal let implementations:WorkerImplementations
+    
+    var registration: ServiceWorkerRegistrationProtocol {
+        get {
+            return self.implementations.registration
+        }
+    }
     let loadContent: (ServiceWorker) -> String
     
     public static var storageURL: URL?
@@ -33,19 +40,20 @@ import PromiseKit
         }
     }
 
-    public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
+    public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
+        
+        self.implementations = implementations ?? WorkerImplementations()
         self.id = id
         self.url = url
-        self.registration = registration
         self.loadContent = loadContent
         self._installState = state
         super.init()
     }
     
-    init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: ServiceWorkerInstallState, content: String) {
+    init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url
-        self.registration = registration
+        self.implementations = implementations ?? WorkerImplementations()
         self.loadContent = { _ in
             content
         }
@@ -57,10 +65,10 @@ import PromiseKit
         NSLog("deinit worker")
     }
 
-    @objc public init(id: String, url: URL, registration: ServiceWorkerRegistrationProtocol, state: String, content: String) {
+    @objc public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: String, content: String) {
         self.id = id
         self.url = url
-        self.registration = registration
+        self.implementations = implementations ?? WorkerImplementations()
         self.loadContent = { _ in
             content
         }
