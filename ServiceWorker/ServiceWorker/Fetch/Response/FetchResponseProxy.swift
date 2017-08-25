@@ -99,7 +99,7 @@ import PromiseKit
                 errmsg = err.message
             }
 
-            self.internalResponse.jsContext!.exception = JSValue(newErrorFromMessage: errmsg, in: self.internalResponse.jsContext!)
+            JSContext.current().exception = JSValue(newErrorFromMessage: errmsg, in: JSContext.current())
         }
 
         return clone

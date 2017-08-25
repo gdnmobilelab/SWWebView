@@ -86,10 +86,6 @@ import PromiseKit
         }
 
         return self.fetch(request)
-            .then { res -> FetchResponseProtocol in
-                res.internalResponse.jsContext = context
-                return res
-            }
             .toJSPromise(in: context)
     }
 

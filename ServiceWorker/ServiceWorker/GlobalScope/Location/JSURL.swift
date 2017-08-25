@@ -44,7 +44,7 @@ import JavaScriptCore
                 throw ErrorMessage("Invalid URL")
             }
 
-            super.init(withURL: parsedURL, inContext: url.context)
+            super.init(withURL: parsedURL)
 
         } catch {
             let err = JSValue(newErrorFromMessage: "\(error)", in: url.context)

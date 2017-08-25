@@ -20,10 +20,6 @@ import PromiseKit
     internal var dataStream: ReadableStream?
     fileprivate var streamController: ReadableStreamController?
 
-    /// We use this context when using the JS-type functions, like json() etc
-    /// to create JSPromises
-    internal var jsContext: JSContext?
-
     public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) {
         self.fetchOperation = fetchOperation
         self.responseCallback = nil
@@ -358,7 +354,7 @@ import PromiseKit
     }
 
     func json() -> JSValue {
-        let promise = JSPromise(context: jsContext!)
+        let promise = JSPromise(context: JSContext.current())
 
         json { err, json in
             if err != nil {
@@ -373,7 +369,7 @@ import PromiseKit
 
     func text() -> JSValue {
 
-        let promise = JSPromise(context: jsContext!)
+        let promise = JSPromise(context: JSContext.current())
 
         text { err, text in
             if err != nil {
@@ -388,7 +384,7 @@ import PromiseKit
 
     internal func arrayBuffer() -> JSValue {
 
-        let promise = JSPromise(context: jsContext!)
+        let promise = JSPromise(context: JSContext.current())
 
         data { err, data in
 
@@ -400,12 +396,12 @@ import PromiseKit
             var d = data!
 
             let arr = d.withUnsafeMutableBytes { pointer -> JSObjectRef in
-                return JSObjectMakeArrayBufferWithBytesNoCopy(self.jsContext!.jsGlobalContextRef, pointer, data!.count, { _, _ in
+                return JSObjectMakeArrayBufferWithBytesNoCopy(JSContext.current().jsGlobalContextRef, pointer, data!.count, { _, _ in
                     // TODO: WTF to do with this
                     NSLog("Deallocate!")
                 }, nil, nil)
             }
-            let asJSVal = JSValue(jsValueRef: arr, in: self.jsContext!)
+            let asJSVal = JSValue(jsValueRef: arr, in: promise.context)
             promise.fulfill(asJSVal)
         }
 

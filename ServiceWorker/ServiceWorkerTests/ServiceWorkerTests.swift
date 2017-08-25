@@ -9,6 +9,7 @@
 import XCTest
 @testable import ServiceWorker
 import JavaScriptCore
+import PromiseKit
 
 class ServiceWorkerTests: XCTestCase {
 
@@ -32,5 +33,30 @@ class ServiceWorkerTests: XCTestCase {
                 XCTAssertEqual(jsVal!.toString(), "hello")
             }
             .assertResolves()
+    }
+    
+    func doNottestShouldDeinitSuccessfully() {
+        
+        Promise(value:())
+            .then { () -> Void in
+            let worker = ServiceWorker.createTestWorker()
+             _ =   worker.getExecutionEnvironment()
+                 XCTAssertEqual(ServiceWorkerExecutionEnvironment.allJSContexts.allObjects.count, 1)
+            }.then { _ -> Promise<Void> in
+                
+                return Promise<Void> { fulfill, reject in
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                        NSLog("Performing check")
+                        XCTAssertEqual(ServiceWorkerExecutionEnvironment.allJSContexts.allObjects.count, 0)
+                        fulfill(())
+                    })
+                    
+                }
+                
+               
+        }
+        .assertResolves()
+        
     }
 }

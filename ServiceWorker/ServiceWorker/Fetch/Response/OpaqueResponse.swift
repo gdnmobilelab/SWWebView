@@ -28,7 +28,7 @@ import JavaScriptCore
 
     override func text() -> JSValue {
 
-        let promise = JSPromise(context: _internal.jsContext!)
+        let promise = JSPromise(context: JSContext.current())
         promise.fulfill("")
         return promise.jsValue
     }
@@ -39,7 +39,7 @@ import JavaScriptCore
 
     override func json() -> JSValue {
 
-        let promise = JSPromise(context: _internal.jsContext!)
+        let promise = JSPromise(context: JSContext.current())
         promise.fulfill(NSNull())
         return promise.jsValue
     }

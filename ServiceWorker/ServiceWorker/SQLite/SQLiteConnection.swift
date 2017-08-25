@@ -94,6 +94,7 @@ public class SQLiteConnection {
     }
 
     public func close() throws {
+        NSLog("CLOSING DB!")
         self.open = false
         let rc = sqlite3_close_v2(self.db!)
         if rc != SQLITE_OK {

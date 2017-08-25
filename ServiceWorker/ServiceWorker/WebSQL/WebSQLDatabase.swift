@@ -26,6 +26,10 @@ import JavaScriptCore
     }
 
     deinit {
+        self.close()
+    }
+    
+    func close() {
         do {
             try self.connection.close()
         } catch {
@@ -33,7 +37,7 @@ import JavaScriptCore
         }
     }
 
-    static func createOpenDatabaseFunction(for url: URL) -> AnyObject {
+    static func createOpenDatabaseFunction(for url: URL, keepTrackIn: NSHashTable<WebSQLDatabase>) -> AnyObject {
 
         let escapedOrigin = url.host!.addingPercentEncoding(withAllowedCharacters: .alphanumerics)!
 
@@ -67,6 +71,7 @@ import JavaScriptCore
                 }
 
                 let db = try WebSQLDatabase(at: dbURL)
+                keepTrackIn.add(db)
                 return db
             } catch {
                 let err = JSValue(newErrorFromMessage: "\(error)", in: name.context)

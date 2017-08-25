@@ -41,13 +41,32 @@ import JavaScriptCore
         self.console = ConsoleMirror(console: context.objectForKeyedSubscript("console"))
         self.worker = worker
         self.context = context
-        self.clients = Clients(for: worker, in: context)
-        self.location = WorkerLocation(withURL: worker.url, inContext: context)!
+        self.clients = Clients(for: worker)
+        self.location = WorkerLocation(withURL: worker.url)!
 
         super.init()
 
         self.attachVariablesToContext()
         try self.loadIndexedDBShim()
+    }
+    
+    deinit {
+        let allWebSQL = self.activeWebSQLDatabases.allObjects
+        
+        if allWebSQL.count > 0 {
+            Log.info?("\(allWebSQL.count) open WebSQL connections when shutting down worker")
+            allWebSQL.forEach { $0.close()}
+        }
+            
+        
+    }
+    
+    
+    /// We add self to the JSContext's global context, which seems to result in a circular
+    /// reference. Since I'm not sure how to add a weak/unowned var to JSContext (it doesn't
+    /// appear that we can)
+    func shutdown () {
+        self.context.globalObject.deleteProperty("self")
     }
 
     func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue {
@@ -58,19 +77,19 @@ import JavaScriptCore
 
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
-
+        
         self.context.globalObject.setValue(self, forProperty: "self")
 
         self.context.globalObject.setValue(Event.self, forProperty: "Event")
-        self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
-        self.context.globalObject.setValue(self.clients, forProperty: "clients")
-        self.context.globalObject.setValue(self.location, forProperty: "location")
+//        self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
+//        self.context.globalObject.setValue(self.clients, forProperty: "clients")
+//        self.context.globalObject.setValue(self.location, forProperty: "location")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
-        self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
+//        self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
 
         let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue = fetch
-        self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
+//        self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
         self.context.globalObject.setValue(FetchRequest.self, forProperty: "Request")
 
         // These have weird hacks involving hash get/set, so we have specific functions
@@ -81,6 +100,15 @@ import JavaScriptCore
         self.applyListenersTo(jsObject: self.context.globalObject)
     }
 
+    // Since these retain an open connection as long as they are alive, we need to
+    // keep track of them, in order to close them off on shutdown. JS garbage collection
+    // is sometimes enough, but not always.
+    internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
+    
+    // Storing here primarily for tests - we don't expose openDatabase globally, but sometimes
+    // we want to use it.
+    internal var openDatabaseFunction: AnyObject?
+    
     fileprivate func loadIndexedDBShim() throws {
 
         let file = Bundle(for: ServiceWorkerGlobalScope.self).bundleURL
@@ -96,13 +124,17 @@ import JavaScriptCore
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
         // "self.indexedDB")
+        
+        let openDatabaseFunction = WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url, keepTrackIn: self.activeWebSQLDatabases)
 
         let config: [String: Any] = [
             "DEBUG": true,
             "win": [
-                "openDatabase": WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url),
+                "openDatabase": openDatabaseFunction,
             ],
         ]
+        
+        self.openDatabaseFunction = openDatabaseFunction
 
         // Documentation for the function we're calling is under setGlobalVars here:
         // https://github.com/axemclion/IndexedDBShim

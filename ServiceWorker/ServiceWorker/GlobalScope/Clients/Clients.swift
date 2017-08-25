@@ -18,22 +18,20 @@ import JavaScriptCore
 
 @objc class Clients: NSObject, ClientsExports {
 
-    let context: JSContext
     unowned let worker: ServiceWorker
 
-    init(for worker: ServiceWorker, in context: JSContext) {
-        self.context = context
+    init(for worker: ServiceWorker) {
         self.worker = worker
     }
 
     func get(_ id: String) -> JSValue {
 
-        let jsp = JSPromise(context: self.context)
+        let jsp = JSPromise(context: JSContext.current())
         self.worker.implementations.clients.get(id: id, worker: self.worker) { err, clientProtocol in
             if let error = err {
                 jsp.reject(error)
             } else if let clientExists = clientProtocol {
-                jsp.fulfill(Client.getOrCreate(from: clientExists, in: self.context))
+                jsp.fulfill(Client.getOrCreate(from: clientExists, in: JSContext.current()))
             } else {
                 jsp.fulfill(nil)
             }
@@ -43,7 +41,7 @@ import JavaScriptCore
 
     func matchAll(_ options: [String: Any]?) -> JSValue {
 
-        let jsp = JSPromise(context: self.context)
+        let jsp = JSPromise(context: JSContext.current())
 
         let type = options?["type"] as? String ?? "all"
         let includeUncontrolled = options?["includeUncontrolled"] as? Bool ?? false
@@ -54,7 +52,7 @@ import JavaScriptCore
             if let error = err {
                 jsp.reject(error)
             } else {
-                let mapped = clientProtocols!.map({ Client.getOrCreate(from: $0, in: self.context) })
+                let mapped = clientProtocols!.map({ Client.getOrCreate(from: $0, in: JSContext.current()) })
                 jsp.fulfill(mapped)
             }
         }
@@ -64,7 +62,7 @@ import JavaScriptCore
 
     func openWindow(_ url: String) -> JSValue {
 
-        let jsp = JSPromise(context: self.context)
+        let jsp = JSPromise(context: JSContext.current())
 
         guard let parsedURL = URL(string: url, relativeTo: self.worker.url) else {
             jsp.reject(ErrorMessage("Could not parse URL given"))
@@ -78,7 +76,7 @@ import JavaScriptCore
 
     func claim() -> JSValue {
 
-        let jsp = JSPromise(context: self.context)
+        let jsp = JSPromise(context: JSContext.current())
 
         self.worker.implementations.clients.claim(jsp.processCallback)
 
