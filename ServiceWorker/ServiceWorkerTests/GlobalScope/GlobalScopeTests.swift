@@ -13,8 +13,8 @@ import JavaScriptCore
 class GlobalScopeTests: XCTestCase {
 
     func testEventListenersWork() {
-
-        let sw = ServiceWorker.createTestWorker()
+        
+        let sw = ServiceWorker.createTestWorker(id:self.name)
         sw.withJSContext { context in
 
             // should be accessible globally and in self.
@@ -43,7 +43,7 @@ class GlobalScopeTests: XCTestCase {
 
     func testEventListenersHandleErrors() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
         sw.withJSContext { context in
 
             // should be accessible globally and in self.
@@ -72,7 +72,7 @@ class GlobalScopeTests: XCTestCase {
     }
 
     func testAllEventFunctionsAreAdded() {
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         let keys = [
             "addEventListener", "removeEventListener", "dispatchEvent",
@@ -98,7 +98,7 @@ class GlobalScopeTests: XCTestCase {
 
     func testHasLocation() {
 
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/sw.js")!, state: .activated, content: "")
+        let sw = ServiceWorker(id: self.name, url: URL(string: "http://www.example.com/sw.js")!, state: .activated, content: "")
 
         sw.evaluateScript("[self.location, location]")
             .then { val -> Void in

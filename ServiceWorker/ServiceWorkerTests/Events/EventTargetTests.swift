@@ -14,41 +14,28 @@ class EventTargetTests: XCTestCase {
 
     func testShouldFireEvents() {
 
-        let testEvents = EventTarget()
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
-        let sw = ServiceWorker.createTestWorker()
-
-        let expect = expectation(description: "Code ran")
-
-        sw.withJSContext { context in
-            context.globalObject.setValue(testEvents, forProperty: "testEvents")
-        }
-        .then {
-            return sw.evaluateScript("""
-                var didFire = false;
-                testEvents.addEventListener('test', function() {
-                    didFire = true;
-                });
-                testEvents.dispatchEvent(new Event('test'));
-                didFire;
-            """)
-        }
+        return sw.evaluateScript("""
+            var didFire = false;
+            self.addEventListener('test', function() {
+                didFire = true;
+            });
+            self.dispatchEvent(new Event('test'));
+            didFire;
+        """)
+        
         .then { didFire -> Void in
             XCTAssertEqual(didFire!.toBool(), true)
-            expect.fulfill()
         }
-        .catch { error -> Void in
-            XCTFail("\(error)")
-        }
-
-        wait(for: [expect], timeout: 1)
+        .assertResolves()
     }
 
     func testShouldRemoveEventListeners() {
 
         let testEvents = EventTarget()
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
         let expect = expectation(description: "Code ran")
 

@@ -396,7 +396,7 @@ import PromiseKit
             var d = data!
 
             let arr = d.withUnsafeMutableBytes { pointer -> JSObjectRef in
-                return JSObjectMakeArrayBufferWithBytesNoCopy(JSContext.current().jsGlobalContextRef, pointer, data!.count, { _, _ in
+                return JSObjectMakeArrayBufferWithBytesNoCopy(promise.context.jsGlobalContextRef, pointer, data!.count, { _, _ in
                     // TODO: WTF to do with this
                     NSLog("Deallocate!")
                 }, nil, nil)

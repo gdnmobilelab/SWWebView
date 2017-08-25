@@ -31,7 +31,9 @@ import JavaScriptCore
     
     func close() {
         do {
-            try self.connection.close()
+            if self.connection.open == true {
+                try self.connection.close()
+            }
         } catch {
             Log.error?("Could not close WebSQL connection")
         }

@@ -88,7 +88,7 @@ class ClientsTests: XCTestCase {
         let testAPI = TestClients()
         testAPI.clients.append(TestClient(id: "TESTCLIENT", type: .Window, url: URL(string: "http://www.example.com")!))
 
-        let worker = ServiceWorker.createTestWorker(implementations: WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name, implementations: WorkerImplementations(registration: nil, clients: testAPI))
 
         worker.evaluateScript("""
             Promise.all([
@@ -123,7 +123,7 @@ class ClientsTests: XCTestCase {
         controlled.isControlled = false
         testAPI.clients.append(controlled)
 
-        let worker = ServiceWorker.createTestWorker(implementations: WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name, implementations:  WorkerImplementations(registration: nil, clients: testAPI))
 
         worker.evaluateScript("""
             Promise.all([
@@ -177,7 +177,7 @@ class ClientsTests: XCTestCase {
             claimed = true
         }
 
-        let worker = ServiceWorker.createTestWorker(implementations: WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name, implementations: WorkerImplementations(registration: nil, clients: testAPI))
 
         worker.evaluateScript("""
             self.clients.claim()

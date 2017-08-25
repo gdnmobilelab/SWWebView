@@ -10,15 +10,23 @@ import Foundation
 import ServiceWorker
 
 extension ServiceWorker {
-    static func createTestWorker(id: String = "TEST", state: ServiceWorkerInstallState = .activated, content: String = "") -> ServiceWorker {
-        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(id).js")!, state: state, content: content)
+    
+    static fileprivate func escapeID(_ id:String) -> String {
+        return id.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "_")
+    }
+    static func createTestWorker(id: String, state: ServiceWorkerInstallState = .activated, content: String = "") -> ServiceWorker {
+        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(escapeID(id)).js")!, state: state, content: content)
     }
 
-    static func createTestWorker(implementations: WorkerImplementations) -> ServiceWorker {
-        return ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/TEST.js")!, implementations: implementations, state: .activated, content: "")
+    static func createTestWorker(id:String, implementations: WorkerImplementations) -> ServiceWorker {
+
+        
+        return ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/\(escapeID(id))")!, implementations: implementations, state: .activated, content: "")
     }
 
-    static func createTestWorker(content: String) -> ServiceWorker {
-        return ServiceWorker.createTestWorker(id: "TEST", state: .activated, content: content)
+    static func createTestWorker(id: String, content: String) -> ServiceWorker {
+        return ServiceWorker.createTestWorker(id: id, state: .activated, content: content)
     }
 }

@@ -15,20 +15,29 @@ import PromiseKit
     fileprivate let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
+    let timeoutManager:TimeoutManager
 
     fileprivate static var virtualMachine = JSVirtualMachine()!
     
     static var allJSContexts = NSHashTable<JSContext>.weakObjects()
+    
+    var jsContextName:String {
+        set(value) {
+            self.jsContext.name = value
+        }
+        get {
+            return self.jsContext.name
+        }
+    }
 
     @objc public init(_ worker: ServiceWorker) throws {
 
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
-        
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
         ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
     
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
-
+        self.timeoutManager = TimeoutManager(withQueue: self.dispatchQueue, in: self.jsContext)
         super.init()
         self.jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
@@ -37,15 +46,12 @@ import PromiseKit
             // collected
             self.currentException = error
         }
-
-        // add setTimeout etc to our context
-        _ = TimeoutManager(for: self, with: self.jsContext)
     }
 
     deinit {
         NSLog("Deinit execution environment: Garbage collect.")
         self.currentException = nil
-        self.globalScope.shutdown()
+        self.timeoutManager.stopAllTimeouts = true
         self.jsContext.exceptionHandler = nil
         JSGarbageCollect(self.jsContext.jsGlobalContextRef)
     }

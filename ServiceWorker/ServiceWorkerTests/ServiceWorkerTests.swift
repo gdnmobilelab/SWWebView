@@ -15,7 +15,7 @@ class ServiceWorkerTests: XCTestCase {
 
     func testLoadContentFunction() {
 
-        let sw = ServiceWorker.createTestWorker(content: "var testValue = 'hello';")
+        let sw = ServiceWorker.createTestWorker(id: self.name, content: "var testValue = 'hello';")
 
         return sw.evaluateScript("testValue")
             .then { val in
@@ -26,7 +26,7 @@ class ServiceWorkerTests: XCTestCase {
 
     func testLoadContentDirectly() {
 
-        let sw = ServiceWorker.createTestWorker(content: "var testValue = 'hello';")
+        let sw = ServiceWorker.createTestWorker(id: self.name, content: "var testValue = 'hello';")
 
         sw.evaluateScript("testValue")
             .then { jsVal in
@@ -35,28 +35,4 @@ class ServiceWorkerTests: XCTestCase {
             .assertResolves()
     }
     
-    func doNottestShouldDeinitSuccessfully() {
-        
-        Promise(value:())
-            .then { () -> Void in
-            let worker = ServiceWorker.createTestWorker()
-             _ =   worker.getExecutionEnvironment()
-                 XCTAssertEqual(ServiceWorkerExecutionEnvironment.allJSContexts.allObjects.count, 1)
-            }.then { _ -> Promise<Void> in
-                
-                return Promise<Void> { fulfill, reject in
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-                        NSLog("Performing check")
-                        XCTAssertEqual(ServiceWorkerExecutionEnvironment.allJSContexts.allObjects.count, 0)
-                        fulfill(())
-                    })
-                    
-                }
-                
-               
-        }
-        .assertResolves()
-        
-    }
 }

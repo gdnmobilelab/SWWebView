@@ -58,6 +58,10 @@ fileprivate struct EventListener {
             .filter { $0.eventName == event.type }
             .forEach { $0.funcToRun.call(withArguments: [event]) }
     }
+    
+    func clearAllListeners() {
+        self.listeners.removeAll()
+    }
 
     func applyListenersTo(jsObject: JSValue) {
 

@@ -34,8 +34,15 @@ import PromiseKit
         set(value) {
             if self._installState != value {
                 self._installState = value
+                self.setJSContextDebuggingName()
                 GlobalEventLog.notifyChange(self)
             }
+        }
+    }
+    
+    fileprivate func setJSContextDebuggingName() {
+        if let exec = self._executionEnvironment {
+            exec.jsContextName = "\(self.url.absoluteString) (\(self.state.rawValue))"
         }
     }
 
@@ -105,11 +112,13 @@ import PromiseKit
 
         return firstly {
             let env = try ServiceWorkerExecutionEnvironment(self)
+            
             let script = loadContent(self)
             return env.evaluateScript(script, withSourceURL: self.url)
                 .then { _ -> ServiceWorkerExecutionEnvironment in
                     // return value doesn't really mean anything here
                     self._executionEnvironment = env
+                    self.setJSContextDebuggingName()
                     return env
                 }
         }

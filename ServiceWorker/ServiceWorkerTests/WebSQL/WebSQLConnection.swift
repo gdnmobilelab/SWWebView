@@ -53,17 +53,15 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testOpeningDatabase() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
-                    (function() {
-                        var db = openDatabase('test', 1, 'pretty name', 1024);
-                        var result = typeof db.transaction !== 'undefined';
-                        db = undefined;
-                        return result;
-                    })()
+                var db = openDatabase('test', 1, 'pretty name', 1024);
+                var result = typeof db.transaction !== 'undefined';
+
+                result;
                 """)
             }
             .then { jsResult -> Promise<Void> in
@@ -79,13 +77,13 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testTransactionCallback() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
-                    (function() {
-                    return new Promise(function(fulfill, reject) {
+                   
+                     new Promise(function(fulfill, reject) {
                         var db = openDatabase('test', 1, 'pretty name', 1024);
                         var callbackCalled = false;
 
@@ -96,7 +94,7 @@ class WebSQLConnectionTests: XCTestCase {
                             fulfill(callbackCalled)
                         })
 
-                    })})()
+                    })
                 """)
             }
             .then { jsResult in
@@ -110,13 +108,13 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testResultSetSelect() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
-                    (function() {var db = openDatabase('test', 1, 'pretty name', 1024);
-                    return new Promise(function(fulfill, reject) {
+                    var db = openDatabase('test', 1, 'pretty name', 1024);
+                    new Promise(function(fulfill, reject) {
 
                        db.transaction(function(tx) {
                             
@@ -128,7 +126,7 @@ class WebSQLConnectionTests: XCTestCase {
                         }, function() {
                         })
 
-                    })})()
+                    })
                 """)
             }
             .then { jsResult in

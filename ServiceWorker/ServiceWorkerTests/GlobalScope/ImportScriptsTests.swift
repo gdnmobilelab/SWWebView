@@ -14,7 +14,7 @@ class ImportScriptsTests: XCTestCase {
 
     func testImportingAScript() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         sw.importScripts = { _, scripts in
             XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")
@@ -30,7 +30,7 @@ class ImportScriptsTests: XCTestCase {
 
     func testImportingMultipleScripts() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         sw.importScripts = { _, scripts in
             XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")
@@ -47,7 +47,7 @@ class ImportScriptsTests: XCTestCase {
 
     func testImportingWithBlockingSyncOperation() {
 
-        let sw = ServiceWorker.createTestWorker()
+        let sw = ServiceWorker.createTestWorker(id:self.name)
 
         sw.importScripts = { _, scripts in
             XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")

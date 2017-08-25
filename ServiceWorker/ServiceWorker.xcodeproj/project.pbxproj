@@ -13,6 +13,7 @@
 		8A235FF91F34D0D300969268 /* SQLiteDataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FF81F34D0D300969268 /* SQLiteDataType.swift */; };
 		8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */; };
 		8A2360061F34F7BE00969268 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8A2360011F34F3AE00969268 /* js-dist */; };
+		8A315BF21F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */; };
 		8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */; };
 		8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */; };
 		8A43C1801F4F223B001221C1 /* WorkerImplementations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17F1F4F223B001221C1 /* WorkerImplementations.swift */; };
@@ -118,6 +119,7 @@
 		8A235FF81F34D0D300969268 /* SQLiteDataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDataType.swift; sourceTree = "<group>"; };
 		8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLConnection.swift; sourceTree = "<group>"; };
 		8A2360011F34F3AE00969268 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = SOURCE_ROOT; };
+		8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZZZ_TestEndChecks.swift; sourceTree = "<group>"; };
 		8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientProtocol.swift; sourceTree = "<group>"; };
 		8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerClientsProtocol.swift; sourceTree = "<group>"; };
 		8A43C17F1F4F223B001221C1 /* WorkerImplementations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerImplementations.swift; sourceTree = "<group>"; };
@@ -352,6 +354,7 @@
 				8AC754F71F312A1200C6B70A /* Fetch */,
 				8AC754FE1F312A1200C6B70A /* GlobalScope */,
 				8AC754781F3122FE00C6B70A /* Info.plist */,
+				8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */,
 			);
 			path = ServiceWorkerTests;
 			sourceTree = "<group>";
@@ -798,6 +801,7 @@
 				8AC755171F312A3200C6B70A /* FetchHeadersTests.swift in Sources */,
 				8A235FF41F34C62100969268 /* SQLiteTests.swift in Sources */,
 				8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */,
+				8A315BF21F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift in Sources */,
 				8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */,
 				8AC755181F312A3200C6B70A /* FetchOperation.swift in Sources */,
 				8ACCD7321F50828A00F444B6 /* URLTests.swift in Sources */,

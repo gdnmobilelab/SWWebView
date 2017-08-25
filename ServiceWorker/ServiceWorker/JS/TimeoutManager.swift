@@ -25,11 +25,12 @@ class TimeoutManager {
     /// we check this array to see if the timeout has been cancelled. If it has, we don't run the
     /// corresponding JS function.
     var cancelledTimeouts = Set<Int>()
+    var stopAllTimeouts = false
 
-    unowned let executionEnvironment: ServiceWorkerExecutionEnvironment
+    unowned let queue: DispatchQueue
 
-    init(for executionEnvironment: ServiceWorkerExecutionEnvironment, with context:JSContext) {
-        self.executionEnvironment = executionEnvironment
+    init(withQueue: DispatchQueue, in context:JSContext) {
+        self.queue = withQueue
 
         let clearInterval = unsafeBitCast((self.clearIntervalFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
         let clearTimeout = unsafeBitCast((self.clearTimeoutFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
@@ -57,9 +58,12 @@ class TimeoutManager {
 
     fileprivate func fireInterval(_ interval: Interval) {
 
-        self.executionEnvironment.dispatchQueue.asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
+        self.queue.asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
+            
             if self.cancelledTimeouts.contains(interval.timeoutIndex) == true {
                 self.cancelledTimeouts.remove(interval.timeoutIndex)
+                return
+            } else if self.stopAllTimeouts {
                 return
             } else {
                 interval.function.call(withArguments: nil)
@@ -92,9 +96,11 @@ class TimeoutManager {
         // turns out you can call setTimeout with undefined and it'll execute
         // immediately. So we need to handle that.
 
-        self.executionEnvironment.dispatchQueue.asyncAfter(deadline: .now() + self.jsValueMaybeNullToDouble(timeout) / 1000, execute: {
+        self.queue.asyncAfter(deadline: .now() + self.jsValueMaybeNullToDouble(timeout) / 1000, execute: {
             if self.cancelledTimeouts.contains(thisTimeoutIndex) == true {
                 self.cancelledTimeouts.remove(thisTimeoutIndex)
+                return
+            } else if self.stopAllTimeouts {
                 return
             } else {
                 callback.call(withArguments: nil)
