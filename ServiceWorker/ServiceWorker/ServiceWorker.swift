@@ -49,7 +49,7 @@ import PromiseKit
         super.init()
     }
 
-    init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, content: String) {
+    public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url
         self.implementations = implementations ?? WorkerImplementations()
@@ -64,14 +64,19 @@ import PromiseKit
         NSLog("deinit worker")
     }
 
-    @objc public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: String, content: String) {
+    @objc public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: String, content: String) throws {
         self.id = id
         self.url = url
         self.implementations = implementations ?? WorkerImplementations()
         self.loadContent = { _ in
             content
         }
-        self._installState = ServiceWorkerInstallState(rawValue: state)!
+        
+        guard let installState = ServiceWorkerInstallState(rawValue: state) else {
+            throw ErrorMessage("Could not parse install state string")
+        }
+        
+        self._installState = installState
         super.init()
     }
 

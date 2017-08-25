@@ -203,12 +203,9 @@ class FetchOperationTests: XCTestCase {
             GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
         }
 
-        let expectResponse = expectation(description: "JS Fetch worked")
-
-        let context = JSContext()!
-        FetchOperation.addToJSContext(context: context)
-
-        let promise = context.evaluateScript("""
+        let sw = ServiceWorker(id: "TEST", url: TestWeb.serverURL, state: .activated, content: "")
+        
+        sw.evaluateScript("""
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)')
             .then(function(res) {
             
@@ -220,36 +217,33 @@ class FetchOperationTests: XCTestCase {
                 }
             }
             
-                return {
-                    status: valOrNo(res.status),
-                    ok: valOrNo(res.ok),
-                    redirected: valOrNo(res.redirected),
-                    statusText: valOrNo(res.statusText),
-                    type: valOrNo(res.type),
-                    url: valOrNo(res.url),
-                    bodyUsed: valOrNo(res.bodyUsed),
-                    json: valOrNo(res.json),
-                    text: valOrNo(res.text)
-                }
+            return {
+                status: valOrNo(res.status),
+                ok: valOrNo(res.ok),
+                redirected: valOrNo(res.redirected),
+                statusText: valOrNo(res.statusText),
+                type: valOrNo(res.type),
+                url: valOrNo(res.url),
+                bodyUsed: valOrNo(res.bodyUsed),
+                json: valOrNo(res.json),
+                text: valOrNo(res.text)
+            }
             })
         """)
-
-        XCTAssert(promise != nil)
-
-        JSPromise.resolve(promise!) { err, val in
-            XCTAssert(err == nil)
-
-            let obj = val!.toDictionary()!
-
-            for (key, val) in obj {
-                NSLog("KEY: \(key), VAL: \(val)")
-                let valInt = val as? Int
-                XCTAssert(valInt == nil || valInt != -1, "Property \(key) should exist")
-            }
-
-            expectResponse.fulfill()
+            .then { val in
+                return JSPromise.fromJSValue(val!)
+            }.then { val -> Void in
+                guard let obj = val?.value.toDictionary() else {
+                    return XCTFail()
+                }
+                
+                for (key, val) in obj {
+                    NSLog("KEY: \(key), VAL: \(val)")
+                    let valInt = val as? Int
+                    XCTAssert(valInt == nil || valInt != -1, "Property \(key) should exist")
+                }
         }
+        .assertResolves()
 
-        wait(for: [expectResponse], timeout: 10)
     }
 }

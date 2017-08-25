@@ -94,6 +94,11 @@
 		8AC7553A1F3240BB00C6B70A /* SQLiteUpdateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */; };
 		8AC7553B1F3240BB00C6B70A /* SQLiteUpdateOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */; };
 		8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */; };
+		8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */; };
+		8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72C1F50755B00F444B6 /* LocationBase.swift */; };
+		8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72F1F507E9600F444B6 /* JSURL.swift */; };
+		8ACCD7321F50828A00F444B6 /* URLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD7311F50828A00F444B6 /* URLTests.swift */; };
+		8ACCD7341F50936600F444B6 /* WorkerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD7331F50936600F444B6 /* WorkerLocation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -193,6 +198,11 @@
 		8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateMonitor.swift; sourceTree = "<group>"; };
 		8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateOperation.swift; sourceTree = "<group>"; };
 		8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLDatabase.swift; sourceTree = "<group>"; };
+		8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestTests.swift; sourceTree = "<group>"; };
+		8ACCD72C1F50755B00F444B6 /* LocationBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBase.swift; sourceTree = "<group>"; };
+		8ACCD72F1F507E9600F444B6 /* JSURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSURL.swift; sourceTree = "<group>"; };
+		8ACCD7311F50828A00F444B6 /* URLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTests.swift; sourceTree = "<group>"; };
+		8ACCD7331F50936600F444B6 /* WorkerLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerLocation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -418,6 +428,7 @@
 		8AC754C81F31235200C6B70A /* GlobalScope */ = {
 			isa = PBXGroup;
 			children = (
+				8ACCD72E1F507E8500F444B6 /* Location */,
 				8A43C1881F4F2C60001221C1 /* Clients */,
 				8AC754C91F31235200C6B70A /* ConsoleMirror.swift */,
 				8AC754CA1F31235200C6B70A /* ServiceWorkerGlobalScope.swift */,
@@ -452,6 +463,7 @@
 				8AC754F91F312A1200C6B70A /* FetchOperation.swift */,
 				8AC754FA1F312A1200C6B70A /* FetchOperationCORS.swift */,
 				8AC754FB1F312A1200C6B70A /* FetchResponse.swift */,
+				8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */,
 			);
 			path = Fetch;
 			sourceTree = "<group>";
@@ -471,6 +483,7 @@
 				8AC755001F312A1200C6B70A /* ExecutionTests.swift */,
 				8AC755011F312A1200C6B70A /* GlobalScopeTests.swift */,
 				8AC755021F312A1200C6B70A /* ImportScriptsTests.swift */,
+				8ACCD7311F50828A00F444B6 /* URLTests.swift */,
 			);
 			path = GlobalScope;
 			sourceTree = "<group>";
@@ -542,6 +555,16 @@
 				8A2264AD1F33C6C700B48902 /* WebSQLResultSet.swift */,
 			);
 			path = WebSQL;
+			sourceTree = "<group>";
+		};
+		8ACCD72E1F507E8500F444B6 /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				8ACCD72C1F50755B00F444B6 /* LocationBase.swift */,
+				8ACCD72F1F507E9600F444B6 /* JSURL.swift */,
+				8ACCD7331F50936600F444B6 /* WorkerLocation.swift */,
+			);
+			path = Location;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -726,6 +749,7 @@
 				8AC754DC1F31252B00C6B70A /* OpaqueResponse.swift in Sources */,
 				8AC754DD1F31252B00C6B70A /* ResponseType.swift in Sources */,
 				8AC754DE1F31252B00C6B70A /* ConsoleMirror.swift in Sources */,
+				8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */,
 				8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */,
 				8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,
@@ -747,10 +771,12 @@
 				8AC755371F3240BB00C6B70A /* SQLiteBlobWriteStream.swift in Sources */,
 				8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */,
 				8AC754F61F31293C00C6B70A /* SharedLogInterface.swift in Sources */,
+				8ACCD7341F50936600F444B6 /* WorkerLocation.swift in Sources */,
 				8A43C18A1F4F2C79001221C1 /* Clients.swift in Sources */,
 				8AC754EB1F31252B00C6B70A /* ServiceWorkerInstallState.swift in Sources */,
 				8AC754EC1F31252B00C6B70A /* ReadableStream.swift in Sources */,
 				8AC754ED1F31252B00C6B70A /* ReadableStreamController.swift in Sources */,
+				8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */,
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
 				8A43C1831F4F229F001221C1 /* EmptyWorkerClients.swift in Sources */,
 				8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */,
@@ -772,7 +798,9 @@
 				8AC755171F312A3200C6B70A /* FetchHeadersTests.swift in Sources */,
 				8A235FF41F34C62100969268 /* SQLiteTests.swift in Sources */,
 				8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */,
+				8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */,
 				8AC755181F312A3200C6B70A /* FetchOperation.swift in Sources */,
+				8ACCD7321F50828A00F444B6 /* URLTests.swift in Sources */,
 				8AC755191F312A3200C6B70A /* FetchOperationCORS.swift in Sources */,
 				8AC7551A1F312A3200C6B70A /* FetchResponse.swift in Sources */,
 				8AC7551B1F312A3200C6B70A /* ConsoleMirrorTests.swift in Sources */,

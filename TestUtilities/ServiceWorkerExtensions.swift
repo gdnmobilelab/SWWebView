@@ -11,11 +11,11 @@ import ServiceWorker
 
 extension ServiceWorker {
     static func createTestWorker(id: String = "TEST", state: ServiceWorkerInstallState = .activated, content: String = "") -> ServiceWorker {
-        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(id).js")!, state: state.rawValue, content: content)
+        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(id).js")!, state: state, content: content)
     }
 
     static func createTestWorker(implementations: WorkerImplementations) -> ServiceWorker {
-        return ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/TEST.js")!, implementations: implementations, state: "activated", content: "")
+        return ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/TEST.js")!, implementations: implementations, state: .activated, content: "")
     }
 
     static func createTestWorker(content: String) -> ServiceWorker {

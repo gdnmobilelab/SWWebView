@@ -49,7 +49,7 @@ import PromiseKit
         }
     }
 
-    fileprivate static func jsFetch(context: JSContext, origin: URL?, requestOrURL: JSValue, options: JSValue?) -> JSValue {
+    internal static func jsFetch(context: JSContext, origin: URL?, requestOrURL: JSValue, options: JSValue?) -> JSValue {
 
         var request: FetchRequest
         let promise = JSPromise(context: context)
@@ -91,15 +91,6 @@ import PromiseKit
                 return res
             }
             .toJSPromise(in: context)
-    }
-
-    public static func addToJSContext(context: JSContext, origin: URL? = nil) {
-
-        let fetchFunc: @convention(block) (JSValue, JSValue?) -> JSValue = { req, opts in
-            self.jsFetch(context: context, origin: origin, requestOrURL: req, options: opts)
-        }
-
-        context.globalObject.setValue(unsafeBitCast(fetchFunc, to: AnyObject.self), forProperty: "fetch")
     }
 
     fileprivate var allowedCORSHeaders: [String]?

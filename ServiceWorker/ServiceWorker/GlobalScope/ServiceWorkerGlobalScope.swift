@@ -13,7 +13,9 @@ import JavaScriptCore
     var registration: ServiceWorkerRegistrationProtocol { get }
     func skipWaiting()
     func importScripts(_: JSValue)
+    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue
     var clients: Clients { get }
+    var location: WorkerLocation { get }
 }
 
 @objc class ServiceWorkerGlobalScope: EventTarget, ServiceWorkerGlobalScopeExports {
@@ -22,6 +24,7 @@ import JavaScriptCore
     unowned let worker: ServiceWorker
     unowned let context: JSContext
     let clients: Clients
+    let location: WorkerLocation
 
     var skipWaitingStatus = false
 
@@ -39,11 +42,16 @@ import JavaScriptCore
         self.worker = worker
         self.context = context
         self.clients = Clients(for: worker, in: context)
+        self.location = WorkerLocation(withURL: worker.url, inContext: context)!
 
         super.init()
 
         self.attachVariablesToContext()
         try self.loadIndexedDBShim()
+    }
+    
+    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue {
+        return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
     }
 
     fileprivate func attachVariablesToContext() {
@@ -52,12 +60,25 @@ import JavaScriptCore
         // all the attributes from the global scope and manually apply them to the existing global object.
 
         self.context.globalObject.setValue(self, forProperty: "self")
+        
+        
         self.context.globalObject.setValue(Event.self, forProperty: "Event")
         self.context.globalObject.setValue(skipWaiting as @convention(block) () -> Void, forProperty: "skipWaiting")
-//        self.context.globalObject.setValue(self.clients, forProperty: "clients")
+        self.context.globalObject.setValue(self.clients, forProperty: "clients")
+        self.context.globalObject.setValue(self.location, forProperty: "location")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = importScripts
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
+        
+        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue = fetch
+        self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
+        self.context.globalObject.setValue(FetchRequest.self, forProperty: "Request")
+        
+        
+        // These have weird hacks involving hash get/set, so we have specific functions
+        // for adding them.
+        JSURL.addToWorkerContext(context: self.context)
+        WorkerLocation.addToWorkerContext(context: self.context)
 
         self.applyListenersTo(jsObject: self.context.globalObject)
     }

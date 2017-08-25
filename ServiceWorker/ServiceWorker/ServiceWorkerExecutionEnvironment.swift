@@ -21,7 +21,7 @@ import PromiseKit
     @objc public init(_ worker: ServiceWorker) throws {
 
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
-
+        
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
 
         super.init()
