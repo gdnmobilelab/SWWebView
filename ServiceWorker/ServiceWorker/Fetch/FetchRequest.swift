@@ -44,8 +44,8 @@ public enum FetchRequestMode: String {
 
     @objc(redirect)
     var redirectString: String { get }
-    
-    init?(url:JSValue, options: JSValue)
+
+    init?(url: JSValue, options: JSValue)
 }
 
 @objc public class FetchRequest: NSObject, FetchRequestExports {
@@ -82,42 +82,41 @@ public enum FetchRequestMode: String {
         self.headers = FetchHeaders()
         super.init()
     }
-    
+
     public required convenience init?(url: JSValue, options: JSValue) {
         do {
-            
+
             if url.isString == false {
                 throw ErrorMessage("Must provide a string URL")
             }
-            
+
             guard let workerLocation = options.context.globalObject.objectForKeyedSubscript("location").toObjectOf(WorkerLocation.self) as? WorkerLocation else {
                 // It's possible to call this constructor outside of a service worker scope, but we don't
                 // want to allow that, because we need to resolve relative URLs. If there is no self.scriptURL
                 // we must not be in a worker, so we fail.
-                
+
                 throw ErrorMessage("Request must be used inside a Service Worker context")
             }
-            
+
             guard let parsedScriptURL = URL(string: workerLocation.href) else {
                 throw ErrorMessage("Could not parse the worker context's script URL successfully")
             }
-            
+
             guard let relativeURL = URL(string: url.toString(), relativeTo: parsedScriptURL) else {
                 throw ErrorMessage("Could not create relative URL with string provided")
             }
             self.init(url: relativeURL.standardized.absoluteURL)
-            if let optionsObject = options.toObject() as? [String :AnyObject] {
+            if let optionsObject = options.toObject() as? [String: AnyObject] {
                 try self.applyOptions(opts: optionsObject)
             }
-            
+
         } catch {
             let error = JSValue(newErrorFromMessage: "\(error)", in: options.context)
             options.context.exception = error
             return nil
         }
-        
     }
-    
+
     /// The Fetch API has various rules regarding the origin of requests. We try to respect
     /// that as best we can.
     internal func enforceOrigin(origin: URL) throws {

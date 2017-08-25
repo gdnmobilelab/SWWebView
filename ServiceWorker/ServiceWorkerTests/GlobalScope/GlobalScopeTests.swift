@@ -95,11 +95,11 @@ class GlobalScopeTests: XCTestCase {
             }
             .assertResolves()
     }
-    
+
     func testHasLocation() {
-        
+
         let sw = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/sw.js")!, state: .activated, content: "")
-        
+
         sw.evaluateScript("[self.location, location]")
             .then { val -> Void in
                 let arr = val?.toArray() as? [WorkerLocation]
@@ -107,8 +107,7 @@ class GlobalScopeTests: XCTestCase {
                 XCTAssertNotNil(arr?[1])
                 XCTAssertEqual(arr?[0], arr?[1])
                 XCTAssertEqual(arr?[0].href, "http://www.example.com/sw.js")
-        }
-        .assertResolves()
-        
+            }
+            .assertResolves()
     }
 }

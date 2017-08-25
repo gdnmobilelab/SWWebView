@@ -204,7 +204,7 @@ class FetchOperationTests: XCTestCase {
         }
 
         let sw = ServiceWorker(id: "TEST", url: TestWeb.serverURL, state: .activated, content: "")
-        
+
         sw.evaluateScript("""
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)')
             .then(function(res) {
@@ -236,14 +236,13 @@ class FetchOperationTests: XCTestCase {
                 guard let obj = val?.value.toDictionary() else {
                     return XCTFail()
                 }
-                
+
                 for (key, val) in obj {
                     NSLog("KEY: \(key), VAL: \(val)")
                     let valInt = val as? Int
                     XCTAssert(valInt == nil || valInt != -1, "Property \(key) should exist")
                 }
-        }
-        .assertResolves()
-
+            }
+            .assertResolves()
     }
 }

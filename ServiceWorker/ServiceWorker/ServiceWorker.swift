@@ -71,11 +71,11 @@ import PromiseKit
         self.loadContent = { _ in
             content
         }
-        
+
         guard let installState = ServiceWorkerInstallState(rawValue: state) else {
             throw ErrorMessage("Could not parse install state string")
         }
-        
+
         self._installState = installState
         super.init()
     }

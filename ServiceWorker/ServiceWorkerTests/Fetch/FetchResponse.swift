@@ -112,22 +112,20 @@ class FetchResponseTests: XCTestCase {
             res!.statusCode = 200
             return res
         }
-        
+
         let sw = ServiceWorker(id: "TEST", url: TestWeb.serverURL, state: .activated, content: "")
-        
 
         sw.evaluateScript("""
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.txt"))')
             .then(function(res) { return res.text() })
         """)
             .then { val in
-            return JSPromise.fromJSValue(val!)
-        }
+                return JSPromise.fromJSValue(val!)
+            }
             .then { val in
                 XCTAssertEqual(val?.value.toString(), "THIS IS TEST CONTENT")
-        }
-        .assertResolves()
-
+            }
+            .assertResolves()
     }
 
     func testFetchResponseClone() {
@@ -169,10 +167,9 @@ class FetchResponseTests: XCTestCase {
             res.statusCode = 200
             return res
         }
-        
+
         let sw = ServiceWorker(id: "TEST", url: TestWeb.serverURL, state: .activated, content: "")
 
-        
         sw.evaluateScript("""
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.dat"))')
             .then(function(res) { return res.arrayBuffer() })
@@ -182,19 +179,17 @@ class FetchResponseTests: XCTestCase {
             })
         """)
             .then { val in
-            return JSPromise.fromJSValue(val!)
+                return JSPromise.fromJSValue(val!)
             }.then { val -> Void in
                 let arr = val?.value.toArray() as? [Int]
-                
+
                 XCTAssertEqual(arr?[0], 1)
                 XCTAssertEqual(arr?[1], 2)
                 XCTAssertEqual(arr?[2], 3)
                 XCTAssertEqual(arr?[3], 4)
                 XCTAssertEqual(arr?[4], 255)
-        }
-        .assertResolves()
-        
-       
+            }
+            .assertResolves()
     }
 
     func testResponseToFileDownload() {
