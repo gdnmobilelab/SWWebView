@@ -12,6 +12,9 @@ import PromiseKit
 
 class ZZZZ_TestEndChecks: XCTestCase {
     
+    
+    /// A wrap-up test we always want to run last, that double-checks all of our JSContexts
+    /// have been garbage collected. If they haven't, it means we have a memory leak somewhere.
     func testShouldDeinitSuccessfully() {
         
         Promise(value:())

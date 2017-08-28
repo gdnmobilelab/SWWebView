@@ -26,7 +26,7 @@ class EventStream: NSObject {
     var workerInstallErrorListener: Listener<WorkerInstallationError>?
 
     func isScopeMatch(_ url: URL) -> Bool {
-        return url.host == self.container.containerURL.host && url.port == self.container.containerURL.port
+        return url.host == self.container.url.host && url.port == self.container.url.port
     }
 
     init(for task: SWURLSchemeTask, withContainer container: ServiceWorkerContainer) throws {

@@ -114,7 +114,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             throw ErrorMessage("All non-event stream SW API tasks must send a referer header")
         }
 
-        guard let container = self.containers.first(where: { $0.containerURL.absoluteString == referrer.absoluteString }) else {
+        guard let container = self.containers.first(where: { $0.url.absoluteString == referrer.absoluteString }) else {
             throw ErrorMessage("ServiceWorkerContainer should already exist before any tasks are run")
         }
 
@@ -171,7 +171,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             throw ErrorMessage("Could not parse path-relative URL")
         }
 
-        let container = try self.containers.first(where: { $0.containerURL.absoluteString == fullPageURL.absoluteString }) ?? {
+        let container = try self.containers.first(where: { $0.url.absoluteString == fullPageURL.absoluteString }) ?? {
             let newContainer = try ServiceWorkerContainer(forURL: fullPageURL.absoluteURL)
             self.containers.insert(newContainer)
             return newContainer

@@ -126,6 +126,7 @@ var StreamingXHR = (function (_super) {
         _this.seenBytes = 0;
         _this.isOpen = false;
         _this.url = url;
+        _this.resetReadyPromise();
         return _this;
     }
     Object.defineProperty(StreamingXHR.prototype, "ready", {
@@ -141,15 +142,16 @@ var StreamingXHR = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    StreamingXHR.prototype.open = function () {
+    StreamingXHR.prototype.resetReadyPromise = function () {
         var _this = this;
-        if (this.isOpen === true) {
-            throw new Error("Already open");
-        }
-        console.info("Opening stream for:" + this.url);
         this.readyPromise = new Promise(function (fulfill) {
             _this.readyFulfill = fulfill;
         });
+    };
+    StreamingXHR.prototype.open = function () {
+        if (this.isOpen === true) {
+            throw new Error("Already open");
+        }
         this.isOpen = true;
         this.xhr = new XMLHttpRequest();
         this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, this.url);
@@ -161,7 +163,15 @@ var StreamingXHR = (function (_super) {
     };
     StreamingXHR.prototype.receiveData = function () {
         var _this = this;
-        // try {
+        if (this.xhr.readyState === 4) {
+            this.isOpen = false;
+            this.resetReadyPromise();
+            setTimeout(function () {
+                // This doesn't fire if page is unloading. So re-establish
+                // connection here?
+                console.error("Streaming task has stopped");
+            }, 1);
+        }
         if (this.xhr.readyState !== 3) {
             return;
         }
@@ -415,9 +425,6 @@ var ServiceWorkerContainerImplementation = (function (_super) {
             newControllerInstance = null;
         }
         if (newControllerInstance !== this._controller) {
-            console.info("Set new controller from", this._controller, "to", newControllerInstance);
-            // Have to do 'as any' because TypeScript definition doesn't
-            // allow null service workers
             this._controller = newControllerInstance;
             var evt = new CustomEvent("controllerchange");
             this.dispatchEvent(evt);
@@ -465,7 +472,6 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     return ServiceWorkerContainerImplementation;
 }(index));
 eventStream.addEventListener("serviceworkercontainer", function (e) {
-    console.log("update?", e.data);
     navigator.serviceWorker.updateFromAPIResponse(e.data);
 });
 if ("ServiceWorkerContainer" in self === false) {

@@ -45,7 +45,7 @@ class ServiceWorkerContainerCommands {
             throw ErrorMessage("URL must be provided")
         }
 
-        guard let workerURL = URL(string: workerURLString, relativeTo: container.containerURL) else {
+        guard let workerURL = URL(string: workerURLString, relativeTo: container.url) else {
             throw ErrorMessage("Could not parse URL")
         }
 
@@ -53,7 +53,7 @@ class ServiceWorkerContainerCommands {
 
         if let specifiedScope = json?["scope"] as? String {
 
-            guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: container.containerURL) else {
+            guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: container.url) else {
                 throw ErrorMessage("Could not parse scope URL")
             }
             options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)

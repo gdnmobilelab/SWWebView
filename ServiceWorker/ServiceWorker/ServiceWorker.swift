@@ -167,13 +167,4 @@ import PromiseKit
             return self._executionEnvironment!.globalScope.skipWaitingStatus
         }
     }
-
-    /// The Service Worker API requires that we cache imported scripts as part of the loading
-    /// process. But because we want this implementation to be self-contained, we provide this
-    /// hook for another module (i.e. ServiceWorkerContainer) to actually implement importing.
-    public var importScripts: (ServiceWorker, [URL]) throws -> [String] = ServiceWorker.importScriptsDefault
-
-    fileprivate static func importScriptsDefault(worker _: ServiceWorker, scripts _: [URL]) throws -> [String] {
-        throw ErrorMessage("You must provide an importScripts implementation on ServiceWorker")
-    }
 }

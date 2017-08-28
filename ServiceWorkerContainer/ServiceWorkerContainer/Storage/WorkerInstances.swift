@@ -31,12 +31,13 @@ class WorkerInstances {
 
                 let registration = try ServiceWorkerRegistration.get(byId: registrationId)!
                 let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
-
-                return ServiceWorker(id: id, url: try resultSet.url("url")!, registration: registration, state: state, loadContent: ServiceWorkerHooks.loadContent)
+                
+                let implementations = WorkerImplementations(registration: registration, clients: nil, importScripts: ServiceWorkerHooks.importScripts)
+                
+                return ServiceWorker(id: id, url: try resultSet.url("url")!, implementations: implementations, state: state, loadContent: ServiceWorkerHooks.loadContent)
             }
         }
 
-        dbWorker.importScripts = ServiceWorkerHooks.importScripts
         workerStorage.add(dbWorker)
 
         return dbWorker

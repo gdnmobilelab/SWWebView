@@ -175,7 +175,7 @@ import JavaScriptCore
                 return asURL!
             }
 
-            let scripts = try worker.importScripts(worker, scriptURLs)
+            let scripts = try worker.implementations.importScripts(worker, scriptURLs)
 
             scripts.enumerated().forEach { arg in
                 self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])

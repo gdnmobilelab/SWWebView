@@ -8,14 +8,14 @@
 
 import Foundation
 
-@objc enum WindowClientVisibilityState: Int {
+@objc public enum WindowClientVisibilityState: Int {
     case Hidden
     case Visible
     case Prerender
     case Unloaded
 }
 
-extension WindowClientVisibilityState {
+public extension WindowClientVisibilityState {
     var stringValue: String {
         switch self {
         case .Hidden:

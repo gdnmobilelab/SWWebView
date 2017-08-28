@@ -95,6 +95,7 @@
 		8AC7553A1F3240BB00C6B70A /* SQLiteUpdateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */; };
 		8AC7553B1F3240BB00C6B70A /* SQLiteUpdateOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */; };
 		8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */; };
+		8AC7FF051F548A3400A8C2FB /* EmptyImportScriptsCallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */; };
 		8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */; };
 		8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72C1F50755B00F444B6 /* LocationBase.swift */; };
 		8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72F1F507E9600F444B6 /* JSURL.swift */; };
@@ -200,6 +201,7 @@
 		8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateMonitor.swift; sourceTree = "<group>"; };
 		8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateOperation.swift; sourceTree = "<group>"; };
 		8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLDatabase.swift; sourceTree = "<group>"; };
+		8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyImportScriptsCallback.swift; sourceTree = "<group>"; };
 		8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestTests.swift; sourceTree = "<group>"; };
 		8ACCD72C1F50755B00F444B6 /* LocationBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBase.swift; sourceTree = "<group>"; };
 		8ACCD72F1F507E9600F444B6 /* JSURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSURL.swift; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 			children = (
 				8AC754931F31235200C6B70A /* EmptyServiceWorkerRegistration.swift */,
 				8A43C1821F4F229F001221C1 /* EmptyWorkerClients.swift */,
+				8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */,
 			);
 			path = Empty;
 			sourceTree = "<group>";
@@ -753,6 +756,7 @@
 				8AC754DD1F31252B00C6B70A /* ResponseType.swift in Sources */,
 				8AC754DE1F31252B00C6B70A /* ConsoleMirror.swift in Sources */,
 				8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */,
+				8AC7FF051F548A3400A8C2FB /* EmptyImportScriptsCallback.swift in Sources */,
 				8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */,
 				8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,

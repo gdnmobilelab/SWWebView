@@ -10,9 +10,12 @@ import Foundation
 import PromiseKit
 import ServiceWorker
 
-@objc public class ServiceWorkerContainer: NSObject {
+@objc public class ServiceWorkerContainer: NSObject, WindowClientProtocol {
 
-    public let containerURL: URL
+    public var id: String
+
+    public var url: URL
+    
     public let origin: URL
     public var readyRegistration: ServiceWorkerRegistration?
     fileprivate var _ready: Promise<ServiceWorkerRegistration>?
@@ -31,7 +34,7 @@ import ServiceWorker
         /// under the scope of the container has an active worker. It's quite possible that
         /// there will already be an active worker when the container is created, so we check
         /// for that.
-        self.readyRegistration = try ServiceWorkerRegistration.getReadyRegistration(for: self.containerURL)
+        self.readyRegistration = try ServiceWorkerRegistration.getReadyRegistration(for: self.url)
 
         if self.readyRegistration != nil {
             self.controller = self.readyRegistration?.active
@@ -45,7 +48,8 @@ import ServiceWorker
     }
 
     public init(forURL: URL) throws {
-        self.containerURL = forURL
+        self.url = forURL
+        self.id = UUID().uuidString
 
         var components = URLComponents(url: forURL, resolvingAgainstBaseURL: true)!
         components.path = "/"
@@ -77,7 +81,7 @@ import ServiceWorker
                 return
             }
 
-            if self.containerURL.absoluteString.hasPrefix(reg.scope.absoluteString) == false {
+            if self.url.absoluteString.hasPrefix(reg.scope.absoluteString) == false {
                 // not in scope, disregard
                 return
             }
@@ -109,34 +113,19 @@ import ServiceWorker
         //        }
     }
 
-    // We don't ever want to have more than one container for a URL, so we keep this weak map internally,
-    // then, when running get(), we return an existing instance if it exists.
-    //    fileprivate static let activeContainers = NSHashTable<ServiceWorkerContainer>.weakObjects()
-    //
-    //    public static func get(for url: URL) throws -> ServiceWorkerContainer {
-    //
-    //        let existing = self.activeContainers.allObjects.first { $0.containerURL.absoluteString == url.absoluteString }
-    //        if existing != nil {
-    //            return existing!
-    //        } else {
-    //            let newContainer = try ServiceWorkerContainer(forURL: url)
-    //            self.activeContainers.add(newContainer)
-    //            return newContainer
-    //        }
-    //    }
 
     fileprivate var defaultScope: URL {
-        if self.containerURL.absoluteString.hasSuffix("/") == false {
-            return self.containerURL.deletingLastPathComponent()
+        if self.url.absoluteString.hasSuffix("/") == false {
+            return self.url.deletingLastPathComponent()
         } else {
-            return self.containerURL
+            return self.url
         }
     }
 
     fileprivate func getRegistrationsSync() throws -> [ServiceWorkerRegistration] {
         return try CoreDatabase.inConnection { db in
 
-            var components = URLComponents(url: self.containerURL, resolvingAgainstBaseURL: true)!
+            var components = URLComponents(url: self.url, resolvingAgainstBaseURL: true)!
             components.path = "/"
 
             let like = components.url!.absoluteString + "%"
@@ -164,7 +153,7 @@ import ServiceWorker
 
     public func getRegistration(_ scope: URL? = nil) -> Promise<ServiceWorkerRegistration?> {
 
-        let scopeToCheck = scope ?? self.containerURL
+        let scopeToCheck = scope ?? self.url
 
         return CoreDatabase.inConnection { db in
 
@@ -193,7 +182,7 @@ import ServiceWorker
         return firstly {
             var scopeURL = workerURL
 
-            if workerURL.host != containerURL.host {
+            if workerURL.host != url.host {
                 throw ErrorMessage("Service worker scope must be on the same domain as both the page and worker URL")
             }
 
@@ -232,4 +221,64 @@ import ServiceWorker
                 }
         }
     }
+    
+    public var windowClientDelegate: WindowClientProtocol? = nil
+    
+    public func focus(_ cb: (Error?, WindowClientProtocol?) -> Void) {
+        if let delegate = self.windowClientDelegate {
+            delegate.focus(cb)
+        } else {
+            cb(ErrorMessage("Container has no windowClientDelegate"), nil)
+        }
+    }
+    
+    public func navigate(to: URL, _ cb: (Error?, WindowClientProtocol?) -> Void) {
+        if let delegate = self.windowClientDelegate {
+            delegate.navigate(to: to, cb)
+        } else {
+            cb(ErrorMessage("Container has no windowClientDelegate"), nil)
+        }
+    }
+    
+    public var focused: Bool {
+        get {
+            if let delegate = self.windowClientDelegate {
+                return delegate.focused
+            } else {
+                Log.error?("Tried to fetch focused state of ServiceWorkerContainer when no windowClientDelegate is set")
+                return false
+            }
+        }
+    }
+    
+    public var visibilityState: WindowClientVisibilityState {
+        get {
+            if let delegate = self.windowClientDelegate {
+                return delegate.visibilityState
+            } else {
+                Log.error?("Tried to fetch visibility state of ServiceWorkerContainer when no windowClientDelegate is set")
+                return WindowClientVisibilityState.Hidden
+            }
+        }
+    }
+    
+    public func postMessage(message: Any?, transferable: [Any]?) {
+        if let delegate = self.windowClientDelegate {
+            return delegate.postMessage(message: message, transferable: transferable)
+        } else {
+            Log.error?("Tried to postMessage to ServiceWorkerContainer when no windowClientDelegate is set")
+        }
+    }
+    
+    public var type: ClientType {
+        get {
+            if let delegate = self.windowClientDelegate {
+                return delegate.type
+            } else {
+                Log.error?("Tried to fetch ClientType of ServiceWorkerContainer when no windowClientDelegate is set")
+                return ClientType.Window
+            }
+        }
+    }
+    
 }

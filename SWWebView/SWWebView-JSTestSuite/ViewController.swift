@@ -37,6 +37,8 @@ class ViewController: UIViewController {
 
         config.userContentController.addUserScript(headerScript)
 
+        let clientManager = BridgeClientManager()
+        
         let swView = SWWebView(frame: self.view.frame, configuration: config)
         swView.serviceWorkerPermittedDomains.append("localhost:4567")
 

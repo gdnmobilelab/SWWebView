@@ -9,11 +9,14 @@
 import Foundation
 import PromiseKit
 import ServiceWorker
+import JavaScriptCore
 
 @objc public class ServiceWorkerRegistration: NSObject, ServiceWorkerRegistrationProtocol {
-
-    public func showNotification(title _: String) {
+    
+    public func showNotification(_ val: JSValue) -> JSValue {
+        return JSValue(undefinedIn: val.context)
     }
+    
 
     typealias RegisterCallback = (Error?) -> Void
 

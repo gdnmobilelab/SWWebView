@@ -8,7 +8,7 @@
 
 import Foundation
 
-@objc protocol WindowClientProtocol: ClientProtocol {
+@objc public protocol WindowClientProtocol: ClientProtocol {
     func focus(_ cb: (Error?, WindowClientProtocol?) -> Void)
     func navigate(to: URL, _ cb: (Error?, WindowClientProtocol?) -> Void)
 

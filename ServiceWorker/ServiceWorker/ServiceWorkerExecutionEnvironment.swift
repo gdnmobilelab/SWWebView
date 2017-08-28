@@ -19,7 +19,11 @@ import PromiseKit
 
     fileprivate static var virtualMachine = JSVirtualMachine()!
     
+    #if DEBUG
+    // We use this in tests to check whether all our JSContexts have been
+    // garbage collected or not. We don't need it in production environments.
     static var allJSContexts = NSHashTable<JSContext>.weakObjects()
+    #endif
     
     var jsContextName:String {
         set(value) {
@@ -34,7 +38,10 @@ import PromiseKit
 
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
+        
+        #if DEBUG
         ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
+        #endif
     
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
         self.timeoutManager = TimeoutManager(withQueue: self.dispatchQueue, in: self.jsContext)
