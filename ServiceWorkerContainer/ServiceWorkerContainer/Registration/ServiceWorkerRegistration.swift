@@ -12,11 +12,10 @@ import ServiceWorker
 import JavaScriptCore
 
 @objc public class ServiceWorkerRegistration: NSObject, ServiceWorkerRegistrationProtocol {
-    
+
     public func showNotification(_ val: JSValue) -> JSValue {
         return JSValue(undefinedIn: val.context)
     }
-    
 
     typealias RegisterCallback = (Error?) -> Void
 
@@ -24,42 +23,34 @@ import JavaScriptCore
     public let id: String
 
     public var active: ServiceWorker? {
-        get {
-            return self.workers[.active]
-        }
+        return self.workers[.active]
     }
-    
+
     public var waiting: ServiceWorker? {
-        get {
-            return self.workers[.waiting]
-        }
+        return self.workers[.waiting]
     }
-    
+
     public var installing: ServiceWorker? {
-        get {
-            return self.workers[.installing]
-        }
+        return self.workers[.installing]
     }
-    
+
     public var redundant: ServiceWorker? {
-        get {
-            return self.workers[.redundant]
-        }
+        return self.workers[.redundant]
     }
-    
+
     fileprivate var workers: [RegistrationWorkerSlot: ServiceWorker] = [:]
-    
-    internal func set(workerSlot:RegistrationWorkerSlot, to worker: ServiceWorker?, makeOldRedundant:Bool = true) throws {
-        
+
+    internal func set(workerSlot: RegistrationWorkerSlot, to worker: ServiceWorker?, makeOldRedundant: Bool = true) throws {
+
         if let existingWorker = self.workers[workerSlot], makeOldRedundant {
             // If we already have a worker in this slot then we mark it as redudant. Maybe
             // further shutdown stuff to be done?
             try self.factory.workerFactory.update(worker: existingWorker, toInstallState: .redundant)
             self.workers[.redundant] = existingWorker
         }
-        
+
         try self.factory.update(self, workerSlot: workerSlot, to: worker)
-        
+
         if worker == nil {
             self.workers.removeValue(forKey: workerSlot)
         } else {
@@ -67,21 +58,20 @@ import JavaScriptCore
         }
         GlobalEventLog.notifyChange(self)
     }
-    
+
     fileprivate let factory: WorkerRegistrationFactory
 
     internal init(scope: URL, id: String, workerIDs: [RegistrationWorkerSlot: String], fromFactory factory: WorkerRegistrationFactory) throws {
-        
+
         self.scope = scope
         self.id = id
-        
+
         self.factory = factory
         super.init()
-        
-        try workerIDs.forEach { (key, workerID) in
+
+        try workerIDs.forEach { key, workerID in
             self.workers[key] = try self.factory.workerFactory.get(id: workerID, withRegistration: self)
         }
-
     }
 
     func update() -> Promise<Void> {
@@ -105,7 +95,6 @@ import JavaScriptCore
 
             let request = try self.factory.workerFactory.getUpdateRequest(forExistingWorker: worker)
 
-            
             return FetchOperation.fetch(request)
                 .then { res in
 
@@ -124,7 +113,6 @@ import JavaScriptCore
                 }
         }
     }
-
 
     typealias RegisterReturn = (ServiceWorker, Promise<Void>)
     func register(_ workerURL: URL) -> Promise<RegisterReturn> {
@@ -150,11 +138,9 @@ import JavaScriptCore
                     // any errors to the webview even though it runs asynchronously.
 
                     return (worker, self.processHTTPResponse(res, newWorker: worker))
-
                 }
         }
     }
-
 
     func processHTTPResponse(_ res: FetchResponseProtocol, newWorker: ServiceWorker, byteCompareWorker: ServiceWorker? = nil) -> Promise<Void> {
 
@@ -182,34 +168,31 @@ import JavaScriptCore
                         }
                     }
             }
-        
     }
 
     fileprivate func install(worker: ServiceWorker) -> Promise<Void> {
-        
+
         return firstly {
             if self.installing != worker {
                 throw ErrorMessage("Can only install a worker if it's in the installing slot")
             }
-            
+
             let ev = ExtendableEvent(type: "install")
             return worker.dispatchEvent(ev)
                 .then { _ in
-                    return ev.resolve(in: worker)
+                    ev.resolve(in: worker)
                 }
         }
-            .then { () -> Void in
-                try self.factory.workerFactory.update(worker: worker, toInstallState: .installed)
-                try self.set(workerSlot: .waiting, to: worker)
-                try self.set(workerSlot: .installing, to: nil, makeOldRedundant: false)
+        .then { () -> Void in
+            try self.factory.workerFactory.update(worker: worker, toInstallState: .installed)
+            try self.set(workerSlot: .waiting, to: worker)
+            try self.set(workerSlot: .installing, to: nil, makeOldRedundant: false)
         }
-            .recover { error -> Void in
-                try self.factory.workerFactory.update(worker: worker, toInstallState: .redundant)
-                try self.set(workerSlot: .installing, to: nil)
-                throw error
+        .recover { error -> Void in
+            try self.factory.workerFactory.update(worker: worker, toInstallState: .redundant)
+            try self.set(workerSlot: .installing, to: nil)
+            throw error
         }
-        
-        
     }
 
     fileprivate func activate(worker: ServiceWorker) -> Promise<Void> {
@@ -218,83 +201,81 @@ import JavaScriptCore
         // 'active' is empty our worker goes directly into that slot
         // even while it is activating. If not, it stays in waiting
         // while it activates.
-        
+
         let moveToActiveImmediately = self.active == nil
-        
+
         return firstly {
-            
+
             if self.waiting != worker {
                 throw ErrorMessage("Can only activate a worker if it's in the waiting slot")
             }
-            
+
             if moveToActiveImmediately == true {
                 try self.set(workerSlot: .active, to: worker)
                 try self.set(workerSlot: .waiting, to: nil, makeOldRedundant: false)
             }
-            
+
             try self.factory.workerFactory.update(worker: worker, toInstallState: .activating)
-            
+
             let ev = ExtendableEvent(type: "activate")
             return worker.dispatchEvent(ev)
                 .then { _ in
-                    return ev.resolve(in: worker)
+                    ev.resolve(in: worker)
+                }
+        }
+        .then { () -> Void in
+            try self.factory.workerFactory.update(worker: worker, toInstallState: .activated)
+            if moveToActiveImmediately == false {
+                try self.set(workerSlot: .active, to: worker)
+                try self.set(workerSlot: .waiting, to: nil, makeOldRedundant: false)
             }
         }
-            .then { () -> Void in
-                try self.factory.workerFactory.update(worker: worker, toInstallState: .activated)
-                if moveToActiveImmediately == false {
-                    try self.set(workerSlot: .active, to: worker)
-                    try self.set(workerSlot: .waiting, to: nil, makeOldRedundant: false)
-                }
+        .recover { error -> Void in
+            try self.factory.workerFactory.update(worker: worker, toInstallState: .redundant)
+            if moveToActiveImmediately == true {
+                try self.set(workerSlot: .active, to: nil)
+            } else {
+                try self.set(workerSlot: .waiting, to: nil)
+            }
+            throw error
         }
-            .recover { error -> Void in
-                try self.factory.workerFactory.update(worker: worker, toInstallState: .redundant)
-                if moveToActiveImmediately == true {
-                    try self.set(workerSlot: .active, to: nil)
-                } else {
-                    try self.set(workerSlot: .waiting, to: nil)
-                }
-                throw error
-        }
-
     }
 
-
-//    public static func getOrCreate(byScope scope: URL) throws -> ServiceWorkerRegistration {
-//        let existing = try self.get(byScope: scope)
-//        if existing != nil {
-//            return existing!
-//        } else {
-//            return try self.create(scope: scope)
-//        }
-//    }
-//
-//    public static func get(byScope scope: URL) throws -> ServiceWorkerRegistration? {
-//        let active = activeInstances.allObjects.filter { $0.scope == scope }.first
-//
-//        if active != nil {
-//            return active
-//        }
-//
-//        return try CoreDatabase.inConnection { connection in
-//
-//            try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope]) { rs -> ServiceWorkerRegistration? in
-//
-//                return try self.fromResultSet(rs)
-//            }
-//        }
-//    }
-//
-//    fileprivate static func create(scope: URL) throws -> ServiceWorkerRegistration {
-//
-//        return try CoreDatabase.inConnection { connection in
-//            let newRegID = UUID().uuidString
-//            _ = try connection.insert(sql: "INSERT INTO registrations (registration_id, scope) VALUES (?, ?)", values: [newRegID, scope])
-//            let reg = ServiceWorkerRegistration(scope: scope, id: newRegID)
-//            self.activeInstances.add(reg)
-//            return reg
-//        }
-//    }
+    //    public static func getOrCreate(byScope scope: URL) throws -> ServiceWorkerRegistration {
+    //        let existing = try self.get(byScope: scope)
+    //        if existing != nil {
+    //            return existing!
+    //        } else {
+    //            return try self.create(scope: scope)
+    //        }
+    //    }
+    //
+    //    public static func get(byScope scope: URL) throws -> ServiceWorkerRegistration? {
+    //        let active = activeInstances.allObjects.filter { $0.scope == scope }.first
+    //
+    //        if active != nil {
+    //            return active
+    //        }
+    //
+    //        return try CoreDatabase.inConnection { connection in
+    //
+    //            try connection.select(sql: "SELECT * FROM registrations WHERE scope = ?", values: [scope]) { rs -> ServiceWorkerRegistration? in
+    //
+    //                return try self.fromResultSet(rs)
+    //            }
+    //        }
+    //    }
+    //
+    //    fileprivate static func create(scope: URL) throws -> ServiceWorkerRegistration {
+    //
+    //        return try CoreDatabase.inConnection { connection in
+    //            let newRegID = UUID().uuidString
+    //            _ = try connection.insert(sql: "INSERT INTO registrations (registration_id, scope) VALUES (?, ?)", values: [newRegID, scope])
+    //            let reg = ServiceWorkerRegistration(scope: scope, id: newRegID)
+    //            self.activeInstances.add(reg)
+    //            return reg
+    //        }
+    //    }
 
     fileprivate var _unregistered = false
 
@@ -305,31 +286,31 @@ import JavaScriptCore
     public func unregister() -> Promise<Void> {
 
         return firstly {
-            
+
             try self.factory.delete(self)
             self._unregistered = true
             GlobalEventLog.notifyChange(self)
-            
+
             return Promise(value: ())
 
-//            let allWorkers = [self.active, self.waiting, self.installing, self.redundant]
-//
-//            try CoreDatabase.inConnection { db in
-//                try allWorkers.forEach { worker in
-//                    worker?.destroy()
-//                    if worker != nil {
-//                        try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
-//                    }
-//                }
-//
-//                try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [self.id])
-//            }
-//
-//            self._unregistered = true
-//
-//            GlobalEventLog.notifyChange(self)
-//            ServiceWorkerRegistration.activeInstances.remove(self)
-//            return Promise(value: ())
+            //            let allWorkers = [self.active, self.waiting, self.installing, self.redundant]
+            //
+            //            try CoreDatabase.inConnection { db in
+            //                try allWorkers.forEach { worker in
+            //                    worker?.destroy()
+            //                    if worker != nil {
+            //                        try self.updateWorkerStatus(db: db, worker: worker!, newState: .redundant)
+            //                    }
+            //                }
+            //
+            //                try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [self.id])
+            //            }
+            //
+            //            self._unregistered = true
+            //
+            //            GlobalEventLog.notifyChange(self)
+            //            ServiceWorkerRegistration.activeInstances.remove(self)
+            //            return Promise(value: ())
         }
     }
 }

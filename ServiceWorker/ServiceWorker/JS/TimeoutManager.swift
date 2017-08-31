@@ -29,7 +29,7 @@ class TimeoutManager {
 
     unowned let queue: DispatchQueue
 
-    init(withQueue: DispatchQueue, in context:JSContext) {
+    init(withQueue: DispatchQueue, in context: JSContext) {
         self.queue = withQueue
 
         let clearInterval = unsafeBitCast((self.clearIntervalFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
@@ -59,7 +59,7 @@ class TimeoutManager {
     fileprivate func fireInterval(_ interval: Interval) {
 
         self.queue.asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
-            
+
             if self.cancelledTimeouts.contains(interval.timeoutIndex) == true {
                 self.cancelledTimeouts.remove(interval.timeoutIndex)
                 return

@@ -51,38 +51,36 @@ class ClientsTests: XCTestCase {
 
     class TestClients: ServiceWorkerClientsDelegate {
 
-        
         var clients: [ClientProtocol] = []
         var claimFunc: (() -> Void)?
 
-        func clients(_ worker: ServiceWorker, getById id: String, _ callback: (Error?, ClientProtocol?) -> Void) {
+        func clients(_: ServiceWorker, getById id: String, _ callback: (Error?, ClientProtocol?) -> Void) {
             callback(nil, self.clients.first(where: { $0.id == id }))
         }
-        
-        func clients(_ for: ServiceWorker, matchAll options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
+
+        func clients(_: ServiceWorker, matchAll options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
             cb(nil, self.clients.filter({ client in
-                
+
                 let asTestCase = client as! TestClient
-                
+
                 return (options.type == "all" || options.type == client.type.stringValue) &&
                     (options.includeUncontrolled == true || asTestCase.isControlled == true)
-                
+
             }))
         }
-        
-        func clients(_ for:ServiceWorker, openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
+
+        func clients(_: ServiceWorker, openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
             let newClient = TestWindowClient(id: "NEWCLIENT", type: .Window, url: url, focused: true, visibilityState: .Visible)
             self.clients.append(newClient)
             return cb(nil, newClient)
         }
 
-        func clientsClaim(_ for: ServiceWorker, _ cb: (Error?) -> Void) {
+        func clientsClaim(_: ServiceWorker, _ cb: (Error?) -> Void) {
             if let claim = self.claimFunc {
                 claim()
             }
             cb(nil)
         }
-
     }
 
     func testShouldGetClientByID() {

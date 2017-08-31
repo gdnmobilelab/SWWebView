@@ -44,7 +44,6 @@ import JavaScriptCore
             } else {
                 Log.error?("Could not create error instance in WebSQLTransaction callback")
             }
-            
         }
     }
 
@@ -66,7 +65,6 @@ import JavaScriptCore
             } else {
                 Log.error?("Could not create error instance in WebSQLTransaction callback")
             }
-            
         }
     }
 }

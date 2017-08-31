@@ -58,25 +58,25 @@ fileprivate struct EventListener {
             .filter { $0.eventName == event.type }
             .forEach { $0.funcToRun.call(withArguments: [event]) }
     }
-    
+
     func clearAllListeners() {
         self.listeners.removeAll()
     }
 
     func applyListenersTo(jsObject: JSValue) {
 
-        let addConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] (name, funcToRun) in
-            return self.addEventListener(name, funcToRun)
+        let addConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] name, funcToRun in
+            self.addEventListener(name, funcToRun)
         }
         jsObject.setValue(addConvention, forProperty: "addEventListener")
 
-        let removeConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] (name, funcToRun) in
-            return self.removeEventListener(name, funcToRun)
+        let removeConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] name, funcToRun in
+            self.removeEventListener(name, funcToRun)
         }
         jsObject.setValue(removeConvention, forProperty: "removeEventListener")
 
         let dispatchConvention: @convention(block) (Event) -> Void = { [unowned self] event in
-            return self.dispatchEvent(event)
+            self.dispatchEvent(event)
         }
         jsObject.setValue(dispatchConvention, forProperty: "dispatchEvent")
     }

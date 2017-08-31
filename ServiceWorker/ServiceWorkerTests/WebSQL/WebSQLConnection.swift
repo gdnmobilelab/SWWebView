@@ -38,22 +38,19 @@ class WebSQLConnectionTests: XCTestCase {
     }
 
     func injectOpenDBIntoWorker(_ sw: ServiceWorker) -> Promise<Void> {
-        
+
         return sw.getExecutionEnvironment()
             .then { exec in
-                
+
                 exec.withJSContext { context in
                     context.globalObject.setValue(exec.globalScope.openDatabaseFunction, forProperty: "openDatabase")
                 }
-                
-                
-        }
-        
+            }
     }
 
     func testOpeningDatabase() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {
@@ -66,7 +63,7 @@ class WebSQLConnectionTests: XCTestCase {
             }
             .then { jsResult -> Promise<Void> in
                 XCTAssertEqual(jsResult?.toBool(), true)
-                return Promise { fulfill, reject in
+                return Promise { fulfill, _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                         fulfill(())
                     })
@@ -77,7 +74,7 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testTransactionCallback() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {
@@ -108,7 +105,7 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testResultSetSelect() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
         self.injectOpenDBIntoWorker(sw)
             .then {

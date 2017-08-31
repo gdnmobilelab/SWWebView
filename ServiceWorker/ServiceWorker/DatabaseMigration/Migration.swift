@@ -80,7 +80,7 @@ public class DatabaseMigration {
                         throw ErrorMessage("Error when attempting migration: " + migration.fileName.absoluteString + ", internal error: " + String(describing: error))
                     }
                 }
-                
+
                 guard let lastMigration = migrationFiles.last else {
                     Log.debug?("No pending migration files found")
                     return currentVersion

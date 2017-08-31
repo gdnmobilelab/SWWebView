@@ -34,5 +34,4 @@ class ServiceWorkerTests: XCTestCase {
             }
             .assertResolves()
     }
-    
 }

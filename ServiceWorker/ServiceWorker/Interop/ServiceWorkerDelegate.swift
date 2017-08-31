@@ -9,10 +9,9 @@
 import Foundation
 
 @objc public protocol ServiceWorkerDelegate {
-    
+
     var storageURL: URL { get }
- 
+
     @objc optional func getRegistration(for: ServiceWorker) -> ServiceWorkerRegistrationProtocol
-    @objc optional func importScripts(at: [URL], for:ServiceWorker, _ callback: @escaping (_: Error?, _: [String]?) -> Void)
-    
+    @objc optional func importScripts(at: [URL], for: ServiceWorker, _ callback: @escaping (_: Error?, _: [String]?) -> Void)
 }

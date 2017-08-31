@@ -24,11 +24,11 @@ class EventTargetTests: XCTestCase {
             self.dispatchEvent(new Event('test'));
             didFire;
         """)
-        
-        .then { didFire -> Void in
-            XCTAssertEqual(didFire!.toBool(), true)
-        }
-        .assertResolves()
+
+            .then { didFire -> Void in
+                XCTAssertEqual(didFire!.toBool(), true)
+            }
+            .assertResolves()
     }
 
     func testShouldRemoveEventListeners() {

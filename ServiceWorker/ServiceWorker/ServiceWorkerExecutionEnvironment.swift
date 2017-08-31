@@ -11,22 +11,22 @@ import JavaScriptCore
 import PromiseKit
 
 @objc public class ServiceWorkerExecutionEnvironment: NSObject, ServiceWorkerGlobalScopeDelegate {
-    
-    unowned let worker:ServiceWorker
+
+    unowned let worker: ServiceWorker
     fileprivate let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
-    let timeoutManager:TimeoutManager
+    let timeoutManager: TimeoutManager
 
     fileprivate static var virtualMachine = JSVirtualMachine()!
-    
+
     #if DEBUG
-    // We use this in tests to check whether all our JSContexts have been
-    // garbage collected or not. We don't need it in production environments.
-    static var allJSContexts = NSHashTable<JSContext>.weakObjects()
+        // We use this in tests to check whether all our JSContexts have been
+        // garbage collected or not. We don't need it in production environments.
+        static var allJSContexts = NSHashTable<JSContext>.weakObjects()
     #endif
-    
-    var jsContextName:String {
+
+    var jsContextName: String {
         set(value) {
             self.jsContext.name = value
         }
@@ -39,11 +39,11 @@ import PromiseKit
         self.worker = worker
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
-        
+
         #if DEBUG
-        ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
+            ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
         #endif
-    
+
         self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
         self.timeoutManager = TimeoutManager(withQueue: self.dispatchQueue, in: self.jsContext)
         super.init()
@@ -54,7 +54,7 @@ import PromiseKit
             // collected
             self.currentException = error
         }
-        
+
         self.globalScope.delegate = self
     }
 
@@ -96,72 +96,69 @@ import PromiseKit
                 return returnVal
             })
     }
-    
+
     func importScripts(urls: [URL]) throws {
-        
+
         guard let delegate = self.worker.delegate else {
             throw ErrorMessage("No ServiceWorkerDelegate to import scripts")
         }
-        
+
         guard let importScriptsDelegate = delegate.importScripts else {
             throw ErrorMessage("ServiceWorkerDelegate does not implement importScript")
         }
-        
+
         self.dispatchQueue.sync {
-        
+
             // We want our worker execution thread to pause at this point, so that
             // we can do remote fetching of content.
-            
+
             let semaphore = DispatchSemaphore(value: 0)
-            
-            var error: Error? = nil
-            var scripts: [String]? = nil
-            
+
+            var error: Error?
+            var scripts: [String]?
+
             DispatchQueue.global().async {
-                
+
                 // Now, outside of our worker thread, we fetch the scripts
-                
+
                 importScriptsDelegate(urls, self.worker) { err, importedScripts in
                     error = err
                     scripts = importedScripts
-                    
+
                     // With the variables set, we can now resume on our worker thread.
                     semaphore.signal()
                 }
-                
             }
-            
+
             // Wait for the above code to execute
             semaphore.wait()
-            
+
             // Now we have our scripts (or error) and can process.
             do {
                 if let err = error {
-                   throw err
+                    throw err
                 }
-                
+
                 guard let allScripts = scripts else {
                     throw ErrorMessage("importScripts() returned no error, but no scripts either")
                 }
-                
-                try allScripts.enumerated().forEach { (idx, script) in
-                    
+
+                try allScripts.enumerated().forEach { idx, script in
+
                     if idx > urls.count - 1 {
-                         throw ErrorMessage("More scripts were returned than were requested")
+                        throw ErrorMessage("More scripts were returned than were requested")
                     }
-                    
+
                     let scriptURL = urls[idx]
-                    
+
                     self.jsContext.evaluateScript(script, withSourceURL: scriptURL)
                 }
-                
+
             } catch {
                 let jsError = JSValue(newErrorFromMessage: "\(error)", in: self.jsContext)
                 self.jsContext.exception = jsError
             }
-            
         }
-        
     }
 
     /// We want to run our JSContext on its own thread, but every now and then we need to

@@ -12,7 +12,7 @@ import JavaScriptCore
 @objc public class LocationBase: NSObject {
 
     fileprivate var components: URLComponents
-   
+
     init?(withURL: URL) {
         guard let components = URLComponents(url: withURL, resolvingAgainstBaseURL: true) else {
             let err = JSValue(newErrorFromMessage: "Could not parse value provided", in: JSContext.current())

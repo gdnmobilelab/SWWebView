@@ -11,28 +11,23 @@ import ServiceWorker
 import ServiceWorkerContainer
 
 public class BridgeClientManager: WorkerClientsProtocol {
-    
-    let workerFactory:WorkerFactory
-    
+
+    let workerFactory: WorkerFactory
+
     public init() {
         self.workerFactory = WorkerFactory()
         self.workerFactory.clientsDelegate = self
     }
-    
-    public func get(id: String, worker: ServiceWorker, _ cb: (Error?, ClientProtocol?) -> Void) {
-        
+
+    public func get(id _: String, worker _: ServiceWorker, _: (Error?, ClientProtocol?) -> Void) {
     }
-    
-    public func matchAll(options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
-        
+
+    public func matchAll(options _: ClientMatchAllOptions, _: (Error?, [ClientProtocol]?) -> Void) {
     }
-    
-    public func openWindow(_: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
-        
+
+    public func openWindow(_: URL, _: (Error?, ClientProtocol?) -> Void) {
     }
-    
-    public func claim(_ cb: (Error?) -> Void) {
-        
+
+    public func claim(_: (Error?) -> Void) {
     }
-    
 }

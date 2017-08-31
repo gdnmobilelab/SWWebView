@@ -16,8 +16,8 @@ import JavaScriptCore
     unowned let context: JSContext
     let clients: Clients
     let location: WorkerLocation
-    
-    weak var delegate: ServiceWorkerGlobalScopeDelegate? = nil
+
+    weak var delegate: ServiceWorkerGlobalScopeDelegate?
 
     var skipWaitingStatus = false
 
@@ -37,19 +37,15 @@ import JavaScriptCore
 
         self.attachVariablesToContext()
         try self.loadIndexedDBShim()
-        
-        
     }
-    
+
     deinit {
         let allWebSQL = self.activeWebSQLDatabases.allObjects
         if allWebSQL.count > 0 {
             Log.info?("\(allWebSQL.count) open WebSQL connections when shutting down worker")
-            allWebSQL.forEach { $0.close()}
+            allWebSQL.forEach { $0.close() }
         }
-        
     }
-    
 
     func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue {
         return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
@@ -59,15 +55,15 @@ import JavaScriptCore
 
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
-        
+
         self.context.globalObject.setValue(self.context.globalObject, forProperty: "self")
 
         self.context.globalObject.setValue(Event.self, forProperty: "Event")
-        
+
         let skipWaiting: @convention(block) () -> Void = { [unowned self] in
             self.skipWaitingStatus = true
         }
-        
+
         self.context.globalObject.setValue(skipWaiting, forProperty: "skipWaiting")
         self.context.globalObject.setValue(self.clients, forProperty: "clients")
         self.context.globalObject.setValue(self.location, forProperty: "location")
@@ -78,7 +74,7 @@ import JavaScriptCore
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
 
         let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue = { [unowned self] requestOrURL, options in
-            return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
+            FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
         }
         self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
         self.context.globalObject.setValue(FetchRequest.self, forProperty: "Request")
@@ -95,11 +91,11 @@ import JavaScriptCore
     // keep track of them, in order to close them off on shutdown. JS garbage collection
     // is sometimes enough, but not always.
     internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
-    
+
     // Storing here primarily for tests - we don't expose openDatabase globally, but sometimes
     // we want to use it.
     internal var openDatabaseFunction: Any?
-    
+
     fileprivate func loadIndexedDBShim() throws {
 
         let file = Bundle(for: ServiceWorkerGlobalScope.self).bundleURL
@@ -115,8 +111,8 @@ import JavaScriptCore
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
         // "self.indexedDB")
-        
-        let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { [unowned self] (name, version, prettyName, size, callback) in
+
+        let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { [unowned self] name, _, _, _, _ in
 
             do {
                 let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name)
@@ -124,28 +120,26 @@ import JavaScriptCore
                 // is destroyed
                 self.activeWebSQLDatabases.add(db)
                 return db
-            }
-            catch {
+            } catch {
                 guard let jsc = JSContext.current() else {
                     Log.error?("Tried to call WebSQL openDatabase outside of a JSContext?")
                     return nil
                 }
-                
+
                 let err = JSValue(newErrorFromMessage: "\(error)", in: jsc)
                 jsc.exception = err
                 Log.error?("\(error)")
                 return nil
             }
-
         }
-        
+
         let config: [String: Any] = [
             "DEBUG": true,
             "win": [
                 "openDatabase": openDatabaseFunction,
             ],
         ]
-        
+
         self.openDatabaseFunction = openDatabaseFunction
 
         // Documentation for the function we're calling is under setGlobalVars here:
@@ -184,7 +178,7 @@ import JavaScriptCore
             guard let delegate = self.delegate else {
                 throw ErrorMessage("No global scope delegate set, cannot import scripts")
             }
-            
+
             var scriptURLStrings: [String]
 
             // importScripts supports both single files and arrays
@@ -200,15 +194,14 @@ import JavaScriptCore
                 }
                 return asURL
             }
-            
-            
+
             try delegate.importScripts(urls: scriptURLs)
 
-//            let scripts = try worker.implementations.importScripts(worker, scriptURLs)
-//
-//            scripts.enumerated().forEach { arg in
-//                self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
-//            }
+            //            let scripts = try worker.implementations.importScripts(worker, scriptURLs)
+            //
+            //            scripts.enumerated().forEach { arg in
+            //                self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
+            //            }
 
         } catch {
             self.throwErrorIntoJSContext(error: error)

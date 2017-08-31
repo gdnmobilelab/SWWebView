@@ -27,8 +27,8 @@ import JavaScriptCore
     func get(_ id: String) -> JSValue {
 
         let jsp = JSPromise(context: JSContext.current())
-        
-        if self.worker.clientsDelegate?.clients?(worker, getById: id, { err, clientProtocol in
+
+        if self.worker.clientsDelegate?.clients?(self.worker, getById: id, { err, clientProtocol in
             if let error = err {
                 jsp.reject(error)
             } else if let clientExists = clientProtocol {
@@ -39,7 +39,7 @@ import JavaScriptCore
         }) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement get()"))
         }
-        
+
         return jsp.jsValue
     }
 
@@ -51,8 +51,8 @@ import JavaScriptCore
         let includeUncontrolled = options?["includeUncontrolled"] as? Bool ?? false
 
         let options = ClientMatchAllOptions(includeUncontrolled: includeUncontrolled, type: type)
-        
-        if self.worker.clientsDelegate?.clients?(worker, matchAll: options, { err, clientProtocols in
+
+        if self.worker.clientsDelegate?.clients?(self.worker, matchAll: options, { err, clientProtocols in
             if let error = err {
                 jsp.reject(error)
             } else {
@@ -62,7 +62,7 @@ import JavaScriptCore
         }) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement matchAll()"))
         }
-        
+
         return jsp.jsValue
     }
 
@@ -74,11 +74,10 @@ import JavaScriptCore
             jsp.reject(ErrorMessage("Could not parse URL given"))
             return jsp.jsValue
         }
-        
-        if self.worker.clientsDelegate?.clients?(worker, openWindow: parsedURL, jsp.processCallback) == nil {
+
+        if self.worker.clientsDelegate?.clients?(self.worker, openWindow: parsedURL, jsp.processCallback) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement openWindow()"))
         }
-
 
         return jsp.jsValue
     }

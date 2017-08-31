@@ -15,15 +15,15 @@ import ServiceWorker
     public var id: String
 
     public var url: URL
-    
+
     public let origin: URL
     public var readyRegistration: ServiceWorkerRegistration?
     fileprivate var _ready: Promise<ServiceWorkerRegistration>?
     fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)?
     fileprivate var registrationChangeListener: Listener<ServiceWorkerRegistration>?
     fileprivate var workerChangeListener: Listener<ServiceWorker>?
-    
-    let registrationFactory:WorkerRegistrationFactory
+
+    let registrationFactory: WorkerRegistrationFactory
 
     public var controller: ServiceWorker?
 
@@ -57,7 +57,7 @@ import ServiceWorker
         components.path = "/"
         components.queryItems = nil
         self.origin = components.url!
-        
+
         self.registrationFactory = withFactory
 
         super.init()
@@ -116,7 +116,6 @@ import ServiceWorker
         //            }
         //        }
     }
-
 
     fileprivate var defaultScope: URL {
         if self.url.absoluteString.hasSuffix("/") == false {
@@ -182,11 +181,11 @@ import ServiceWorker
             }
         }
         .then { regId -> ServiceWorkerRegistration? in
-            
+
             guard let reg = regId else {
                 return nil
             }
-            
+
             return try self.registrationFactory.get(byId: reg)
         }
     }
@@ -221,11 +220,11 @@ import ServiceWorker
             if workerURL.absoluteString.starts(with: maxScope.absoluteString) == false {
                 throw ErrorMessage("Script must be within scope")
             }
-            
+
             let existingRegistration = try self.registrationFactory.get(byScope: scopeURL)
 
             let reg = try existingRegistration ?? self.registrationFactory.create(scope: scopeURL)
-            
+
             return reg.register(workerURL)
                 .then { (worker, installationPromise) -> ServiceWorkerRegistration in
 
@@ -238,9 +237,9 @@ import ServiceWorker
                 }
         }
     }
-    
-    public var windowClientDelegate: WindowClientProtocol? = nil
-    
+
+    public var windowClientDelegate: WindowClientProtocol?
+
     public func focus(_ cb: (Error?, WindowClientProtocol?) -> Void) {
         if let delegate = self.windowClientDelegate {
             delegate.focus(cb)
@@ -248,7 +247,7 @@ import ServiceWorker
             cb(ErrorMessage("Container has no windowClientDelegate"), nil)
         }
     }
-    
+
     public func navigate(to: URL, _ cb: (Error?, WindowClientProtocol?) -> Void) {
         if let delegate = self.windowClientDelegate {
             delegate.navigate(to: to, cb)
@@ -256,29 +255,25 @@ import ServiceWorker
             cb(ErrorMessage("Container has no windowClientDelegate"), nil)
         }
     }
-    
+
     public var focused: Bool {
-        get {
-            if let delegate = self.windowClientDelegate {
-                return delegate.focused
-            } else {
-                Log.error?("Tried to fetch focused state of ServiceWorkerContainer when no windowClientDelegate is set")
-                return false
-            }
+        if let delegate = self.windowClientDelegate {
+            return delegate.focused
+        } else {
+            Log.error?("Tried to fetch focused state of ServiceWorkerContainer when no windowClientDelegate is set")
+            return false
         }
     }
-    
+
     public var visibilityState: WindowClientVisibilityState {
-        get {
-            if let delegate = self.windowClientDelegate {
-                return delegate.visibilityState
-            } else {
-                Log.error?("Tried to fetch visibility state of ServiceWorkerContainer when no windowClientDelegate is set")
-                return WindowClientVisibilityState.Hidden
-            }
+        if let delegate = self.windowClientDelegate {
+            return delegate.visibilityState
+        } else {
+            Log.error?("Tried to fetch visibility state of ServiceWorkerContainer when no windowClientDelegate is set")
+            return WindowClientVisibilityState.Hidden
         }
     }
-    
+
     public func postMessage(message: Any?, transferable: [Any]?) {
         if let delegate = self.windowClientDelegate {
             return delegate.postMessage(message: message, transferable: transferable)
@@ -286,16 +281,13 @@ import ServiceWorker
             Log.error?("Tried to postMessage to ServiceWorkerContainer when no windowClientDelegate is set")
         }
     }
-    
+
     public var type: ClientType {
-        get {
-            if let delegate = self.windowClientDelegate {
-                return delegate.type
-            } else {
-                Log.error?("Tried to fetch ClientType of ServiceWorkerContainer when no windowClientDelegate is set")
-                return ClientType.Window
-            }
+        if let delegate = self.windowClientDelegate {
+            return delegate.type
+        } else {
+            Log.error?("Tried to fetch ClientType of ServiceWorkerContainer when no windowClientDelegate is set")
+            return ClientType.Window
         }
     }
-    
 }

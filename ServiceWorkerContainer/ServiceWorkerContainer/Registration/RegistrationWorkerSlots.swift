@@ -8,10 +8,9 @@
 
 import Foundation
 
-enum RegistrationWorkerSlot : String {
-    case active = "active";
-    case waiting = "waiting";
-    case installing = "installing";
-    case redundant = "redundant";
+enum RegistrationWorkerSlot: String {
+    case active
+    case waiting
+    case installing
+    case redundant
 }
-

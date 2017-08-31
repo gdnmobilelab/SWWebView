@@ -15,12 +15,12 @@ class ImportScriptsTests: XCTestCase {
     override func tearDown() {
         ServiceWorkerTestDelegate.reset()
     }
-    
+
     func testImportingAScript() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
-        ServiceWorkerTestDelegate.importScripts = { urls, worker, cb in
+        ServiceWorkerTestDelegate.importScripts = { urls, _, cb in
             XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
             cb(nil, ["testValue = 'hello';"])
         }
@@ -34,9 +34,9 @@ class ImportScriptsTests: XCTestCase {
 
     func testImportingMultipleScripts() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
-        ServiceWorkerTestDelegate.importScripts = { urls, worker, cb in
+        ServiceWorkerTestDelegate.importScripts = { urls, _, cb in
             XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
             XCTAssertEqual(urls[1].absoluteString, "http://www.example.com/test2.js")
             cb(nil, ["testValue = 'hello';", "testValue = 'hello2';"])
@@ -51,14 +51,13 @@ class ImportScriptsTests: XCTestCase {
 
     func testImportingWithAsyncOperation() {
 
-        let sw = ServiceWorker.createTestWorker(id:self.name)
+        let sw = ServiceWorker.createTestWorker(id: self.name)
 
-        ServiceWorkerTestDelegate.importScripts = { (urls, worker, cb) in
-         
-            DispatchQueue.global().async{
+        ServiceWorkerTestDelegate.importScripts = { _, _, cb in
+
+            DispatchQueue.global().async {
                 cb(nil, ["testValue = 'hello';"])
             }
-
         }
 
         sw.evaluateScript("importScripts('test.js'); testValue;")

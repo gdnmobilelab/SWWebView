@@ -178,7 +178,7 @@ public class SQLiteConnection {
     }
 
     fileprivate func bindValue(_ statement: OpaquePointer, idx: Int32, value: Any?) throws {
-        
+
         if value == nil {
             sqlite3_bind_null(statement, idx)
         } else if let int32Value = value as? Int32 {

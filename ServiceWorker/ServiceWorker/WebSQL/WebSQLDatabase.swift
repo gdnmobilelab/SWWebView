@@ -28,7 +28,7 @@ import JavaScriptCore
     deinit {
         self.close()
     }
-    
+
     func close() {
         do {
             if self.connection.open == true {
@@ -41,38 +41,35 @@ import JavaScriptCore
 
     static func openDatabase(for worker: ServiceWorker, name: String) throws -> WebSQLDatabase {
 
-            guard let host = worker.url.host else {
-                throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
-            }
-            
-            guard let escapedOrigin = host.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
-                throw ErrorMessage("Could not create percent-escaped origin for WebSQL")
-            }
+        guard let host = worker.url.host else {
+            throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
+        }
 
-            guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
-                throw ErrorMessage("Could not escape SQLite database filename")
-            }
-            
-            guard let storageURL = worker.delegate?.storageURL else {
-                throw ErrorMessage("You must set a ServiceWorkerDelegate with a storageURL property to use storage")
-            }
+        guard let escapedOrigin = host.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
+            throw ErrorMessage("Could not create percent-escaped origin for WebSQL")
+        }
 
-            let dbDirectory = storageURL
-                .appendingPathComponent(escapedOrigin, isDirectory: true)
-                .appendingPathComponent("websql", isDirectory: true)
+        guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
+            throw ErrorMessage("Could not escape SQLite database filename")
+        }
 
-            let dbURL = dbDirectory
-                .appendingPathComponent(escapedName)
-                .appendingPathExtension("sqlite")
+        guard let storageURL = worker.delegate?.storageURL else {
+            throw ErrorMessage("You must set a ServiceWorkerDelegate with a storageURL property to use storage")
+        }
 
-        
-            if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
-                try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
-            }
+        let dbDirectory = storageURL
+            .appendingPathComponent(escapedOrigin, isDirectory: true)
+            .appendingPathComponent("websql", isDirectory: true)
 
-            let db = try WebSQLDatabase(at: dbURL)
-            return db
-       
-    
+        let dbURL = dbDirectory
+            .appendingPathComponent(escapedName)
+            .appendingPathExtension("sqlite")
+
+        if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
+            try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
+        }
+
+        let db = try WebSQLDatabase(at: dbURL)
+        return db
     }
 }

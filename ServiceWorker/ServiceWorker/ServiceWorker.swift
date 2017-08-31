@@ -14,17 +14,15 @@ import PromiseKit
 
     public let url: URL
     public let id: String
-    
-    weak public var delegate:ServiceWorkerDelegate? = nil
-    weak public var clientsDelegate: ServiceWorkerClientsDelegate? = nil
+
+    public weak var delegate: ServiceWorkerDelegate?
+    public weak var clientsDelegate: ServiceWorkerClientsDelegate?
 
     public var registration: ServiceWorkerRegistrationProtocol {
-        get {
-            if let reg = self.delegate?.getRegistration?(for: self) {
-                return reg
-            }
-            return EmptyServiceWorkerRegistration()
+        if let reg = self.delegate?.getRegistration?(for: self) {
+            return reg
         }
+        return EmptyServiceWorkerRegistration()
     }
 
     let loadContent: (ServiceWorker) -> String
@@ -43,7 +41,7 @@ import PromiseKit
             }
         }
     }
-    
+
     fileprivate func setJSContextDebuggingName() {
         if let exec = self._executionEnvironment {
             exec.jsContextName = "\(self.url.absoluteString) (\(self.state.rawValue))"
@@ -113,7 +111,7 @@ import PromiseKit
 
         return firstly {
             let env = try ServiceWorkerExecutionEnvironment(self)
-            
+
             let script = loadContent(self)
             return env.evaluateScript(script, withSourceURL: self.url)
                 .then { _ -> ServiceWorkerExecutionEnvironment in
