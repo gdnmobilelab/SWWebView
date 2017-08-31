@@ -27,13 +27,11 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister,
     ]
 
-    // These are two separate sets because multiple EventStreams can share a
-    // ServiceWorkerContainer. Technically they shouldn't, but we don't have
-    // any way of differentating them when requests come in.
-    var containers = Set<ServiceWorkerContainer>()
+    /// Track the streams we currently have open, so that when one is stopped we know where
+    /// it came from
     var eventStreams = Set<EventStream>()
 
-    public func webView(_: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webview: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
 
         // WKURLSchemeTask can fail even when using didFailWithError if the task
         // has already been closed. We handle that in SWURLSchemeTask but first
@@ -51,9 +49,13 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         // worrying about if the task will fail.
 
         firstly { () -> Promise<Void> in
+            
+            guard let swWebView = webview as? SWWebView else {
+                throw ErrorMessage("SWWebViewBridge must be used with an SWWebView")
+            }
 
             if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
-                return try self.startServiceWorkerTask(modifiedTask)
+                return try self.startServiceWorkerTask(modifiedTask, webview: swWebView)
             }
 
             // Need to flesh this out, but for now we're using this for tests
@@ -95,7 +97,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         }
     }
 
-    func startServiceWorkerTask(_ task: SWURLSchemeTask) throws -> Promise<Void> {
+    func startServiceWorkerTask(_ task: SWURLSchemeTask, webview:SWWebView) throws -> Promise<Void> {
 
         guard let requestURL = task.request.url else {
             throw ErrorMessage("Cannot start a task with no URL")
@@ -103,7 +105,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
 
         if requestURL.path == SWWebViewBridge.eventStreamPath {
 
-            try self.startEventStreamTask(task)
+            try self.startEventStreamTask(task, webview: webview)
 
             // Since the event stream stays alive indefinitely, we just early return
             // a void promise
@@ -114,7 +116,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             throw ErrorMessage("All non-event stream SW API tasks must send a referer header")
         }
 
-        guard let container = self.containers.first(where: { $0.url.absoluteString == referrer.absoluteString }) else {
+        guard let container = webview.containerDelegate?.container(webview, getContainerFor: referrer) else {
             throw ErrorMessage("ServiceWorkerContainer should already exist before any tasks are run")
         }
 
@@ -154,8 +156,12 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         }
     }
 
-    func startEventStreamTask(_ task: SWURLSchemeTask) throws {
+    func startEventStreamTask(_ task: SWURLSchemeTask, webview: SWWebView) throws {
 
+        guard let containerDelegate = webview.containerDelegate else {
+            throw ErrorMessage("SWWebView has no containerDelegate set, cannot start service worker functionality")
+        }
+        
         guard let requestURL = task.request.url else {
             throw ErrorMessage("Cannot start event stream with no URL")
         }
@@ -171,31 +177,31 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             throw ErrorMessage("Could not parse path-relative URL")
         }
 
-        let container = try self.containers.first(where: { $0.url.absoluteString == fullPageURL.absoluteString }) ?? {
-            let newContainer = try ServiceWorkerContainer(forURL: fullPageURL.absoluteURL)
-            self.containers.insert(newContainer)
-            return newContainer
-        }()
+        let container = try containerDelegate.container(webview, createContainerFor: fullPageURL.absoluteURL)
 
         let newStream = try EventStream(for: task, withContainer: container)
         self.eventStreams.insert(newStream)
     }
 
-    public func webView(_: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webview: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
 
         guard let existingTask = SWURLSchemeTask.getExistingTask(for: urlSchemeTask) else {
             Log.error?("Stopping a task that isn't currently running - this should never happen")
             return
         }
         existingTask.close()
+        
         if let stream = self.eventStreams.first(where: { $0.task.hash == existingTask.hash }) {
             stream.shutdown()
             self.eventStreams.remove(stream)
-
-            if self.eventStreams.first(where: { $0.container == stream.container }) == nil {
-                // We have no other streams using this container, so we can safely remove it.
-                self.containers.remove(stream.container)
+            
+            guard let swWebView = webview as? SWWebView else {
+                Log.error?("Tried to use SWWebViewBridge with a non-SWWebView class")
+                return
             }
+            
+            swWebView.containerDelegate?.container(swWebView, freeContainer: stream.container)
+            
         }
     }
 }

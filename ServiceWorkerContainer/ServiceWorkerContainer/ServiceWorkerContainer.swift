@@ -135,16 +135,16 @@ import ServiceWorker
 
             let like = components.url!.absoluteString + "%"
 
-            return try db.select(sql: "SELECT scope FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
+            return try db.select(sql: "SELECT id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
 
-                var scopes: [URL] = []
+                var ids: [String] = []
 
                 while resultSet.next() {
-                    scopes.append(try resultSet.url("scope")!)
+                    ids.append(try resultSet.string("id")!)
                 }
 
-                return try scopes.map { scope in
-                    guard let reg = try self.registrationFactory.get(byScope: scope) else {
+                return try ids.map { id in
+                    guard let reg = try self.registrationFactory.get(byId: id) else {
                         throw ErrorMessage("Could not create registration that exists in database")
                     }
                     return reg

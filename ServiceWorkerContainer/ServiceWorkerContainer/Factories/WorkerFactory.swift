@@ -14,7 +14,7 @@ import PromiseKit
 public class WorkerFactory {
 
     fileprivate let workerStorage = NSHashTable<ServiceWorker>.weakObjects()
-    public var clientsDelegate: WorkerClientsProtocol?
+    public var clientsDelegate: ServiceWorkerClientsDelegate?
 
     public init() {
     }
@@ -22,7 +22,7 @@ public class WorkerFactory {
     func get(id: String, withRegistration registration: ServiceWorkerRegistration) throws -> ServiceWorker {
         let workerWanted = workerStorage.allObjects.filter { $0.id == id }
 
-        guard let delegate = self.clientsDelegate else {
+        guard let clientDelegate = self.clientsDelegate else {
             throw ErrorMessage("Must have a clientsDelegate set")
         }
 
@@ -53,9 +53,9 @@ public class WorkerFactory {
 
                 let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
 
-                let implementations = WorkerImplementations(registration: registration, clients: delegate, importScripts: ServiceWorkerHooks.importScripts)
-
-                return ServiceWorker(id: id, url: try resultSet.url("url")!, implementations: implementations, state: state, loadContent: ServiceWorkerHooks.loadContent)
+                let worker = ServiceWorker(id: id, url: try resultSet.url("url")!, state: state, loadContent: ServiceWorkerHooks.loadContent)
+                worker.clientsDelegate = clientDelegate
+                return worker
             }
         }
 

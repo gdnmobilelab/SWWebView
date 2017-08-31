@@ -15,7 +15,7 @@ public class WorkerRegistrationFactory {
 
     fileprivate let activeRegistrations = NSHashTable<ServiceWorkerRegistration>.weakObjects()
 
-    init(withWorkerFactory workerFactory: WorkerFactory) {
+    public init(withWorkerFactory workerFactory: WorkerFactory) {
         self.workerFactory = workerFactory
     }
 

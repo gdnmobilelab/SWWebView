@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A35AE991F58669C00E63EF5 /* SWWebViewContainerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */; };
+		8A35AE9B1F5869CB00E63EF5 /* SWWebViewCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */; };
 		8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */; };
 		8A43C17A1F4DD889001221C1 /* SWWebViewBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */; };
 		8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97FE1F3CC607002E521F /* ToJSON.swift */; };
@@ -29,7 +31,6 @@
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */; };
-		8AC7FF021F54817600A8C2FB /* BridgeClientManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7FF011F54817600A8C2FB /* BridgeClientManager.swift */; };
 		8AF85D531F38BA1D001B0A87 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */; };
 		8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D561F38BB70001B0A87 /* SWWebView.swift */; };
 		8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */; };
@@ -51,6 +52,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewContainerDelegate.swift; sourceTree = "<group>"; };
+		8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewCoordinator.swift; sourceTree = "<group>"; };
 		8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerInstallationError.swift; sourceTree = "<group>"; };
 		8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewBridge.swift; sourceTree = "<group>"; };
 		8A5D97FE1F3CC607002E521F /* ToJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToJSON.swift; sourceTree = "<group>"; };
@@ -77,7 +80,6 @@
 		8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewTests.swift; sourceTree = "<group>"; };
 		8AA76F5E1F38B81700EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
-		8AC7FF011F54817600A8C2FB /* BridgeClientManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeClientManager.swift; sourceTree = "<group>"; };
 		8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorkerContainer.framework; path = "../ServiceWorkerContainer/build/Debug-iphoneos/ServiceWorkerContainer.framework"; sourceTree = "<group>"; };
 		8AF85D561F38BB70001B0A87 /* SWWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebView.swift; sourceTree = "<group>"; };
 		8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewNavigationDelegate.swift; sourceTree = "<group>"; };
@@ -120,11 +122,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A35AE971F58668D00E63EF5 /* Interop */ = {
+			isa = PBXGroup;
+			children = (
+				8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */,
+				8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */,
+			);
+			path = Interop;
+			sourceTree = "<group>";
+		};
 		8A43C1781F4DD87D001221C1 /* Bridge */ = {
 			isa = PBXGroup;
 			children = (
 				8A43C1791F4DD889001221C1 /* SWWebViewBridge.swift */,
-				8AC7FF011F54817600A8C2FB /* BridgeClientManager.swift */,
 			);
 			path = Bridge;
 			sourceTree = "<group>";
@@ -179,6 +189,7 @@
 		8AA76F501F38B81600EFB4E1 /* SWWebView */ = {
 			isa = PBXGroup;
 			children = (
+				8A35AE971F58668D00E63EF5 /* Interop */,
 				8A43C1781F4DD87D001221C1 /* Bridge */,
 				8A5D97FD1F3CC5F1002E521F /* ToJSONExtensions */,
 				8AF85DB01F3B6848001B0A87 /* CommandBridge */,
@@ -457,15 +468,16 @@
 				8A43C17A1F4DD889001221C1 /* SWWebViewBridge.swift in Sources */,
 				8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */,
 				8AF85D5C1F38E4EF001B0A87 /* SWNavigationAction.swift in Sources */,
+				8A35AE991F58669C00E63EF5 /* SWWebViewContainerDelegate.swift in Sources */,
 				8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */,
 				8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */,
 				8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */,
 				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
-				8AC7FF021F54817600A8C2FB /* BridgeClientManager.swift in Sources */,
 				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,
 				8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */,
 				8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */,
 				8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */,
+				8A35AE9B1F5869CB00E63EF5 /* SWWebViewCoordinator.swift in Sources */,
 				8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */,
 				8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */,
 				8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */,

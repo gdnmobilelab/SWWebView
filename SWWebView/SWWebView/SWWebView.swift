@@ -15,8 +15,9 @@ public class SWWebView: WKWebView {
     static let ServiceWorkerScheme = "sw"
 
     public var serviceWorkerPermittedDomains: [String] = []
-    fileprivate var swNavigationDelegate: SWWebViewNavigationDelegate!
+    fileprivate let swNavigationDelegate: SWWebViewNavigationDelegate
     fileprivate var bridge: SWWebViewBridge!
+    public weak var containerDelegate: SWWebViewContainerDelegate? = nil
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -82,10 +83,10 @@ public class SWWebView: WKWebView {
 
         self.bridge = SWWebViewBridge()
         SWWebView.addSWHooksToConfiguration(configuration, bridge: self.bridge)
-
+        self.swNavigationDelegate = SWWebViewNavigationDelegate()
         super.init(frame: frame, configuration: configuration)
 
-        self.swNavigationDelegate = SWWebViewNavigationDelegate(for: self)
+        
 
         super.navigationDelegate = self.swNavigationDelegate
     }
@@ -101,7 +102,7 @@ public class SWWebView: WKWebView {
             return super.load(request)
         }
 
-        let transformedRequest = self.swNavigationDelegate!.makeServiceWorkerSuitableURLRequest(request)
+        let transformedRequest = self.swNavigationDelegate.makeServiceWorkerSuitableURLRequest(self, request: request)
 
         return super.load(transformedRequest)
     }
@@ -112,7 +113,7 @@ public class SWWebView: WKWebView {
             if url.scheme != SWWebView.ServiceWorkerScheme {
                 return url
             } else {
-                return self.swNavigationDelegate!.makeNonServiceWorker(url: url)
+                return self.swNavigationDelegate.makeNonServiceWorker(url: url)
             }
         } else {
             return nil
