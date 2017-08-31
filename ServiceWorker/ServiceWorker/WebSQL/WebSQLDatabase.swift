@@ -39,27 +39,25 @@ import JavaScriptCore
         }
     }
 
-    static func createOpenDatabaseFunction(for url: URL, keepTrackIn: NSHashTable<WebSQLDatabase>) -> AnyObject {
+    static func openDatabase(for worker: ServiceWorker, name: String) throws -> WebSQLDatabase {
 
-        let escapedOrigin = url.host!.addingPercentEncoding(withAllowedCharacters: .alphanumerics)!
-
-        let open: @convention(block) (JSValue, String, Int, JSValue?) -> WebSQLDatabase? = { name, _, _, _ in
-
-            // Since we're only using this so that IndexedDBShim can use it, we can skip some unnecessary
-            // features - for instance, it doesn't use DB versions, so we'll ignore that.
-
-            // name is a JSValue just so that we can grab a reference to its JSContext if we need
-            // to throw an error.
-
-            if ServiceWorker.storageURL == nil {
-                let errorText = "Tried to create a WebSQL database without setting the storage URL for ServiceWorker"
-                Log.error?(errorText)
-                name.context.exception = JSValue(newErrorFromMessage: errorText, in: name.context)
+            guard let host = worker.url.host else {
+                throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
+            }
+            
+            guard let escapedOrigin = host.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
+                throw ErrorMessage("Could not create percent-escaped origin for WebSQL")
             }
 
-            let escapedName = name.toString().addingPercentEncoding(withAllowedCharacters: .alphanumerics)!
+            guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
+                throw ErrorMessage("Could not escape SQLite database filename")
+            }
+            
+            guard let storageURL = worker.delegate?.storageURL else {
+                throw ErrorMessage("You must set a ServiceWorkerDelegate with a storageURL property to use storage")
+            }
 
-            let dbDirectory = ServiceWorker.storageURL!
+            let dbDirectory = storageURL
                 .appendingPathComponent(escapedOrigin, isDirectory: true)
                 .appendingPathComponent("websql", isDirectory: true)
 
@@ -67,22 +65,14 @@ import JavaScriptCore
                 .appendingPathComponent(escapedName)
                 .appendingPathExtension("sqlite")
 
-            do {
-                if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
-                    try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
-                }
-
-                let db = try WebSQLDatabase(at: dbURL)
-                keepTrackIn.add(db)
-                return db
-            } catch {
-                let err = JSValue(newErrorFromMessage: "\(error)", in: name.context)
-                name.context.exception = err
-                Log.error?("\(error)")
-                return nil
+        
+            if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
+                try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
             }
-        }
 
-        return unsafeBitCast(open, to: AnyObject.self)
+            let db = try WebSQLDatabase(at: dbURL)
+            return db
+       
+    
     }
 }

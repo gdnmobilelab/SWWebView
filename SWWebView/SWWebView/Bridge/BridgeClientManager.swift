@@ -8,11 +8,15 @@
 
 import Foundation
 import ServiceWorker
+import ServiceWorkerContainer
 
 public class BridgeClientManager: WorkerClientsProtocol {
     
+    let workerFactory:WorkerFactory
+    
     public init() {
-        
+        self.workerFactory = WorkerFactory()
+        self.workerFactory.clientsDelegate = self
     }
     
     public func get(id: String, worker: ServiceWorker, _ cb: (Error?, ClientProtocol?) -> Void) {
@@ -30,6 +34,5 @@ public class BridgeClientManager: WorkerClientsProtocol {
     public func claim(_ cb: (Error?) -> Void) {
         
     }
-    
     
 }

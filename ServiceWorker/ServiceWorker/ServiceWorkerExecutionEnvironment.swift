@@ -10,8 +10,9 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-@objc public class ServiceWorkerExecutionEnvironment: NSObject {
-
+@objc public class ServiceWorkerExecutionEnvironment: NSObject, ServiceWorkerGlobalScopeDelegate {
+    
+    unowned let worker:ServiceWorker
     fileprivate let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
@@ -35,7 +36,7 @@ import PromiseKit
     }
 
     @objc public init(_ worker: ServiceWorker) throws {
-
+        self.worker = worker
         self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
         
@@ -53,6 +54,8 @@ import PromiseKit
             // collected
             self.currentException = error
         }
+        
+        self.globalScope.delegate = self
     }
 
     deinit {
@@ -92,6 +95,73 @@ import PromiseKit
 
                 return returnVal
             })
+    }
+    
+    func importScripts(urls: [URL]) throws {
+        
+        guard let delegate = self.worker.delegate else {
+            throw ErrorMessage("No ServiceWorkerDelegate to import scripts")
+        }
+        
+        guard let importScriptsDelegate = delegate.importScripts else {
+            throw ErrorMessage("ServiceWorkerDelegate does not implement importScript")
+        }
+        
+        self.dispatchQueue.sync {
+        
+            // We want our worker execution thread to pause at this point, so that
+            // we can do remote fetching of content.
+            
+            let semaphore = DispatchSemaphore(value: 0)
+            
+            var error: Error? = nil
+            var scripts: [String]? = nil
+            
+            DispatchQueue.global().async {
+                
+                // Now, outside of our worker thread, we fetch the scripts
+                
+                importScriptsDelegate(urls, self.worker) { err, importedScripts in
+                    error = err
+                    scripts = importedScripts
+                    
+                    // With the variables set, we can now resume on our worker thread.
+                    semaphore.signal()
+                }
+                
+            }
+            
+            // Wait for the above code to execute
+            semaphore.wait()
+            
+            // Now we have our scripts (or error) and can process.
+            do {
+                if let err = error {
+                   throw err
+                }
+                
+                guard let allScripts = scripts else {
+                    throw ErrorMessage("importScripts() returned no error, but no scripts either")
+                }
+                
+                try allScripts.enumerated().forEach { (idx, script) in
+                    
+                    if idx > urls.count - 1 {
+                         throw ErrorMessage("More scripts were returned than were requested")
+                    }
+                    
+                    let scriptURL = urls[idx]
+                    
+                    self.jsContext.evaluateScript(script, withSourceURL: scriptURL)
+                }
+                
+            } catch {
+                let jsError = JSValue(newErrorFromMessage: "\(error)", in: self.jsContext)
+                self.jsContext.exception = jsError
+            }
+            
+        }
+        
     }
 
     /// We want to run our JSContext on its own thread, but every now and then we need to

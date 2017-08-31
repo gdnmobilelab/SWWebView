@@ -14,10 +14,10 @@
 		8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */; };
 		8A2360061F34F7BE00969268 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8A2360011F34F3AE00969268 /* js-dist */; };
 		8A315BF21F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */; };
+		8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */; };
+		8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */; };
 		8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */; };
 		8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */; };
-		8A43C1801F4F223B001221C1 /* WorkerImplementations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17F1F4F223B001221C1 /* WorkerImplementations.swift */; };
-		8A43C1831F4F229F001221C1 /* EmptyWorkerClients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1821F4F229F001221C1 /* EmptyWorkerClients.swift */; };
 		8A43C1871F4F29A2001221C1 /* ClientMatchAllOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */; };
 		8A43C18A1F4F2C79001221C1 /* Clients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1891F4F2C79001221C1 /* Clients.swift */; };
 		8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C18B1F4F32CD001221C1 /* ClientType.swift */; };
@@ -95,7 +95,6 @@
 		8AC7553A1F3240BB00C6B70A /* SQLiteUpdateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */; };
 		8AC7553B1F3240BB00C6B70A /* SQLiteUpdateOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */; };
 		8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */; };
-		8AC7FF051F548A3400A8C2FB /* EmptyImportScriptsCallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */; };
 		8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */; };
 		8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72C1F50755B00F444B6 /* LocationBase.swift */; };
 		8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72F1F507E9600F444B6 /* JSURL.swift */; };
@@ -121,10 +120,10 @@
 		8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLConnection.swift; sourceTree = "<group>"; };
 		8A2360011F34F3AE00969268 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = SOURCE_ROOT; };
 		8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZZZ_TestEndChecks.swift; sourceTree = "<group>"; };
+		8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerDelegate.swift; sourceTree = "<group>"; };
+		8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerGlobalScopeDelegate.swift; sourceTree = "<group>"; };
 		8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientProtocol.swift; sourceTree = "<group>"; };
 		8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerClientsProtocol.swift; sourceTree = "<group>"; };
-		8A43C17F1F4F223B001221C1 /* WorkerImplementations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerImplementations.swift; sourceTree = "<group>"; };
-		8A43C1821F4F229F001221C1 /* EmptyWorkerClients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyWorkerClients.swift; sourceTree = "<group>"; };
 		8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientMatchAllOptions.swift; sourceTree = "<group>"; };
 		8A43C1891F4F2C79001221C1 /* Clients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clients.swift; sourceTree = "<group>"; };
 		8A43C18B1F4F32CD001221C1 /* ClientType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientType.swift; sourceTree = "<group>"; };
@@ -201,7 +200,6 @@
 		8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateMonitor.swift; sourceTree = "<group>"; };
 		8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateOperation.swift; sourceTree = "<group>"; };
 		8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLDatabase.swift; sourceTree = "<group>"; };
-		8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyImportScriptsCallback.swift; sourceTree = "<group>"; };
 		8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestTests.swift; sourceTree = "<group>"; };
 		8ACCD72C1F50755B00F444B6 /* LocationBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBase.swift; sourceTree = "<group>"; };
 		8ACCD72F1F507E9600F444B6 /* JSURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSURL.swift; sourceTree = "<group>"; };
@@ -245,8 +243,6 @@
 			isa = PBXGroup;
 			children = (
 				8AC754931F31235200C6B70A /* EmptyServiceWorkerRegistration.swift */,
-				8A43C1821F4F229F001221C1 /* EmptyWorkerClients.swift */,
-				8AC7FF041F548A3400A8C2FB /* EmptyImportScriptsCallback.swift */,
 			);
 			path = Empty;
 			sourceTree = "<group>";
@@ -369,7 +365,7 @@
 				8A43C1841F4F2979001221C1 /* Registration */,
 				8A43C1811F4F227C001221C1 /* Empty */,
 				8AC754941F31235200C6B70A /* NotificationShowOptions.swift */,
-				8A43C17F1F4F223B001221C1 /* WorkerImplementations.swift */,
+				8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */,
 			);
 			path = Interop;
 			sourceTree = "<group>";
@@ -438,6 +434,7 @@
 				8A43C1881F4F2C60001221C1 /* Clients */,
 				8AC754C91F31235200C6B70A /* ConsoleMirror.swift */,
 				8AC754CA1F31235200C6B70A /* ServiceWorkerGlobalScope.swift */,
+				8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */,
 			);
 			path = GlobalScope;
 			sourceTree = "<group>";
@@ -732,7 +729,6 @@
 				8AC754CF1F31252B00C6B70A /* Event.swift in Sources */,
 				8AC754D01F31252B00C6B70A /* EventTarget.swift in Sources */,
 				8AC754D11F31252B00C6B70A /* ExtendableEvent.swift in Sources */,
-				8A43C1801F4F223B001221C1 /* WorkerImplementations.swift in Sources */,
 				8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */,
 				8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */,
 				8AC754D31F31252B00C6B70A /* FetchOperation.swift in Sources */,
@@ -756,7 +752,6 @@
 				8AC754DD1F31252B00C6B70A /* ResponseType.swift in Sources */,
 				8AC754DE1F31252B00C6B70A /* ConsoleMirror.swift in Sources */,
 				8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */,
-				8AC7FF051F548A3400A8C2FB /* EmptyImportScriptsCallback.swift in Sources */,
 				8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */,
 				8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,
@@ -769,6 +764,7 @@
 				8A43C1871F4F29A2001221C1 /* ClientMatchAllOptions.swift in Sources */,
 				8AC754E41F31252B00C6B70A /* JSPromise.swift in Sources */,
 				8AC754E51F31252B00C6B70A /* PromiseToJSPromise.swift in Sources */,
+				8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */,
 				8AC754E61F31252B00C6B70A /* TimeoutManager.swift in Sources */,
 				8AC755361F3240BB00C6B70A /* SQLiteBlobStream.swift in Sources */,
 				8A2264AE1F33C6C700B48902 /* WebSQLResultSet.swift in Sources */,
@@ -781,11 +777,11 @@
 				8ACCD7341F50936600F444B6 /* WorkerLocation.swift in Sources */,
 				8A43C18A1F4F2C79001221C1 /* Clients.swift in Sources */,
 				8AC754EB1F31252B00C6B70A /* ServiceWorkerInstallState.swift in Sources */,
+				8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */,
 				8AC754EC1F31252B00C6B70A /* ReadableStream.swift in Sources */,
 				8AC754ED1F31252B00C6B70A /* ReadableStreamController.swift in Sources */,
 				8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */,
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
-				8A43C1831F4F229F001221C1 /* EmptyWorkerClients.swift in Sources */,
 				8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */,
 				8A43C1901F4F346F001221C1 /* Client.swift in Sources */,
 			);

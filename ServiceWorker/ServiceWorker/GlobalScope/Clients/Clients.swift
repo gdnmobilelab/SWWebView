@@ -27,7 +27,8 @@ import JavaScriptCore
     func get(_ id: String) -> JSValue {
 
         let jsp = JSPromise(context: JSContext.current())
-        self.worker.implementations.clients.get(id: id, worker: self.worker) { err, clientProtocol in
+        
+        if self.worker.delegate?.clients?(getById: id, for: worker, { err, clientProtocol in
             if let error = err {
                 jsp.reject(error)
             } else if let clientExists = clientProtocol {
@@ -35,7 +36,10 @@ import JavaScriptCore
             } else {
                 jsp.fulfill(nil)
             }
+        }) == nil {
+            jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement get()"))
         }
+        
         return jsp.jsValue
     }
 
@@ -47,16 +51,18 @@ import JavaScriptCore
         let includeUncontrolled = options?["includeUncontrolled"] as? Bool ?? false
 
         let options = ClientMatchAllOptions(includeUncontrolled: includeUncontrolled, type: type)
-
-        self.worker.implementations.clients.matchAll(options: options) { err, clientProtocols in
+        
+        if self.worker.delegate?.clients?(matchAll: options, for: self.worker, { err, clientProtocols in
             if let error = err {
                 jsp.reject(error)
             } else {
                 let mapped = clientProtocols!.map({ Client.getOrCreate(from: $0, in: JSContext.current()) })
                 jsp.fulfill(mapped)
             }
+        }) == nil {
+            jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement matchAll()"))
         }
-
+        
         return jsp.jsValue
     }
 
@@ -68,8 +74,11 @@ import JavaScriptCore
             jsp.reject(ErrorMessage("Could not parse URL given"))
             return jsp.jsValue
         }
+        
+        if self.worker.delegate?.clients?(openWindow: parsedURL, jsp.processCallback) == nil {
+            jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement openWindow()"))
+        }
 
-        self.worker.implementations.clients.openWindow(parsedURL, jsp.processCallback)
 
         return jsp.jsValue
     }
@@ -78,7 +87,9 @@ import JavaScriptCore
 
         let jsp = JSPromise(context: JSContext.current())
 
-        self.worker.implementations.clients.claim(jsp.processCallback)
+        if self.worker.delegate?.clients?(claimForWorker: self.worker, jsp.processCallback) == nil {
+            jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement claim()"))
+        }
 
         return jsp.jsValue
     }

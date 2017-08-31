@@ -12,13 +12,17 @@ import JavaScriptCore
 
 class ImportScriptsTests: XCTestCase {
 
+    override func tearDown() {
+        ServiceWorkerTestDelegate.reset()
+    }
+    
     func testImportingAScript() {
 
         let sw = ServiceWorker.createTestWorker(id:self.name)
 
-        sw.importScripts = { _, scripts in
-            XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")
-            return ["testValue = 'hello';"]
+        ServiceWorkerTestDelegate.importScripts = { urls, worker, cb in
+            XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
+            cb(nil, ["testValue = 'hello';"])
         }
 
         sw.evaluateScript("importScripts('test.js'); testValue;")
@@ -32,10 +36,10 @@ class ImportScriptsTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id:self.name)
 
-        sw.importScripts = { _, scripts in
-            XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")
-            XCTAssertEqual(scripts[1].absoluteString, "http://www.example.com/test2.js")
-            return ["testValue = 'hello';", "testValue = 'hello2';"]
+        ServiceWorkerTestDelegate.importScripts = { urls, worker, cb in
+            XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
+            XCTAssertEqual(urls[1].absoluteString, "http://www.example.com/test2.js")
+            cb(nil, ["testValue = 'hello';", "testValue = 'hello2';"])
         }
 
         sw.evaluateScript("importScripts(['test.js', 'test2.js']); testValue;")
@@ -45,22 +49,16 @@ class ImportScriptsTests: XCTestCase {
             .assertResolves()
     }
 
-    func testImportingWithBlockingSyncOperation() {
+    func testImportingWithAsyncOperation() {
 
         let sw = ServiceWorker.createTestWorker(id:self.name)
 
-        sw.importScripts = { _, scripts in
-            XCTAssertEqual(scripts[0].absoluteString, "http://www.example.com/test.js")
-
-            let semaphore = DispatchSemaphore(value: 0)
-
-            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + .seconds(1)) {
-                semaphore.signal()
+        ServiceWorkerTestDelegate.importScripts = { (urls, worker, cb) in
+         
+            DispatchQueue.global().async{
+                cb(nil, ["testValue = 'hello';"])
             }
 
-            _ = semaphore.wait(timeout: .distantFuture)
-
-            return ["testValue = 'hello';"]
         }
 
         sw.evaluateScript("importScripts('test.js'); testValue;")

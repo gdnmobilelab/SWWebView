@@ -177,9 +177,11 @@ public class SQLiteConnection {
         return result!
     }
 
-    fileprivate func bindValue(_ statement: OpaquePointer, idx: Int32, value: Any) throws {
-
-        if let int32Value = value as? Int32 {
+    fileprivate func bindValue(_ statement: OpaquePointer, idx: Int32, value: Any?) throws {
+        
+        if value == nil {
+            sqlite3_bind_null(statement, idx)
+        } else if let int32Value = value as? Int32 {
             sqlite3_bind_int(statement, idx, int32Value)
         } else if let intValue = value as? Int {
             sqlite3_bind_int(statement, idx, Int32(intValue))
@@ -206,7 +208,7 @@ public class SQLiteConnection {
         return ErrorMessage(errMsg)
     }
 
-    public func update(sql: String, values: [Any]) throws {
+    public func update(sql: String, values: [Any?]) throws {
         var statement: OpaquePointer?
 
         if sqlite3_prepare_v2(self.db!, sql + ";", -1, &statement, nil) != SQLITE_OK {
@@ -237,7 +239,7 @@ public class SQLiteConnection {
         }
     }
 
-    public func insert(sql: String, values: [Any]) throws -> Int64 {
+    public func insert(sql: String, values: [Any?]) throws -> Int64 {
         try self.update(sql: sql, values: values)
 
         return self.lastInsertRowId
@@ -251,7 +253,7 @@ public class SQLiteConnection {
         return sqlite3_last_insert_rowid(self.db!)
     }
 
-    public func select<T>(sql: String, values: [Any], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
+    public func select<T>(sql: String, values: [Any?], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
 
         var statement: OpaquePointer?
 

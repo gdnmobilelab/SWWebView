@@ -22,6 +22,8 @@ import ServiceWorker
     fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)?
     fileprivate var registrationChangeListener: Listener<ServiceWorkerRegistration>?
     fileprivate var workerChangeListener: Listener<ServiceWorker>?
+    
+    let registrationFactory:WorkerRegistrationFactory
 
     public var controller: ServiceWorker?
 
@@ -34,7 +36,7 @@ import ServiceWorker
         /// under the scope of the container has an active worker. It's quite possible that
         /// there will already be an active worker when the container is created, so we check
         /// for that.
-        self.readyRegistration = try ServiceWorkerRegistration.getReadyRegistration(for: self.url)
+        self.readyRegistration = try self.registrationFactory.getReadyRegistration(for: self.url)
 
         if self.readyRegistration != nil {
             self.controller = self.readyRegistration?.active
@@ -47,7 +49,7 @@ import ServiceWorker
         }
     }
 
-    public init(forURL: URL) throws {
+    public init(forURL: URL, withFactory: WorkerRegistrationFactory) throws {
         self.url = forURL
         self.id = UUID().uuidString
 
@@ -55,6 +57,8 @@ import ServiceWorker
         components.path = "/"
         components.queryItems = nil
         self.origin = components.url!
+        
+        self.registrationFactory = withFactory
 
         super.init()
         try self.resetReadyRegistration()
@@ -125,7 +129,9 @@ import ServiceWorker
     fileprivate func getRegistrationsSync() throws -> [ServiceWorkerRegistration] {
         return try CoreDatabase.inConnection { db in
 
-            var components = URLComponents(url: self.url, resolvingAgainstBaseURL: true)!
+            guard var components = URLComponents(url: self.url, resolvingAgainstBaseURL: true) else {
+                throw ErrorMessage("Could not create URL components from registration URL")
+            }
             components.path = "/"
 
             let like = components.url!.absoluteString + "%"
@@ -139,7 +145,10 @@ import ServiceWorker
                 }
 
                 return try scopes.map { scope in
-                    try ServiceWorkerRegistration.get(byScope: scope)!
+                    guard let reg = try self.registrationFactory.get(byScope: scope) else {
+                        throw ErrorMessage("Could not create registration that exists in database")
+                    }
+                    return reg
                 }
             }
         }
@@ -166,14 +175,19 @@ import ServiceWorker
                 if resultSet.next() == false {
                     return Promise(value: nil)
                 }
-                return Promise(value: try resultSet.string("registration_id")!)
+                guard let id = try resultSet.string("registration_id") else {
+                    throw ErrorMessage("Registration in database has no ID")
+                }
+                return Promise(value: id)
             }
         }
         .then { regId -> ServiceWorkerRegistration? in
-            if regId == nil {
+            
+            guard let reg = regId else {
                 return nil
             }
-            return try ServiceWorkerRegistration.get(byId: regId!)
+            
+            return try self.registrationFactory.get(byId: reg)
         }
     }
 
@@ -207,9 +221,12 @@ import ServiceWorker
             if workerURL.absoluteString.starts(with: maxScope.absoluteString) == false {
                 throw ErrorMessage("Script must be within scope")
             }
+            
+            let existingRegistration = try self.registrationFactory.get(byScope: scopeURL)
 
-            let registration = try ServiceWorkerRegistration.getOrCreate(byScope: scopeURL)
-            return registration.register(workerURL)
+            let reg = try existingRegistration ?? self.registrationFactory.create(scope: scopeURL)
+            
+            return reg.register(workerURL)
                 .then { (worker, installationPromise) -> ServiceWorkerRegistration in
 
                     installationPromise
@@ -217,7 +234,7 @@ import ServiceWorker
                             GlobalEventLog.notifyChange(WorkerInstallationError(worker: worker, container: self, error: error))
                         }
 
-                    return registration
+                    return reg
                 }
         }
     }

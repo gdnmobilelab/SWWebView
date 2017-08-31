@@ -16,6 +16,8 @@ import JavaScriptCore
     unowned let context: JSContext
     let clients: Clients
     let location: WorkerLocation
+    
+    weak var delegate: ServiceWorkerGlobalScopeDelegate? = nil
 
     var skipWaitingStatus = false
 
@@ -96,7 +98,7 @@ import JavaScriptCore
     
     // Storing here primarily for tests - we don't expose openDatabase globally, but sometimes
     // we want to use it.
-    internal var openDatabaseFunction: AnyObject?
+    internal var openDatabaseFunction: Any?
     
     fileprivate func loadIndexedDBShim() throws {
 
@@ -114,8 +116,29 @@ import JavaScriptCore
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
         // "self.indexedDB")
         
-        let openDatabaseFunction = WebSQLDatabase.createOpenDatabaseFunction(for: self.worker.url, keepTrackIn: self.activeWebSQLDatabases)
+        let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { [unowned self] (name, version, prettyName, size, callback) in
 
+            do {
+                let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name)
+                // we have to track these to make sure they are all closed when the worker
+                // is destroyed
+                self.activeWebSQLDatabases.add(db)
+                return db
+            }
+            catch {
+                guard let jsc = JSContext.current() else {
+                    Log.error?("Tried to call WebSQL openDatabase outside of a JSContext?")
+                    return nil
+                }
+                
+                let err = JSValue(newErrorFromMessage: "\(error)", in: jsc)
+                jsc.exception = err
+                Log.error?("\(error)")
+                return nil
+            }
+
+        }
+        
         let config: [String: Any] = [
             "DEBUG": true,
             "win": [
@@ -158,6 +181,10 @@ import JavaScriptCore
     internal func importScripts(_ scripts: JSValue) {
         do {
 
+            guard let delegate = self.delegate else {
+                throw ErrorMessage("No global scope delegate set, cannot import scripts")
+            }
+            
             var scriptURLStrings: [String]
 
             // importScripts supports both single files and arrays
@@ -168,18 +195,20 @@ import JavaScriptCore
             }
 
             let scriptURLs = try scriptURLStrings.map { urlString -> URL in
-                let asURL = URL(string: urlString, relativeTo: self.worker.url)
-                if asURL == nil {
+                guard let asURL = URL(string: urlString, relativeTo: self.worker.url) else {
                     throw ErrorMessage("Could not parse URL: " + urlString)
                 }
-                return asURL!
+                return asURL
             }
+            
+            
+            try delegate.importScripts(urls: scriptURLs)
 
-            let scripts = try worker.implementations.importScripts(worker, scriptURLs)
-
-            scripts.enumerated().forEach { arg in
-                self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
-            }
+//            let scripts = try worker.implementations.importScripts(worker, scriptURLs)
+//
+//            scripts.enumerated().forEach { arg in
+//                self.context.evaluateScript(arg.element, withSourceURL: scriptURLs[arg.offset])
+//            }
 
         } catch {
             self.throwErrorIntoJSContext(error: error)

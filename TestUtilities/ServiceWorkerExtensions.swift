@@ -9,6 +9,30 @@
 import Foundation
 import ServiceWorker
 
+class ServiceWorkerTestDelegate : ServiceWorkerDelegate {
+    
+    static var storageURL: URL? = nil
+    
+    internal var storageURL: URL {
+        get {
+            return ServiceWorkerTestDelegate.storageURL!
+        }
+    }
+
+    static func reset() {
+        self.storageURL = nil
+        self.importScripts = nil
+    }
+    
+    static var importScripts: (([URL],ServiceWorker, @escaping (Error?,[String]?) -> Void) -> Void)? = nil
+    
+    func importScripts(at: [URL], for worker: ServiceWorker, _ callback: @escaping (Error?, [String]?) -> Void) {
+        ServiceWorkerTestDelegate.importScripts!(at, worker, callback)
+    }
+    
+    static var instance = ServiceWorkerTestDelegate()
+}
+
 extension ServiceWorker {
     
     static fileprivate func escapeID(_ id:String) -> String {
@@ -17,16 +41,20 @@ extension ServiceWorker {
             .replacingOccurrences(of: " ", with: "_")
     }
     static func createTestWorker(id: String, state: ServiceWorkerInstallState = .activated, content: String = "") -> ServiceWorker {
-        return ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(escapeID(id)).js")!, state: state, content: content)
+        let worker = ServiceWorker(id: id, url: URL(string: "http://www.example.com/\(escapeID(id)).js")!, state: state, content: content)
+        worker.delegate = ServiceWorkerTestDelegate.instance
+        return worker
     }
 
-    static func createTestWorker(id:String, implementations: WorkerImplementations) -> ServiceWorker {
-
-        
-        return ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/\(escapeID(id))")!, implementations: implementations, state: .activated, content: "")
+    static func createTestWorker(id:String) -> ServiceWorker {
+        let worker = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/\(escapeID(id))")!, state: .activated, content: "")
+        worker.delegate = ServiceWorkerTestDelegate.instance
+        return worker
     }
 
     static func createTestWorker(id: String, content: String) -> ServiceWorker {
-        return ServiceWorker.createTestWorker(id: id, state: .activated, content: content)
+        let worker = ServiceWorker.createTestWorker(id: id, state: .activated, content: content)
+        worker.delegate = ServiceWorkerTestDelegate.instance
+        return worker
     }
 }

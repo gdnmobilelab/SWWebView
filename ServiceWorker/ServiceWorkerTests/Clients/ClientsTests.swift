@@ -49,38 +49,45 @@ class ClientsTests: XCTestCase {
         }
     }
 
-    class TestClients: WorkerClientsProtocol {
+    class TestClients: ServiceWorkerDelegate {
 
+        var storageURL: URL {
+            get {
+                return ServiceWorkerTestDelegate.storageURL!
+            }
+        }
+        
         var clients: [ClientProtocol] = []
         var claimFunc: (() -> Void)?
 
-        func get(id: String, worker _: ServiceWorker, _ cb: (Error?, ClientProtocol?) -> Void) {
-            cb(nil, self.clients.first(where: { $0.id == id }))
+        func clients(getById id: String, for: ServiceWorker, _ callback: (Error?, ClientProtocol?) -> Void) {
+            callback(nil, self.clients.first(where: { $0.id == id }))
         }
-
-        func matchAll(options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
+        
+        func clients(matchAll options: ClientMatchAllOptions, for: ServiceWorker, _ cb: (Error?, [ClientProtocol]?) -> Void) {
             cb(nil, self.clients.filter({ client in
-
+                
                 let asTestCase = client as! TestClient
-
+                
                 return (options.type == "all" || options.type == client.type.stringValue) &&
                     (options.includeUncontrolled == true || asTestCase.isControlled == true)
-
+                
             }))
         }
-
-        func openWindow(_ url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
+        
+        func clients(openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
             let newClient = TestWindowClient(id: "NEWCLIENT", type: .Window, url: url, focused: true, visibilityState: .Visible)
             self.clients.append(newClient)
             return cb(nil, newClient)
         }
 
-        func claim(_ cb: (Error?) -> Void) {
+        func clients(claimForWorker: ServiceWorker, _ cb: (Error?) -> Void) {
             if let claim = self.claimFunc {
                 claim()
             }
             cb(nil)
         }
+
     }
 
     func testShouldGetClientByID() {
@@ -88,7 +95,8 @@ class ClientsTests: XCTestCase {
         let testAPI = TestClients()
         testAPI.clients.append(TestClient(id: "TESTCLIENT", type: .Window, url: URL(string: "http://www.example.com")!))
 
-        let worker = ServiceWorker.createTestWorker(id: self.name, implementations: WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name)
+        worker.delegate = testAPI
 
         worker.evaluateScript("""
             Promise.all([
@@ -123,7 +131,8 @@ class ClientsTests: XCTestCase {
         controlled.isControlled = false
         testAPI.clients.append(controlled)
 
-        let worker = ServiceWorker.createTestWorker(id: self.name, implementations:  WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name)
+        worker.delegate = testAPI
 
         worker.evaluateScript("""
             Promise.all([
@@ -177,7 +186,8 @@ class ClientsTests: XCTestCase {
             claimed = true
         }
 
-        let worker = ServiceWorker.createTestWorker(id: self.name, implementations: WorkerImplementations(registration: nil, clients: testAPI))
+        let worker = ServiceWorker.createTestWorker(id: self.name)
+        worker.delegate = testAPI
 
         worker.evaluateScript("""
             self.clients.claim()

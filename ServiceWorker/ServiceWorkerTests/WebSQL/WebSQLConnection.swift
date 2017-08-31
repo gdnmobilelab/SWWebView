@@ -18,7 +18,7 @@ class WebSQLConnectionTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        ServiceWorker.storageURL = self.webSQLTestPath
+        ServiceWorkerTestDelegate.storageURL = self.webSQLTestPath
 
         do {
 

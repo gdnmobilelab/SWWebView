@@ -14,16 +14,19 @@ import PromiseKit
 
     public let url: URL
     public let id: String
+    
+    weak public var delegate:ServiceWorkerDelegate? = nil
 
-    internal let implementations: WorkerImplementations
-
-    var registration: ServiceWorkerRegistrationProtocol {
-        return self.implementations.registration
+    public var registration: ServiceWorkerRegistrationProtocol {
+        get {
+            if let reg = self.delegate?.getRegistration?(for: self) {
+                return reg
+            }
+            return EmptyServiceWorkerRegistration()
+        }
     }
 
     let loadContent: (ServiceWorker) -> String
-
-    public static var storageURL: URL?
 
     fileprivate var _installState: ServiceWorkerInstallState
 
@@ -46,9 +49,8 @@ import PromiseKit
         }
     }
 
-    public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
+    public init(id: String, url: URL, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
 
-        self.implementations = implementations ?? WorkerImplementations()
         self.id = id
         self.url = url
         self.loadContent = loadContent
@@ -56,10 +58,9 @@ import PromiseKit
         super.init()
     }
 
-    public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: ServiceWorkerInstallState, content: String) {
+    public init(id: String, url: URL, state: ServiceWorkerInstallState, content: String) {
         self.id = id
         self.url = url
-        self.implementations = implementations ?? WorkerImplementations()
         self.loadContent = { _ in
             content
         }
@@ -71,10 +72,9 @@ import PromiseKit
         NSLog("deinit worker")
     }
 
-    @objc public init(id: String, url: URL, implementations: WorkerImplementations? = nil, state: String, content: String) throws {
+    @objc public init(id: String, url: URL, state: String, content: String) throws {
         self.id = id
         self.url = url
-        self.implementations = implementations ?? WorkerImplementations()
         self.loadContent = { _ in
             content
         }
