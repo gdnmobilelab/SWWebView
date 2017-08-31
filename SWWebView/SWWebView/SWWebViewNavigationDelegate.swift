@@ -12,7 +12,7 @@ import ServiceWorker
 
 class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
 
-    func isServiceWorkerPermittedURL(_ webview:SWWebView, url: URL) -> Bool {
+    func isServiceWorkerPermittedURL(_ webview: SWWebView, url: URL) -> Bool {
 
         var checkFor = url.host!
         if url.port != nil && url.port != 80 {
@@ -22,7 +22,7 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
         return webview.serviceWorkerPermittedDomains.contains(checkFor)
     }
 
-    func makeServiceWorkerSuitableURLRequest(_ webview:SWWebView, request: URLRequest) -> URLRequest {
+    func makeServiceWorkerSuitableURLRequest(_ webview: SWWebView, request: URLRequest) -> URLRequest {
 
         if request.url!.scheme == SWWebView.ServiceWorkerScheme && self.isServiceWorkerPermittedURL(webview, url: request.url!) == true {
             // already the correct scheme
@@ -76,7 +76,7 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
             Log.error?("Trying to use SWNavigationDelegate on a non-SWWebView class")
             return decisionHandler(.allow)
         }
-        
+
         if navigationAction.request.url == nil {
             // Not sure in what circumstance this would ever happen, but safe to say
             // we don't want our handler to kick in.
@@ -135,7 +135,7 @@ class SWWebViewNavigationDelegate: NSObject, WKNavigationDelegate {
             Log.error?("Trying to use SWNavigationDelegate on a non-SWWebView class")
             return decisionHandler(.allow)
         }
-        
+
         if navigationResponse.response.url == nil || navigationResponse.response.url!.scheme != SWWebView.ServiceWorkerScheme {
 
             // If there is no URL(?) or the URL is not a service worker one, then we just pass it straight through.

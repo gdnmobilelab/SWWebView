@@ -267,8 +267,7 @@ public class SQLiteConnection {
         }
 
         let rs = SQLiteResultSet(statement: statement!)
-        
-        
+
         do {
             let result = try cb(rs)
             rs.open = false

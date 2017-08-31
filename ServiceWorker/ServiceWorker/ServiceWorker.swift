@@ -18,7 +18,7 @@ import PromiseKit
     public weak var delegate: ServiceWorkerDelegate?
     public weak var clientsDelegate: ServiceWorkerClientsDelegate?
 
-    public var registration: ServiceWorkerRegistrationProtocol? = nil
+    public var registration: ServiceWorkerRegistrationProtocol?
 
     let loadContent: (ServiceWorker) -> String
 

@@ -22,17 +22,14 @@ import JavaScriptCore
     var skipWaitingStatus = false
 
     var registration: ServiceWorkerRegistrationProtocol? {
-        get {
-            if self.worker.registration == nil {
-                if let context = JSContext.current() {
-                    if let error = JSValue(newErrorFromMessage: "ServiceWorker has no registration attached", in: context)
-                    {
-                        context.exception = error
-                    }
+        if self.worker.registration == nil {
+            if let context = JSContext.current() {
+                if let error = JSValue(newErrorFromMessage: "ServiceWorker has no registration attached", in: context) {
+                    context.exception = error
                 }
             }
-            return self.worker.registration
         }
+        return self.worker.registration
     }
 
     init(context: JSContext, _ worker: ServiceWorker) throws {

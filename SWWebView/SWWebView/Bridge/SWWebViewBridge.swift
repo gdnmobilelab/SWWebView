@@ -49,7 +49,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         // worrying about if the task will fail.
 
         firstly { () -> Promise<Void> in
-            
+
             guard let swWebView = webview as? SWWebView else {
                 throw ErrorMessage("SWWebViewBridge must be used with an SWWebView")
             }
@@ -97,7 +97,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         }
     }
 
-    func startServiceWorkerTask(_ task: SWURLSchemeTask, webview:SWWebView) throws -> Promise<Void> {
+    func startServiceWorkerTask(_ task: SWURLSchemeTask, webview: SWWebView) throws -> Promise<Void> {
 
         guard let requestURL = task.request.url else {
             throw ErrorMessage("Cannot start a task with no URL")
@@ -161,7 +161,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         guard let containerDelegate = webview.containerDelegate else {
             throw ErrorMessage("SWWebView has no containerDelegate set, cannot start service worker functionality")
         }
-        
+
         guard let requestURL = task.request.url else {
             throw ErrorMessage("Cannot start event stream with no URL")
         }
@@ -190,18 +190,17 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             return
         }
         existingTask.close()
-        
+
         if let stream = self.eventStreams.first(where: { $0.task.hash == existingTask.hash }) {
             stream.shutdown()
             self.eventStreams.remove(stream)
-            
+
             guard let swWebView = webview as? SWWebView else {
                 Log.error?("Tried to use SWWebViewBridge with a non-SWWebView class")
                 return
             }
-            
+
             swWebView.containerDelegate?.container(swWebView, freeContainer: stream.container)
-            
         }
     }
 }

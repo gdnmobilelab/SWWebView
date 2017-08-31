@@ -17,7 +17,7 @@ public class SWWebView: WKWebView {
     public var serviceWorkerPermittedDomains: [String] = []
     fileprivate let swNavigationDelegate: SWWebViewNavigationDelegate
     fileprivate var bridge: SWWebViewBridge!
-    public weak var containerDelegate: SWWebViewContainerDelegate? = nil
+    public weak var containerDelegate: SWWebViewContainerDelegate?
 
     fileprivate var outerNavigationDelegate: WKNavigationDelegate?
 
@@ -85,8 +85,6 @@ public class SWWebView: WKWebView {
         SWWebView.addSWHooksToConfiguration(configuration, bridge: self.bridge)
         self.swNavigationDelegate = SWWebViewNavigationDelegate()
         super.init(frame: frame, configuration: configuration)
-
-        
 
         super.navigationDelegate = self.swNavigationDelegate
     }

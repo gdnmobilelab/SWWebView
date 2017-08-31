@@ -11,5 +11,5 @@ import JavaScriptCore
 
 @objc public protocol ServiceWorkerRegistrationProtocol {
     func showNotification(_: JSValue) -> JSValue
-    var id:String {get}
+    var id: String { get }
 }

@@ -23,7 +23,7 @@ class ServiceWorkerContainerTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-    
+
     let factory = WorkerRegistrationFactory(withWorkerFactory: WorkerFactory())
 
     func testContainerCreation() {
@@ -34,8 +34,6 @@ class ServiceWorkerContainerTests: XCTestCase {
             let testContainer = try ServiceWorkerContainer(forURL: URL(string: "https://www.example.com")!, withFactory: factory)
             XCTAssert(testContainer.url.absoluteString == "https://www.example.com")
         }())
-
-        
     }
 
     func testGetRegistrations() {
@@ -68,4 +66,3 @@ class ServiceWorkerContainerTests: XCTestCase {
         .assertResolves()
     }
 }
-

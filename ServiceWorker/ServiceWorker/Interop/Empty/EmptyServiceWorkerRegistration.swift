@@ -16,10 +16,8 @@ import JavaScriptCore
         promise.reject(ErrorMessage("ServiceWorkerRegistration implementation not provided"))
         return promise.jsValue
     }
-    
+
     public var id: String {
-        get {
-            return "empty"
-        }
+        return "empty"
     }
 }

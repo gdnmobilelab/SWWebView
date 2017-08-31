@@ -118,7 +118,7 @@ import JavaScriptCore
         let worker: ServiceWorker
         let registerComplete: Promise<Void>
     }
-    
+
     func register(_ workerURL: URL) -> Promise<RegisterReturn> {
 
         // The install process is asynchronous and the register call doesn't wait for it.
@@ -295,7 +295,7 @@ import JavaScriptCore
                 slot.value.destroy()
                 try self.factory.workerFactory.update(worker: slot.value, toInstallState: .redundant)
             }
-            
+
             try self.factory.delete(self)
             self._unregistered = true
             GlobalEventLog.notifyChange(self)

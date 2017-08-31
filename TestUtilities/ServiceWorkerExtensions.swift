@@ -12,28 +12,26 @@ import ServiceWorker
 class ServiceWorkerTestDelegate: ServiceWorkerDelegate {
 
     static var storageURL: URL?
-   
+
     static func reset() {
         self.storageURL = nil
         self.importScripts = nil
     }
-    
+
     func serviceWorker(_: ServiceWorker, getStoragePathForDomain domain: String) -> String? {
-        
+
         guard let escapedOrigin = domain.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
             Log.error?("Could not create percent-escaped origin for WebSQL")
             return nil
         }
-        
+
         return ServiceWorkerTestDelegate.storageURL!.appendingPathComponent(escapedOrigin, isDirectory: true).path
-        
     }
-    
 
     func serviceWorker(_ worker: ServiceWorker, importScripts at: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
         ServiceWorkerTestDelegate.importScripts!(at, worker, callback)
     }
-    
+
     static var importScripts: (([URL], ServiceWorker, @escaping (Error?, [String]?) -> Void) -> Void)?
 
     static var instance = ServiceWorkerTestDelegate()

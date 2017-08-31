@@ -33,7 +33,7 @@ public class WorkerRegistrationFactory {
                 if rs.next() == false {
                     return nil
                 }
-                
+
                 guard let id = try rs.string("registration_id") else {
                     throw ErrorMessage("No ID value for registration")
                 }

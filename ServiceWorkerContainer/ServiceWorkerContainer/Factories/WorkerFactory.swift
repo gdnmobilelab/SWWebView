@@ -16,7 +16,7 @@ public class WorkerFactory {
     fileprivate let workerStorage = NSHashTable<ServiceWorker>.weakObjects()
     public var clientsDelegate: ServiceWorkerClientsDelegate?
     public var serviceWorkerDelegate: ServiceWorkerDelegate?
-    
+
     public init() {
     }
 
@@ -28,7 +28,6 @@ public class WorkerFactory {
             if existingWorker.registration?.id != registration.id {
                 throw ErrorMessage("Existing worker has a different registration")
             }
-
 
             return existingWorker
         }
@@ -59,11 +58,11 @@ public class WorkerFactory {
 
         return dbWorker
     }
-    
+
     func create(for url: URL, in registration: ServiceWorkerRegistration) throws -> ServiceWorker {
-        
+
         let newWorkerID = UUID().uuidString
-        
+
         try CoreDatabase.inConnection { db in
             _ = try db.insert(sql: """
                 INSERT INTO workers
@@ -75,11 +74,11 @@ public class WorkerFactory {
                 url,
                 ServiceWorkerInstallState.installing.rawValue,
                 registration.id,
-                ])
+            ])
         }
-        
+
         let worker = try self.get(id: newWorkerID, withRegistration: registration)
-        
+
         return worker
     }
 
@@ -188,11 +187,11 @@ public class WorkerFactory {
                 if rs.next() == false {
                     throw ErrorMessage("Could not find both worker IDs")
                 }
-                
+
                 guard let isSame = try rs.int("isSame") else {
                     throw ErrorMessage("Hash comparison failed")
                 }
-                
+
                 return isSame == 1
             }
         }
