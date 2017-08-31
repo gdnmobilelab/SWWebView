@@ -238,7 +238,6 @@ class FetchOperationTests: XCTestCase {
                 }
 
                 for (key, val) in obj {
-                    NSLog("KEY: \(key), VAL: \(val)")
                     let valInt = val as? Int
                     XCTAssert(valInt == nil || valInt != -1, "Property \(key) should exist")
                 }

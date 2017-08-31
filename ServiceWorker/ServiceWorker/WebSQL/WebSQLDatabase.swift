@@ -38,27 +38,26 @@ import JavaScriptCore
             Log.error?("Could not close WebSQL connection")
         }
     }
+    
+    
 
     static func openDatabase(for worker: ServiceWorker, name: String) throws -> WebSQLDatabase {
-
+        
         guard let host = worker.url.host else {
             throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
         }
-
-        guard let escapedOrigin = host.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
-            throw ErrorMessage("Could not create percent-escaped origin for WebSQL")
+        
+        guard let storagePath = worker.delegate?.serviceWorker?(worker, getStoragePathForDomain: host) else {
+            throw ErrorMessage("ServiceWorkerDelegate does not implement getStoragePathForDomain")
         }
-
+        
+        let storageURL = URL(fileURLWithPath: storagePath)
+        
         guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
             throw ErrorMessage("Could not escape SQLite database filename")
         }
 
-        guard let storageURL = worker.delegate?.storageURL else {
-            throw ErrorMessage("You must set a ServiceWorkerDelegate with a storageURL property to use storage")
-        }
-
         let dbDirectory = storageURL
-            .appendingPathComponent(escapedOrigin, isDirectory: true)
             .appendingPathComponent("websql", isDirectory: true)
 
         let dbURL = dbDirectory

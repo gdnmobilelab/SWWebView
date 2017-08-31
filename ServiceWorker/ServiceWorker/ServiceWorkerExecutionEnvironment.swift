@@ -99,14 +99,6 @@ import PromiseKit
 
     func importScripts(urls: [URL]) throws {
 
-        guard let delegate = self.worker.delegate else {
-            throw ErrorMessage("No ServiceWorkerDelegate to import scripts")
-        }
-
-        guard let importScriptsDelegate = delegate.importScripts else {
-            throw ErrorMessage("ServiceWorkerDelegate does not implement importScript")
-        }
-
         self.dispatchQueue.sync {
 
             // We want our worker execution thread to pause at this point, so that
@@ -120,14 +112,18 @@ import PromiseKit
             DispatchQueue.global().async {
 
                 // Now, outside of our worker thread, we fetch the scripts
-
-                importScriptsDelegate(urls, self.worker) { err, importedScripts in
+                
+                if self.worker.delegate?.serviceWorker?(self.worker, importScripts: urls, { err, importedScripts in
                     error = err
                     scripts = importedScripts
-
+                    
                     // With the variables set, we can now resume on our worker thread.
                     semaphore.signal()
+                }) == nil {
+                    error = ErrorMessage("ServiceWorkerDelegate does not implement importScript")
+                    semaphore.signal()
                 }
+
             }
 
             // Wait for the above code to execute

@@ -19,7 +19,7 @@ import PromiseKit
     public weak var clientsDelegate: ServiceWorkerClientsDelegate?
 
     public var registration: ServiceWorkerRegistrationProtocol {
-        if let reg = self.delegate?.getRegistration?(for: self) {
+        if let reg = self.delegate?.serviceWorkerGetRegistration?(self) {
             return reg
         }
         return EmptyServiceWorkerRegistration()
