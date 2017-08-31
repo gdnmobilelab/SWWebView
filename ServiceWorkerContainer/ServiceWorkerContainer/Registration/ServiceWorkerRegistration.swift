@@ -114,7 +114,11 @@ import JavaScriptCore
         }
     }
 
-    typealias RegisterReturn = (ServiceWorker, Promise<Void>)
+    public struct RegisterReturn {
+        let worker: ServiceWorker
+        let registerComplete: Promise<Void>
+    }
+    
     func register(_ workerURL: URL) -> Promise<RegisterReturn> {
 
         // The install process is asynchronous and the register call doesn't wait for it.
@@ -137,7 +141,7 @@ import JavaScriptCore
                     // immediately when we've created the stub worker, but we also want to return
                     // any errors to the webview even though it runs asynchronously.
 
-                    return (worker, self.processHTTPResponse(res, newWorker: worker))
+                    return RegisterReturn(worker: worker, registerComplete: self.processHTTPResponse(res, newWorker: worker))
                 }
         }
     }
@@ -287,6 +291,11 @@ import JavaScriptCore
 
         return firstly {
 
+            try self.workers.forEach { slot in
+                slot.value.destroy()
+                try self.factory.workerFactory.update(worker: slot.value, toInstallState: .redundant)
+            }
+            
             try self.factory.delete(self)
             self._unregistered = true
             GlobalEventLog.notifyChange(self)

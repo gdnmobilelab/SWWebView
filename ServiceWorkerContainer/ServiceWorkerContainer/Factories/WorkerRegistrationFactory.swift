@@ -30,7 +30,11 @@ public class WorkerRegistrationFactory {
 
             try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
 
-                guard let id = try rs.string("id") else {
+                if rs.next() == false {
+                    return nil
+                }
+                
+                guard let id = try rs.string("registration_id") else {
                     throw ErrorMessage("No ID value for registration")
                 }
                 guard let scope = try rs.url("scope") else {
@@ -39,15 +43,15 @@ public class WorkerRegistrationFactory {
 
                 var workerIDs: [RegistrationWorkerSlot: String] = [:]
 
-                if let active = try rs.string("active_worker") {
+                if let active = try rs.string("active") {
                     workerIDs[.active] = active
                 }
 
-                if let waiting = try rs.string("waiting_worker") {
+                if let waiting = try rs.string("waiting") {
                     workerIDs[.waiting] = waiting
                 }
 
-                if let installing = try rs.string("installing_worker") {
+                if let installing = try rs.string("installing") {
                     workerIDs[.installing] = installing
                 }
 
@@ -73,13 +77,13 @@ public class WorkerRegistrationFactory {
 
         let id = try CoreDatabase.inConnection { connection in
 
-            try connection.select(sql: "SELECT id FROM registrations WHERE scope = ?", values: [scope]) { rs -> String? in
+            try connection.select(sql: "SELECT registration_id FROM registrations WHERE scope = ?", values: [scope]) { rs -> String? in
 
                 if rs.next() == false {
                     return nil
                 }
 
-                guard let id = try rs.string("id") else {
+                guard let id = try rs.string("registration_id") else {
                     throw ErrorMessage("Registration has no scope")
                 }
 
@@ -94,7 +98,7 @@ public class WorkerRegistrationFactory {
         }
     }
 
-    func create(scope: URL) throws -> ServiceWorkerRegistration {
+    public func create(scope: URL) throws -> ServiceWorkerRegistration {
 
         return try CoreDatabase.inConnection { connection in
             let newRegID = UUID().uuidString
@@ -107,23 +111,7 @@ public class WorkerRegistrationFactory {
 
     func createNewInstallingWorker(for url: URL, in registration: ServiceWorkerRegistration) throws -> ServiceWorker {
 
-        let newWorkerID = UUID().uuidString
-
-        try CoreDatabase.inConnection { db in
-            _ = try db.insert(sql: """
-                INSERT INTO workers
-                    (worker_id, url, install_state, registration_id)
-                VALUES
-                    (?,?,?,?)
-            """, values: [
-                newWorkerID,
-                url,
-                ServiceWorkerInstallState.installing.rawValue,
-                registration.id,
-            ])
-        }
-
-        let worker = try self.workerFactory.get(id: newWorkerID, withRegistration: registration)
+        let worker = try self.workerFactory.create(for: url, in: registration)
 
         try registration.set(workerSlot: .installing, to: worker)
 
@@ -176,10 +164,9 @@ public class WorkerRegistrationFactory {
 
             _ = try db.insert(sql: """
                 UPDATE registrations
-                    SET ? = ?
+                    SET '\(workerSlot.rawValue)' = ?
                 WHERE registration_id = ?
             """, values: [
-                workerSlot.rawValue + "_worker",
                 worker?.id,
                 registration.id,
             ])
@@ -188,7 +175,8 @@ public class WorkerRegistrationFactory {
 
     func delete(_ registration: ServiceWorkerRegistration) throws {
         try CoreDatabase.inConnection { db in
-            try db.update(sql: "DELETE FROM registration WHERE registration_id = ?", values: [registration.id])
+            try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [registration.id])
         }
+        self.activeRegistrations.remove(registration)
     }
 }

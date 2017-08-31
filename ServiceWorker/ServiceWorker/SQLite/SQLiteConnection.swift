@@ -267,13 +267,20 @@ public class SQLiteConnection {
         }
 
         let rs = SQLiteResultSet(statement: statement!)
+        
+        
+        do {
+            let result = try cb(rs)
+            rs.open = false
 
-        let result = try cb(rs)
-        rs.open = false
+            sqlite3_finalize(statement)
 
-        sqlite3_finalize(statement)
-
-        return result
+            return result
+        } catch {
+            sqlite3_finalize(statement)
+            rs.open = false
+            throw error
+        }
     }
 
     public func select<T>(sql: String, _ cb: (SQLiteResultSet) throws -> T) throws -> T {

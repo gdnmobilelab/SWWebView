@@ -32,11 +32,14 @@ public class SWWebViewCoordinator : SWWebViewContainerDelegate {
     
     public func container(_ webview: SWWebView, createContainerFor url: URL) throws -> ServiceWorkerContainer {
         
-        var containerArray = self.inUseContainers[webview] ?? {
-            let newArray: [ContainerAndUsageNumber] = []
-            self.inUseContainers[webview] = newArray
-            return newArray
-        }()
+        if self.inUseContainers[webview] == nil {
+            self.inUseContainers[webview] = []
+        }
+        
+        guard var containerArray = self.inUseContainers[webview] else {
+            // Given the above I can't see how this could happen, but...
+            throw ErrorMessage("Array does not exist")
+        }
         
         if var alreadyExists = containerArray.first(where: { $0.container.url.absoluteString == url.absoluteString }){
             alreadyExists.numUsing += 1
@@ -46,6 +49,10 @@ public class SWWebViewCoordinator : SWWebViewContainerDelegate {
         let newContainer = try ServiceWorkerContainer(forURL: url, withFactory: self.registrationFactory)
         let wrapper = ContainerAndUsageNumber(container: newContainer, numUsing: 1)
         containerArray.append(wrapper)
+        
+        // It makes NO sense to me that I need to set this variable again here. But I do.
+        self.inUseContainers[webview] = containerArray
+        
         return newContainer
     }
     

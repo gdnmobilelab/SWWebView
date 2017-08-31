@@ -15,26 +15,20 @@ public class WorkerFactory {
 
     fileprivate let workerStorage = NSHashTable<ServiceWorker>.weakObjects()
     public var clientsDelegate: ServiceWorkerClientsDelegate?
-
+    public var serviceWorkerDelegate: ServiceWorkerDelegate?
+    
     public init() {
     }
 
     func get(id: String, withRegistration registration: ServiceWorkerRegistration) throws -> ServiceWorker {
         let workerWanted = workerStorage.allObjects.filter { $0.id == id }
 
-        guard let clientDelegate = self.clientsDelegate else {
-            throw ErrorMessage("Must have a clientsDelegate set")
-        }
-
         if let existingWorker = workerWanted.first {
 
-            guard let existingRegistration = existingWorker.registration as? ServiceWorkerRegistration else {
-                throw ErrorMessage("Worker has been created with a different registration type")
+            if existingWorker.registration?.id != registration.id {
+                throw ErrorMessage("Existing worker has a different registration")
             }
 
-            if existingRegistration != registration {
-                throw ErrorMessage("Existing worker does have the correct registration")
-            }
 
             return existingWorker
         }
@@ -54,7 +48,9 @@ public class WorkerFactory {
                 let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
 
                 let worker = ServiceWorker(id: id, url: try resultSet.url("url")!, state: state, loadContent: ServiceWorkerHooks.loadContent)
-                worker.clientsDelegate = clientDelegate
+                worker.clientsDelegate = self.clientsDelegate
+                worker.delegate = self.serviceWorkerDelegate
+                worker.registration = registration
                 return worker
             }
         }
@@ -62,6 +58,29 @@ public class WorkerFactory {
         workerStorage.add(dbWorker)
 
         return dbWorker
+    }
+    
+    func create(for url: URL, in registration: ServiceWorkerRegistration) throws -> ServiceWorker {
+        
+        let newWorkerID = UUID().uuidString
+        
+        try CoreDatabase.inConnection { db in
+            _ = try db.insert(sql: """
+                INSERT INTO workers
+                    (worker_id, url, install_state, registration_id, content)
+                VALUES
+                    (?,?,?,?,NULL)
+            """, values: [
+                newWorkerID,
+                url,
+                ServiceWorkerInstallState.installing.rawValue,
+                registration.id,
+                ])
+        }
+        
+        let worker = try self.get(id: newWorkerID, withRegistration: registration)
+        
+        return worker
     }
 
     func update(worker: ServiceWorker, toInstallState newState: ServiceWorkerInstallState) throws {
@@ -81,7 +100,7 @@ public class WorkerFactory {
 
             try db.select(sql: """
                 SELECT
-                    CASE content WHEN NULL 0 ELSE 1 END AS num
+                    CASE WHEN content IS NULL THEN 0 ELSE 1 END AS num
                 FROM workers
                 WHERE worker_id = ?
             """, values: [worker.id]) { rs in
@@ -154,26 +173,27 @@ public class WorkerFactory {
     }
 
     func isByteIdentical(_ workerOne: ServiceWorker, _ workerTwo: ServiceWorker) throws -> Bool {
-
         return try CoreDatabase.inConnection { db in
             try db.select(sql: """
-            SELECT CASE WHEN
-                    (SELECT hash FROM workers WHERE worker_id = ?) as one
-                =
-                    (SELECT hash FROM workers WHERE worker_id = ?) as two
-                THEN 1 ELSE 0
-            END as isIdentical
+
+                SELECT CASE WHEN one.content_hash = two.content_hash THEN 1 ELSE 0 END as isSame
+                FROM workers as one,
+                    workers as two
+                WHERE one.worker_id = ?
+                AND two.worker_id = ?
+
+               
             """, values: [workerOne.id, workerTwo.id]) { rs in
 
                 if rs.next() == false {
                     throw ErrorMessage("Could not find both worker IDs")
                 }
-
-                guard let isIdentical = try rs.int("isIdentical") else {
-                    throw ErrorMessage("DB check for byte identical failed")
+                
+                guard let isSame = try rs.int("isSame") else {
+                    throw ErrorMessage("Hash comparison failed")
                 }
-
-                return isIdentical == 1
+                
+                return isSame == 1
             }
         }
     }

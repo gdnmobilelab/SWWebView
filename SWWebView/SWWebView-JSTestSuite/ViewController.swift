@@ -15,6 +15,8 @@ import PromiseKit
 
 class ViewController: UIViewController {
 
+    var coordinator:SWWebViewCoordinator? = nil
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -37,11 +39,11 @@ class ViewController: UIViewController {
 
         config.userContentController.addUserScript(headerScript)
 
-        let coordinator = SWWebViewCoordinator()
+        self.coordinator = SWWebViewCoordinator()
 
         let swView = SWWebView(frame: self.view.frame, configuration: config)
         swView.serviceWorkerPermittedDomains.append("localhost:4567")
-
+        swView.containerDelegate = self.coordinator!
         self.view.addSubview(swView)
 
         var url = URLComponents(string: "sw://localhost:4567/tests.html")!

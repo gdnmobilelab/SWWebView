@@ -23,22 +23,27 @@ class ServiceWorkerContainerTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
+    
+    let factory = WorkerRegistrationFactory(withWorkerFactory: WorkerFactory())
 
     func testContainerCreation() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
 
-        let testContainer = ServiceWorkerContainer(forURL: URL(string: "https://www.example.com")!)
+        XCTAssertNoThrow(try {
+            let testContainer = try ServiceWorkerContainer(forURL: URL(string: "https://www.example.com")!, withFactory: factory)
+            XCTAssert(testContainer.url.absoluteString == "https://www.example.com")
+        }())
 
-        XCTAssert(testContainer.containerURL.absoluteString == "https://www.example.com")
+        
     }
 
     func testGetRegistrations() {
 
         firstly { () -> Promise<Void> in
-            let reg1 = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1")!)
-            let reg2 = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope2")!)
-            let container = ServiceWorkerContainer.get(for: URL(string: "https://www.example.com/scope3")!)
+            let reg1 = try factory.create(scope: URL(string: "https://www.example.com/scope1")!)
+            let reg2 = try factory.create(scope: URL(string: "https://www.example.com/scope2")!)
+            let container = try ServiceWorkerContainer(forURL: URL(string: "https://www.example.com/scope3")!, withFactory: factory)
             return container.getRegistrations()
                 .then { registrations -> Void in
                     XCTAssertEqual(registrations.count, 2)
@@ -51,10 +56,10 @@ class ServiceWorkerContainerTests: XCTestCase {
 
     func testGetRegistration() {
         firstly { () -> Promise<Void> in
-            _ = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1/")!)
-            let reg1 = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1/scope2/")!)
-            _ = try ServiceWorkerRegistration.create(scope: URL(string: "https://www.example.com/scope1/scope2/file2.html")!)
-            let container = ServiceWorkerContainer.get(for: URL(string: "https://www.example.com/scope1/scope2/file.html")!)
+            _ = try factory.create(scope: URL(string: "https://www.example.com/scope1/")!)
+            let reg1 = try factory.create(scope: URL(string: "https://www.example.com/scope1/scope2/")!)
+            _ = try factory.create(scope: URL(string: "https://www.example.com/scope1/scope2/file2.html")!)
+            let container = try ServiceWorkerContainer(forURL: URL(string: "https://www.example.com/scope1/scope2/file.html")!, withFactory: factory)
             return container.getRegistration()
                 .then { registration -> Void in
                     XCTAssertEqual(registration, reg1)
@@ -63,3 +68,4 @@ class ServiceWorkerContainerTests: XCTestCase {
         .assertResolves()
     }
 }
+

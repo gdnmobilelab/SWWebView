@@ -135,12 +135,12 @@ import ServiceWorker
 
             let like = components.url!.absoluteString + "%"
 
-            return try db.select(sql: "SELECT id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
+            return try db.select(sql: "SELECT registration_id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
 
                 var ids: [String] = []
 
                 while resultSet.next() {
-                    ids.append(try resultSet.string("id")!)
+                    ids.append(try resultSet.string("registration_id")!)
                 }
 
                 return try ids.map { id in
@@ -226,11 +226,11 @@ import ServiceWorker
             let reg = try existingRegistration ?? self.registrationFactory.create(scope: scopeURL)
 
             return reg.register(workerURL)
-                .then { (worker, installationPromise) -> ServiceWorkerRegistration in
+                .then { result -> ServiceWorkerRegistration in
 
-                    installationPromise
+                    result.registerComplete
                         .catch { error in
-                            GlobalEventLog.notifyChange(WorkerInstallationError(worker: worker, container: self, error: error))
+                            GlobalEventLog.notifyChange(WorkerInstallationError(worker: result.worker, container: self, error: error))
                         }
 
                     return reg
