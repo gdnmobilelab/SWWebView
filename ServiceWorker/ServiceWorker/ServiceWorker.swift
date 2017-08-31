@@ -16,6 +16,7 @@ import PromiseKit
     public let id: String
     
     weak public var delegate:ServiceWorkerDelegate? = nil
+    weak public var clientsDelegate: ServiceWorkerClientsDelegate? = nil
 
     public var registration: ServiceWorkerRegistrationProtocol {
         get {

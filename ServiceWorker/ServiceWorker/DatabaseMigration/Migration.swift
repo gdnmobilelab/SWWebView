@@ -34,7 +34,10 @@ public class DatabaseMigration {
             if rs.next() == false {
                 throw ErrorMessage("Could not find row for current migration version")
             }
-            return try rs.int("value")!
+            guard let currentVersion = try rs.int("value") else {
+                throw ErrorMessage("Could not find row for current migration version")
+            }
+            return currentVersion
         }
     }
 
@@ -50,12 +53,14 @@ public class DatabaseMigration {
                 // Grab all the migration files currently in our bundle.
                 let migrationFilePaths = try FileManager.default.contentsOfDirectory(at: migrationsPath, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions.skipsSubdirectoryDescendants)
 
-                let migrationFiles = migrationFilePaths
+                let migrationFiles = try migrationFilePaths
                     .filter { $0.pathExtension == "sql" }
                     .map { url -> MigrationAndVersion in
 
                         // Extract the version number (the number before the _ in the file)
-                        let idx = Int(url.deletingPathExtension().lastPathComponent.components(separatedBy: "_")[0])!
+                        guard let idx = Int(url.deletingPathExtension().lastPathComponent.components(separatedBy: "_")[0]) else {
+                            throw ErrorMessage("Could not extract version number from: \(url.absoluteString)")
+                        }
 
                         return MigrationAndVersion(fileName: url, version: idx)
                     }
@@ -63,11 +68,6 @@ public class DatabaseMigration {
                     .filter { $0.version > currentVersion }
                     // Sort them by version, so they execute in order
                     .sorted(by: { $1.version > $0.version })
-
-                if migrationFiles.count == 0 {
-                    Log.debug?("No pending migration files found")
-                    return currentVersion
-                }
 
                 for migration in migrationFiles {
 
@@ -80,8 +80,13 @@ public class DatabaseMigration {
                         throw ErrorMessage("Error when attempting migration: " + migration.fileName.absoluteString + ", internal error: " + String(describing: error))
                     }
                 }
+                
+                guard let lastMigration = migrationFiles.last else {
+                    Log.debug?("No pending migration files found")
+                    return currentVersion
+                }
 
-                try connection.update(sql: "UPDATE _migrations SET value = ? WHERE identifier = 'currentVersion'", values: [migrationFiles.last!.version])
+                try connection.update(sql: "UPDATE _migrations SET value = ? WHERE identifier = 'currentVersion'", values: [lastMigration.version])
                 return migrationFiles.last!.version
             }
         }

@@ -28,7 +28,7 @@ import JavaScriptCore
 
         let jsp = JSPromise(context: JSContext.current())
         
-        if self.worker.delegate?.clients?(getById: id, for: worker, { err, clientProtocol in
+        if self.worker.clientsDelegate?.clients?(worker, getById: id, { err, clientProtocol in
             if let error = err {
                 jsp.reject(error)
             } else if let clientExists = clientProtocol {
@@ -52,7 +52,7 @@ import JavaScriptCore
 
         let options = ClientMatchAllOptions(includeUncontrolled: includeUncontrolled, type: type)
         
-        if self.worker.delegate?.clients?(matchAll: options, for: self.worker, { err, clientProtocols in
+        if self.worker.clientsDelegate?.clients?(worker, matchAll: options, { err, clientProtocols in
             if let error = err {
                 jsp.reject(error)
             } else {
@@ -75,7 +75,7 @@ import JavaScriptCore
             return jsp.jsValue
         }
         
-        if self.worker.delegate?.clients?(openWindow: parsedURL, jsp.processCallback) == nil {
+        if self.worker.clientsDelegate?.clients?(worker, openWindow: parsedURL, jsp.processCallback) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement openWindow()"))
         }
 
@@ -87,7 +87,7 @@ import JavaScriptCore
 
         let jsp = JSPromise(context: JSContext.current())
 
-        if self.worker.delegate?.clients?(claimForWorker: self.worker, jsp.processCallback) == nil {
+        if self.worker.clientsDelegate?.clientsClaim?(self.worker, jsp.processCallback) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement claim()"))
         }
 

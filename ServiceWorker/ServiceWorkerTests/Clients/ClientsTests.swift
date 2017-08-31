@@ -49,22 +49,17 @@ class ClientsTests: XCTestCase {
         }
     }
 
-    class TestClients: ServiceWorkerDelegate {
+    class TestClients: ServiceWorkerClientsDelegate {
 
-        var storageURL: URL {
-            get {
-                return ServiceWorkerTestDelegate.storageURL!
-            }
-        }
         
         var clients: [ClientProtocol] = []
         var claimFunc: (() -> Void)?
 
-        func clients(getById id: String, for: ServiceWorker, _ callback: (Error?, ClientProtocol?) -> Void) {
+        func clients(_ worker: ServiceWorker, getById id: String, _ callback: (Error?, ClientProtocol?) -> Void) {
             callback(nil, self.clients.first(where: { $0.id == id }))
         }
         
-        func clients(matchAll options: ClientMatchAllOptions, for: ServiceWorker, _ cb: (Error?, [ClientProtocol]?) -> Void) {
+        func clients(_ for: ServiceWorker, matchAll options: ClientMatchAllOptions, _ cb: (Error?, [ClientProtocol]?) -> Void) {
             cb(nil, self.clients.filter({ client in
                 
                 let asTestCase = client as! TestClient
@@ -75,13 +70,13 @@ class ClientsTests: XCTestCase {
             }))
         }
         
-        func clients(openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
+        func clients(_ for:ServiceWorker, openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
             let newClient = TestWindowClient(id: "NEWCLIENT", type: .Window, url: url, focused: true, visibilityState: .Visible)
             self.clients.append(newClient)
             return cb(nil, newClient)
         }
 
-        func clients(claimForWorker: ServiceWorker, _ cb: (Error?) -> Void) {
+        func clientsClaim(_ for: ServiceWorker, _ cb: (Error?) -> Void) {
             if let claim = self.claimFunc {
                 claim()
             }
@@ -96,7 +91,7 @@ class ClientsTests: XCTestCase {
         testAPI.clients.append(TestClient(id: "TESTCLIENT", type: .Window, url: URL(string: "http://www.example.com")!))
 
         let worker = ServiceWorker.createTestWorker(id: self.name)
-        worker.delegate = testAPI
+        worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""
             Promise.all([
@@ -132,7 +127,7 @@ class ClientsTests: XCTestCase {
         testAPI.clients.append(controlled)
 
         let worker = ServiceWorker.createTestWorker(id: self.name)
-        worker.delegate = testAPI
+        worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""
             Promise.all([
@@ -187,7 +182,7 @@ class ClientsTests: XCTestCase {
         }
 
         let worker = ServiceWorker.createTestWorker(id: self.name)
-        worker.delegate = testAPI
+        worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""
             self.clients.claim()

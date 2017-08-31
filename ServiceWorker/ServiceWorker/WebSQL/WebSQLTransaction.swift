@@ -39,8 +39,12 @@ import JavaScriptCore
                 Log.error?("Couldn't rollback WebSQL transaction: \(error)")
             }
 
-            let jsError = JSValue(newErrorFromMessage: "\(error)", in: completeCallback.context)!
-            completeCallback.call(withArguments: [jsError])
+            if let jsError = JSValue(newErrorFromMessage: "\(error)", in: completeCallback.context) {
+                completeCallback.call(withArguments: [jsError])
+            } else {
+                Log.error?("Could not create error instance in WebSQLTransaction callback")
+            }
+            
         }
     }
 
@@ -57,8 +61,12 @@ import JavaScriptCore
             callback.call(withArguments: [webResultSet])
         } catch {
             Log.error?("Error when processing WebSQL statement: \(error)")
-            let err = JSValue(newErrorFromMessage: "\(error)", in: errorCallback.context)!
-            errorCallback.call(withArguments: [err])
+            if let err = JSValue(newErrorFromMessage: "\(error)", in: errorCallback.context) {
+                errorCallback.call(withArguments: [err])
+            } else {
+                Log.error?("Could not create error instance in WebSQLTransaction callback")
+            }
+            
         }
     }
 }

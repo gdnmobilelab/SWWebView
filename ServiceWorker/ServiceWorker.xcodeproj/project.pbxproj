@@ -16,6 +16,7 @@
 		8A315BF21F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */; };
 		8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */; };
 		8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */; };
+		8A35AE941F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */; };
 		8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */; };
 		8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */; };
 		8A43C1871F4F29A2001221C1 /* ClientMatchAllOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */; };
@@ -122,6 +123,7 @@
 		8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZZZ_TestEndChecks.swift; sourceTree = "<group>"; };
 		8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerDelegate.swift; sourceTree = "<group>"; };
 		8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerGlobalScopeDelegate.swift; sourceTree = "<group>"; };
+		8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerClientsDelegate.swift; sourceTree = "<group>"; };
 		8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientProtocol.swift; sourceTree = "<group>"; };
 		8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerClientsProtocol.swift; sourceTree = "<group>"; };
 		8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientMatchAllOptions.swift; sourceTree = "<group>"; };
@@ -366,6 +368,7 @@
 				8A43C1811F4F227C001221C1 /* Empty */,
 				8AC754941F31235200C6B70A /* NotificationShowOptions.swift */,
 				8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */,
+				8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */,
 			);
 			path = Interop;
 			sourceTree = "<group>";
@@ -741,6 +744,7 @@
 				8AC754D51F31252B00C6B70A /* FetchResponse.swift in Sources */,
 				8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */,
 				8AC754D61F31252B00C6B70A /* HttpStatusCodes.swift in Sources */,
+				8A35AE941F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift in Sources */,
 				8AC754D71F31252B00C6B70A /* MultiDataDelegate.swift in Sources */,
 				8AC754D81F31252B00C6B70A /* BasicResponse.swift in Sources */,
 				8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */,
