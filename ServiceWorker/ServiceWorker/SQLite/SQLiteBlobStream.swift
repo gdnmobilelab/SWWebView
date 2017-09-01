@@ -8,19 +8,30 @@
 
 import Foundation
 import SQLite3
-public class SQLiteBlobStream: Stream {
+public class SQLiteBlobStream {
+    
+    class State {
+        let pointer: OpaquePointer
+        let blobLength: Int32
+        var currentPosition: Int32
+        
+        init(pointer:OpaquePointer, blobLength:Int32) {
+            self.pointer = pointer
+            self.blobLength = blobLength
+            self.currentPosition = 0
+        }
+    }
 
     let table: String
     let column: String
     let row: Int64
     let dbPointer: OpaquePointer
+    
     public var isOpen: Bool {
-        return self.pointer != nil
+        return self.openState != nil
     }
 
-    var pointer: OpaquePointer?
-    var blobLength: Int32?
-    var currentPosition: Int32?
+    internal var openState:State? = nil
 
     var isWriteStream: Int32 {
         return 0
@@ -33,25 +44,33 @@ public class SQLiteBlobStream: Stream {
         self.column = column
         self.row = row
 
-        super.init()
     }
 
-    public override func open() {
-        if self.isOpen {
-            return
+    public func open() throws {
+        if self.openState != nil {
+            throw ErrorMessage("Blob stream is already open")
         }
-        sqlite3_blob_open(self.dbPointer, "main", self.table, self.column, self.row, self.isWriteStream, &self.pointer)
-        self.blobLength = sqlite3_blob_bytes(self.pointer)
-        self.currentPosition = 0
-        //        self.isOpen = true
+        
+        var pointer: OpaquePointer?
+        
+        sqlite3_blob_open(self.dbPointer, "main", self.table, self.column, self.row, self.isWriteStream, &pointer)
+        
+        guard let setPointer = pointer else {
+            throw ErrorMessage("Blob pointer was not stored")
+        }
+
+        self.openState = State(pointer: setPointer, blobLength: sqlite3_blob_bytes(setPointer))
+
     }
 
-    public override func close() {
-        if self.isOpen == false {
-            return
+    public func close() throws {
+        
+        guard let openState = self.openState else {
+            throw ErrorMessage("Blob stream is not open")
         }
-        //        self.isOpen = false
-        sqlite3_blob_close(self.pointer)
-        self.pointer = nil
+        
+        sqlite3_blob_close(openState.pointer)
+        self.openState = nil
+        
     }
 }

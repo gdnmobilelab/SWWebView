@@ -42,14 +42,12 @@ fileprivate struct EventListener {
     }
 
     func removeEventListener(_ name: String, _ funcToRun: JSValue) {
-        let existing = listeners.index(where: { $0.eventName == name && $0.funcToRun == funcToRun })
-
-        if existing == nil {
+        guard let existing = listeners.index(where: { $0.eventName == name && $0.funcToRun == funcToRun }) else {
             Log.debug?("Tried to remove event listener when it was not attached")
             return
         }
 
-        self.listeners.remove(at: existing!)
+        self.listeners.remove(at: existing)
     }
 
     func dispatchEvent(_ event: Event) {

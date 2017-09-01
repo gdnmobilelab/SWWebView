@@ -59,7 +59,7 @@ class SQLiteTests: XCTestCase {
         XCTAssert(conn!.open == true)
 
         XCTAssertNoThrow(try conn!.select(sql: "SELECT 1 as num") { resultSet in
-            XCTAssertEqual(resultSet.next(), true)
+            XCTAssertEqual(try resultSet.next(), true)
             XCTAssertEqual(try resultSet.int("num"), 1)
         })
 
@@ -76,7 +76,7 @@ class SQLiteTests: XCTestCase {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     do {
                         try db.select(sql: "SELECT 1 as num") { resultSet in
-                            XCTAssertEqual(resultSet.next(), true)
+                            XCTAssertEqual(try resultSet.next(), true)
                             fulfill(try resultSet.int("num")!)
                         }
                     } catch {
@@ -158,12 +158,12 @@ class SQLiteTests: XCTestCase {
 
             let returnedValue = try conn.select(sql: "SELECT * FROM testtable", values: []) { rs -> Int in
 
-                XCTAssert(rs.next() == true)
+                XCTAssert(try rs.next() == true)
                 XCTAssert(try rs.string("val") == "hello")
                 XCTAssert(try rs.int("num") == 1)
                 XCTAssert(try rs.string("blobtexttest") == "blobtest")
 
-                XCTAssert(rs.next() == true)
+                XCTAssert(try rs.next() == true)
                 XCTAssert(try rs.string("val") == "there")
                 XCTAssert(try rs.int("num") == 2)
 
@@ -189,7 +189,7 @@ class SQLiteTests: XCTestCase {
 
             _ = try conn.select(sql: "SELECT * FROM testtable", values: []) { rs in
 
-                XCTAssert(rs.next() == true)
+                XCTAssert(try rs.next() == true)
                 XCTAssert(try rs.string("val") == nil)
             }
             try conn.close()
@@ -226,37 +226,37 @@ class SQLiteTests: XCTestCase {
 
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["abcdefghijk".data(using: String.Encoding.utf8) as Any])
 
-            let stream = conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
-            stream.open()
+            let stream = try conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
+            try stream.open()
 
             var testData = Data(count: 3)
 
-            _ = testData.withUnsafeMutableBytes { body in
-                stream.read(body, maxLength: 3)
+            _ = try testData.withUnsafeMutableBytes { body in
+                try stream.read(body, maxLength: 3)
             }
 
             XCTAssert(String(data: testData, encoding: String.Encoding.utf8) == "abc")
 
-            _ = testData.withUnsafeMutableBytes { body in
-                stream.read(body, maxLength: 3)
+            _ = try testData.withUnsafeMutableBytes { body in
+                try stream.read(body, maxLength: 3)
             }
 
-            XCTAssert(String(data: testData, encoding: String.Encoding.utf8) == "def")
+            XCTAssertEqual(String(data: testData, encoding: String.Encoding.utf8), "def")
 
             XCTAssert(stream.hasBytesAvailable == true)
 
             var restData = Data(count: 5)
             var amtRead = 0
-            _ = restData.withUnsafeMutableBytes { body in
+            _ = try restData.withUnsafeMutableBytes { body in
                 // Should only read as much data is there, no matter what maxLength is specified
-                amtRead = stream.read(body, maxLength: 11)
+                amtRead = try stream.read(body, maxLength: 11)
             }
 
             XCTAssert(amtRead == 5)
             XCTAssert(String(data: restData, encoding: String.Encoding.utf8) == "ghijk")
             XCTAssert(stream.hasBytesAvailable == false)
 
-            stream.close()
+            try stream.close()
             try conn.close()
         }())
     }
@@ -273,8 +273,8 @@ class SQLiteTests: XCTestCase {
 
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES ('aaaaaaaaaaa')", values: [])
 
-            let stream = conn.openBlobWriteStream(table: "testtable", column: "val", row: rowId)
-            stream.open()
+            let stream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: rowId)
+            try stream.open()
             _ = try "abc".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
                 XCTAssert(try stream.write(body, maxLength: 3) == 3)
             }
@@ -287,10 +287,10 @@ class SQLiteTests: XCTestCase {
                 try stream.write(body, maxLength: 5)
             }
 
-            stream.close()
+            try stream.close()
 
             try conn.select(sql: "SELECT val FROM testtable", values: []) { rs in
-                XCTAssert(rs.next() == true)
+                XCTAssert(try rs.next() == true)
                 let data = try rs.data("val")!
                 let asStr = String(data: data, encoding: String.Encoding.utf8)
                 XCTAssert(asStr! == "abcdefghijk")
@@ -299,45 +299,6 @@ class SQLiteTests: XCTestCase {
         }())
     }
 
-    func testUpdateMonitor() {
-
-        XCTAssertNoThrow(try {
-            let conn = try SQLiteConnection(self.dbPath)
-            try conn.exec(sql: """
-                CREATE TABLE "testtable" (
-                    "val" TEXT NOT NULL
-                );
-            """)
-
-            let monitor = SQLiteUpdateMonitor(conn)
-
-            var insertListenerFired = false
-            var listenerID = monitor.addListener { operation, tableName, rowId in
-                insertListenerFired = true
-                XCTAssert(operation == SQLiteUpdateOperation.Insert)
-                XCTAssert(tableName == "testtable")
-                XCTAssert(rowId == 1)
-            }
-
-            try conn.exec(sql: "INSERT INTO testtable (val) VALUES ('test')")
-            XCTAssert(insertListenerFired == true)
-            monitor.removeListener(listenerID)
-
-            var updateListenerFired = false
-
-            listenerID = monitor.addListener { operation, tableName, rowId in
-                updateListenerFired = true
-                XCTAssert(operation == SQLiteUpdateOperation.Update)
-                XCTAssert(tableName == "testtable")
-                XCTAssert(rowId == 1)
-            }
-
-            try conn.exec(sql: "UPDATE testtable SET val = 'new-test'")
-            XCTAssert(updateListenerFired == true)
-            monitor.removeListener(listenerID)
-            try conn.close()
-        }())
-    }
 
     func testRowChangesNumber() {
 
@@ -375,7 +336,7 @@ class SQLiteTests: XCTestCase {
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: [100])
 
             try conn.select(sql: "SELECT val FROM testtable WHERE rowid = ?", values: [rowId]) { resultSet in
-                XCTAssertEqual(resultSet.next(), true)
+                XCTAssertEqual(try resultSet.next(), true)
                 XCTAssertEqual(try resultSet.int("val"), 100)
             }
 
@@ -390,17 +351,17 @@ class SQLiteTests: XCTestCase {
             let conn = try SQLiteConnection(self.dbPath)
 
             try conn.select(sql: "SELECT 'hello' as t") { resultSet in
-                _ = resultSet.next()
+                _ = try resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Text)
             }
 
             try conn.select(sql: "SELECT 1 as t") { resultSet in
-                _ = resultSet.next()
+                _ = try resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Int)
             }
 
             try conn.select(sql: "SELECT 1.4 as t") { resultSet in
-                _ = resultSet.next()
+                _ = try resultSet.next()
                 XCTAssertEqual(try resultSet.getColumnType("t"), SQLiteDataType.Float)
             }
 

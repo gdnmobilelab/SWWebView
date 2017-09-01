@@ -92,8 +92,6 @@
 		8AC755371F3240BB00C6B70A /* SQLiteBlobWriteStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */; };
 		8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755301F3240B200C6B70A /* SQLiteConnection.swift */; };
 		8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */; };
-		8AC7553A1F3240BB00C6B70A /* SQLiteUpdateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */; };
-		8AC7553B1F3240BB00C6B70A /* SQLiteUpdateOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */; };
 		8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */; };
 		8ACCD72B1F50719400F444B6 /* FetchRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */; };
 		8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72C1F50755B00F444B6 /* LocationBase.swift */; };
@@ -197,8 +195,6 @@
 		8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteBlobWriteStream.swift; sourceTree = "<group>"; };
 		8AC755301F3240B200C6B70A /* SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteConnection.swift; sourceTree = "<group>"; };
 		8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteResultSet.swift; sourceTree = "<group>"; };
-		8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateMonitor.swift; sourceTree = "<group>"; };
-		8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteUpdateOperation.swift; sourceTree = "<group>"; };
 		8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLDatabase.swift; sourceTree = "<group>"; };
 		8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestTests.swift; sourceTree = "<group>"; };
 		8ACCD72C1F50755B00F444B6 /* LocationBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBase.swift; sourceTree = "<group>"; };
@@ -535,8 +531,6 @@
 				8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */,
 				8AC755301F3240B200C6B70A /* SQLiteConnection.swift */,
 				8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */,
-				8AC755321F3240B200C6B70A /* SQLiteUpdateMonitor.swift */,
-				8AC755331F3240B200C6B70A /* SQLiteUpdateOperation.swift */,
 				8A235FF81F34D0D300969268 /* SQLiteDataType.swift */,
 			);
 			path = SQLite;
@@ -726,10 +720,8 @@
 				8AC754D31F31252B00C6B70A /* FetchOperation.swift in Sources */,
 				8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */,
 				8AC754D41F31252B00C6B70A /* FetchRequest.swift in Sources */,
-				8AC7553A1F3240BB00C6B70A /* SQLiteUpdateMonitor.swift in Sources */,
 				8A43C18E1F4F3391001221C1 /* WindowClientProtocol.swift in Sources */,
 				8A2264AC1F33BCDA00B48902 /* WebSQLTransaction.swift in Sources */,
-				8AC7553B1F3240BB00C6B70A /* SQLiteUpdateOperation.swift in Sources */,
 				8AC754D51F31252B00C6B70A /* FetchResponse.swift in Sources */,
 				8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */,
 				8AC754D61F31252B00C6B70A /* HttpStatusCodes.swift in Sources */,

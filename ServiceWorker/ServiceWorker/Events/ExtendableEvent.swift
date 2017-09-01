@@ -32,7 +32,10 @@ import PromiseKit
             val.context.exception = JSValue(newErrorFromMessage: "Invalid state for waitUntil()", in: val.context)
             return
         }
-        let managed = JSManagedValue(value: val, andOwner: self)!
+        guard let managed = JSManagedValue(value: val, andOwner: self) else {
+            val.context.exception = JSValue(newErrorFromMessage: "Could not create JSManagedValue for waitUntil()", in: val.context)
+            return
+        }
         val.context.virtualMachine.addManagedReference(managed, withOwner: self)
 
         self.pendingPromises.append(managed)
@@ -67,11 +70,14 @@ import PromiseKit
 
             worker.withJSContext { context in
 
-                let jsFunc = context.evaluateScript("""
+                guard let jsFunc = context.evaluateScript("""
                     (function(promises, success, failure) {
                         return Promise.all(promises).then(success).catch(failure)
                     })
-                """)!
+                """) else {
+                    reject(ErrorMessage("Failed to wrap promise inside JS context"))
+                    return
+                }
 
                 jsFunc.call(withArguments: [self.pendingPromises, unsafeBitCast(success, to: AnyObject.self), unsafeBitCast(failure, to: AnyObject.self)])
 

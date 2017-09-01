@@ -31,7 +31,7 @@ public class DatabaseMigration {
     fileprivate static func getCurrentMigrationVersion(_ db: SQLiteConnection) throws -> Int {
 
         return try db.select(sql: "SELECT value FROM _migrations WHERE identifier = 'currentVersion'") { rs -> Int in
-            if rs.next() == false {
+            if try rs.next() == false {
                 throw ErrorMessage("Could not find row for current migration version")
             }
             guard let currentVersion = try rs.int("value") else {
@@ -87,7 +87,7 @@ public class DatabaseMigration {
                 }
 
                 try connection.update(sql: "UPDATE _migrations SET value = ? WHERE identifier = 'currentVersion'", values: [lastMigration.version])
-                return migrationFiles.last!.version
+                return lastMigration.version
             }
         }
     }

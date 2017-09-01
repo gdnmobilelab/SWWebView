@@ -15,7 +15,7 @@ import JavaScriptCore
     func set(_ name: String, _ value: String)
     func get(_ name: String) -> String?
     func delete(_ name: String)
-    func getAll(_ name: String) -> [String]?
+    func getAll(_ name: String) -> [String]
     func append(_ name: String, _ value: String)
     func keys() -> [String]
     init()
@@ -23,39 +23,48 @@ import JavaScriptCore
 
 /// Replicating the Fetch APIs Headers object: https://developer.mozilla.org/en-US/docs/Web/API/Headers
 @objc public class FetchHeaders: NSObject, FetchHeadersExports {
+    
+    struct KeyValuePair {
+        let key: String
+        let value: String
+    }
 
-    fileprivate var values = [String: [String]]()
-
+    fileprivate var values: [KeyValuePair] = []
+    
     public func set(_ name: String, _ value: String) {
-        self.values[name.lowercased()] = [value]
+        
+        self.delete(name)
+        self.values.append(KeyValuePair(key: name.lowercased(), value: value))
+
     }
 
     public func delete(_ name: String) {
-        self.values.removeValue(forKey: name.lowercased())
+        self.values = self.values.filter { $0.key != name.lowercased() }
     }
 
     public func append(_ name: String, _ value: String) {
-        if self.values[name.lowercased()] != nil {
-            self.values[name.lowercased()]!.append(value)
-        } else {
-            self.values[name.lowercased()] = [value]
-        }
+        self.values.append(KeyValuePair(key: name.lowercased(), value: value))
     }
 
     public func keys() -> [String] {
-        var arr = [String]()
-        for (key, _) in self.values {
-            arr.append(key)
-        }
-        return arr
+        let nameSet = Set(self.values.map { $0.key })
+        return Array(nameSet)
     }
 
     public func get(_ name: String) -> String? {
-        return self.values[name.lowercased()]?.first
+        let all = self.getAll(name)
+            
+        if all.count == 0 {
+            return nil
+        }
+        
+        return all.joined(separator: ",")
     }
 
-    public func getAll(_ name: String) -> [String]? {
-        return self.values[name.lowercased()]
+    public func getAll(_ name: String) -> [String] {
+        return self.values
+            .filter { $0.key == name.lowercased()}
+            .map { $0.value}
     }
 
     public required override init() {
@@ -69,15 +78,27 @@ import JavaScriptCore
     /// - Returns: A complete FetchHeaders object with the headers provided in the JSON
     /// - Throws: If the JSON cannot be parsed successfully.
     public static func fromJSON(_ json: String) throws -> FetchHeaders {
-        let jsonAsData = json.data(using: String.Encoding.utf8)!
+        
+        guard let jsonAsData = json.data(using: String.Encoding.utf8) else {
+            throw ErrorMessage("Could not parse JSON string")
+        }
+        
         let headersObj = try JSONSerialization.jsonObject(with: jsonAsData, options: JSONSerialization.ReadingOptions())
         let fh = FetchHeaders()
-
-        for (key, values) in headersObj as! [String: [String]] {
-            for value in values {
-                fh.append(key, value)
-            }
+        
+        guard let asArray = headersObj as? [[String: String]] else {
+            throw ErrorMessage("JSON string not in the form expected")
         }
+
+        try asArray.forEach { dictionary in
+            
+            guard let key = dictionary["key"], let value = dictionary["value"] else {
+                throw ErrorMessage("Header entry does not have key/value pair")
+            }
+            
+            fh.append(key, value)
+        }
+        
         return fh
     }
 
@@ -86,16 +107,18 @@ import JavaScriptCore
     /// - Returns: A JSON string
     /// - Throws: if the JSON can't be encoded. Not sure what would ever cause this to happen.
     public func toJSON() throws -> String {
-        var dict = [String: [String]]()
 
-        for key in self.keys() {
-            dict[key] = []
-            for value in self.getAll(key)! {
-                dict[key]!.append(value)
+        var dictionaryArray: [[String: String]] = []
+        self.keys().forEach { key in
+            self.getAll(key).forEach { value in
+                dictionaryArray.append([
+                    "key": key,
+                    "value": value
+                ])
             }
         }
-
-        let jsonData = try JSONSerialization.data(withJSONObject: dict, options: JSONSerialization.WritingOptions())
+        
+        let jsonData = try JSONSerialization.data(withJSONObject: dictionaryArray, options: JSONSerialization.WritingOptions())
 
         return String(data: jsonData, encoding: String.Encoding.utf8)!
     }

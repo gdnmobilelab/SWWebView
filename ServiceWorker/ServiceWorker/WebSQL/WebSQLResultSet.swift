@@ -23,12 +23,16 @@ import JavaScriptCore
 
     init(resultSet: SQLiteResultSet, connection: SQLiteConnection) throws {
 
-        self.insertId = connection.lastInsertRowId
-        self.rowsAffected = connection.lastNumberChanges
+        guard let lastInsertedId = connection.lastInsertRowId, let lastNumberChanges = connection.lastNumberChanges else {
+            throw ErrorMessage("Could not fetch last inserted ID/last number of changes from database")
+        }
+        
+        self.insertId = lastInsertedId
+        self.rowsAffected = lastNumberChanges
 
         self.rows = []
 
-        while resultSet.next() {
+        while try resultSet.next() {
 
             var row = [String: Any?]()
 
