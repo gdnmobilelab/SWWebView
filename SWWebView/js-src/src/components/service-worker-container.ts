@@ -99,10 +99,6 @@ class ServiceWorkerContainerImplementation extends EventEmitter
         }
     }
 
-    controllerChangeMessage(evt: MessageEvent) {
-        console.log(evt);
-    }
-
     getRegistration(
         scope?: string
     ): Promise<ServiceWorkerRegistration | undefined> {
@@ -164,6 +160,7 @@ class ServiceWorkerContainerImplementation extends EventEmitter
 eventStream.addEventListener<
     ServiceWorkerContainerAPIResponse
 >("serviceworkercontainer", e => {
+    console.log("Container update", e.data);
     (navigator.serviceWorker as ServiceWorkerContainerImplementation).updateFromAPIResponse(
         e.data
     );

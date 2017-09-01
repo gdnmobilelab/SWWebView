@@ -92,6 +92,7 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
 eventStream.addEventListener<
     ServiceWorkerRegistrationAPIResponse
 >("serviceworkerregistration", e => {
+    console.log("reg update", e.data);
     let reg = existingRegistrations.find(r => r.id == e.data.id);
     if (reg) {
         reg.updateFromResponse(e.data);

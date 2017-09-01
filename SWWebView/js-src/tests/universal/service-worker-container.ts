@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { withIframe } from "../util/with-iframe";
+import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
 
 describe("Service Worker Container", () => {
     afterEach(() => {
@@ -47,9 +48,11 @@ describe("Service Worker Container", () => {
     });
 
     it("Should be controller on a newly created client", function() {
-        return withIframe("/fixtures/blank.html", ({ navigator }) => {
-            navigator.serviceWorker.register("./test-register-worker.js");
-            return navigator.serviceWorker.ready
+        return withIframe("/fixtures/blank.html", parentWindow => {
+            parentWindow.navigator.serviceWorker.register(
+                "./test-register-worker.js"
+            );
+            return parentWindow.navigator.serviceWorker.ready
                 .then(reg => {
                     if (reg.active.state === "activated") {
                         return;
@@ -83,7 +86,8 @@ describe("Service Worker Container", () => {
                                     );
 
                                     assert.notExists(
-                                        navigator.serviceWorker.controller
+                                        parentWindow.navigator.serviceWorker
+                                            .controller
                                     );
                                 }
                             );
@@ -93,7 +97,7 @@ describe("Service Worker Container", () => {
         });
     });
 
-    xit("Should fire oncontrollerchange promise", function() {
+    it("Should fire oncontrollerchange promise", function() {
         // have to use iframe as none of the fixture JS files are in this
         // page's scope
         return withIframe("/fixtures/blank.html", ({ navigator }) => {
@@ -104,12 +108,20 @@ describe("Service Worker Container", () => {
                     .then(reg => {
                         console.log(reg.active.state);
                     });
-            }).then(() => {
-                assert.equal(
-                    navigator.serviceWorker.controller.state,
-                    "activated"
-                );
-            });
+            })
+                .then(() => {
+                    assert.equal(
+                        navigator.serviceWorker.controller.state,
+                        "activating"
+                    );
+                    return navigator.serviceWorker.ready;
+                })
+                .then((reg: ServiceWorkerRegistration) => {
+                    assert.equal(
+                        navigator.serviceWorker.controller,
+                        reg.active
+                    );
+                });
         });
     });
 
@@ -163,5 +175,80 @@ describe("Service Worker Container", () => {
             .then(result => {
                 assert.equal(result, "Errored!");
             });
+    });
+
+    it("Should not automatically claim a registrant that isn't in scope", () => {
+        return navigator.serviceWorker
+            .register("/fixtures/test-register-worker.js")
+            .then(result => {
+                return waitUntilWorkerIsActivated(result.installing!);
+            })
+            .then(() => {
+                assert.notExists(navigator.serviceWorker.controller);
+            });
+    });
+
+    it("Should take over a less specific scope", function() {
+        return withIframe("/fixtures/subscope/blank.html", parentFrame => {
+            return parentFrame.navigator.serviceWorker
+                .register("/fixtures/test-register-worker.js", {
+                    scope: "/fixtures/"
+                })
+                .then(reg => {
+                    return waitUntilWorkerIsActivated(reg.installing);
+                })
+                .then(() => {
+                    return parentFrame.navigator.serviceWorker.register(
+                        "/fixtures/test-take-control-worker.js",
+                        {
+                            scope: "/fixtures/subscope/"
+                        }
+                    );
+                })
+                .then(reg => waitUntilWorkerIsActivated(reg.installing))
+                .then(() => {
+                    assert.equal(
+                        parentFrame.navigator.serviceWorker.controller
+                            .scriptURL,
+                        new URL(
+                            "/fixtures/test-take-control-worker.js",
+                            window.location.href
+                        ).href
+                    );
+                });
+        });
+    });
+
+    it("Should not take over a more specific scope", function() {
+        return withIframe("/fixtures/subscope/blank.html", ({ navigator }) => {
+            return navigator.serviceWorker
+                .register("/fixtures/test-take-control-worker.js?subscope", {
+                    scope: "/fixtures/subscope/"
+                })
+                .then(reg => {
+                    return waitUntilWorkerIsActivated(reg.installing);
+                })
+                .then(worker => {
+                    assert.exists(navigator.serviceWorker.controller);
+                    return navigator.serviceWorker.register(
+                        "/fixtures/test-take-control-worker.js?notsubscope",
+                        {
+                            scope: "/fixtures/"
+                        }
+                    );
+                })
+                .then(reg => {
+                    return waitUntilWorkerIsActivated(reg.installing);
+                })
+                .then(() => {
+                    assert.equal(
+                        navigator.serviceWorker.controller.scriptURL,
+                        new URL(
+                            "/fixtures/test-take-control-worker.js?subscope",
+                            window.location.href
+                        ).href
+                    );
+                });
+        });
     });
 });

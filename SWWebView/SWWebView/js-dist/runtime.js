@@ -286,6 +286,7 @@ var ServiceWorkerImplementation = (function (_super) {
 }(index));
 eventStream.addEventListener("serviceworker", function (e) {
     var existingWorker = ServiceWorkerImplementation.get(e.data);
+    console.info("Worker update:", e.data);
     if (existingWorker) {
         existingWorker.updateFromAPIResponse(e.data);
     }
@@ -355,6 +356,7 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
     return ServiceWorkerRegistrationImplementation;
 }(index));
 eventStream.addEventListener("serviceworkerregistration", function (e) {
+    console.log("reg update", e.data);
     var reg = existingRegistrations.find(function (r) { return r.id == e.data.id; });
     if (reg) {
         reg.updateFromResponse(e.data);
@@ -430,9 +432,6 @@ var ServiceWorkerContainerImplementation = (function (_super) {
             this.dispatchEvent(evt);
         }
     };
-    ServiceWorkerContainerImplementation.prototype.controllerChangeMessage = function (evt) {
-        console.log(evt);
-    };
     ServiceWorkerContainerImplementation.prototype.getRegistration = function (scope) {
         return apiRequest("/ServiceWorkerContainer/getregistration", {
             path: window.location.pathname,
@@ -472,6 +471,7 @@ var ServiceWorkerContainerImplementation = (function (_super) {
     return ServiceWorkerContainerImplementation;
 }(index));
 eventStream.addEventListener("serviceworkercontainer", function (e) {
+    console.log("Container update", e.data);
     navigator.serviceWorker.updateFromAPIResponse(e.data);
 });
 if ("ServiceWorkerContainer" in self === false) {

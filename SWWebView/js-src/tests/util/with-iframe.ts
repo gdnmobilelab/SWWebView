@@ -16,11 +16,16 @@ export function withIframe(
                         return Promise.all(mapped);
                     })
                     .then(() => {
-                        setTimeout(() => {
-                            // No idea why this has to be in a timeout, but the promise stops
-                            // if it isn't.
-                            document.body.removeChild(iframe);
-                        }, 100);
+                        return new Promise<void>((fulfill, reject) => {
+                            setTimeout(() => {
+                                // No idea why this has to be in a timeout, but the promise stops
+                                // if it isn't.
+                                document.body.removeChild(iframe);
+                                // setTimeout(() => {
+                                fulfill();
+                                // }, 10);
+                            }, 1);
+                        });
                     })
             );
         };

@@ -56,7 +56,6 @@
 		8AC754DD1F31252B00C6B70A /* ResponseType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754B41F31235200C6B70A /* ResponseType.swift */; };
 		8AC754DE1F31252B00C6B70A /* ConsoleMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C91F31235200C6B70A /* ConsoleMirror.swift */; };
 		8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754CA1F31235200C6B70A /* ServiceWorkerGlobalScope.swift */; };
-		8AC754E11F31252B00C6B70A /* EmptyServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754931F31235200C6B70A /* EmptyServiceWorkerRegistration.swift */; };
 		8AC754E21F31252B00C6B70A /* NotificationShowOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754941F31235200C6B70A /* NotificationShowOptions.swift */; };
 		8AC754E31F31252B00C6B70A /* ServiceWorkerRegistrationProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754951F31235200C6B70A /* ServiceWorkerRegistrationProtocol.swift */; };
 		8AC754E41F31252B00C6B70A /* JSPromise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7549C1F31235200C6B70A /* JSPromise.swift */; };
@@ -145,7 +144,6 @@
 		8AC754711F3122FE00C6B70A /* ServiceWorkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ServiceWorkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC754761F3122FE00C6B70A /* ServiceWorkerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerTests.swift; sourceTree = "<group>"; };
 		8AC754781F3122FE00C6B70A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8AC754931F31235200C6B70A /* EmptyServiceWorkerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyServiceWorkerRegistration.swift; sourceTree = "<group>"; };
 		8AC754941F31235200C6B70A /* NotificationShowOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationShowOptions.swift; sourceTree = "<group>"; };
 		8AC754951F31235200C6B70A /* ServiceWorkerRegistrationProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationProtocol.swift; sourceTree = "<group>"; };
 		8AC754961F31235200C6B70A /* ServiceWorkerInstallState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerInstallState.swift; sourceTree = "<group>"; };
@@ -239,14 +237,6 @@
 				8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */,
 			);
 			path = WebSQL;
-			sourceTree = "<group>";
-		};
-		8A43C1811F4F227C001221C1 /* Empty */ = {
-			isa = PBXGroup;
-			children = (
-				8AC754931F31235200C6B70A /* EmptyServiceWorkerRegistration.swift */,
-			);
-			path = Empty;
 			sourceTree = "<group>";
 		};
 		8A43C1841F4F2979001221C1 /* Registration */ = {
@@ -365,7 +355,6 @@
 			children = (
 				8A43C1851F4F2985001221C1 /* Clients */,
 				8A43C1841F4F2979001221C1 /* Registration */,
-				8A43C1811F4F227C001221C1 /* Empty */,
 				8AC754941F31235200C6B70A /* NotificationShowOptions.swift */,
 				8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */,
 				8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */,
@@ -760,7 +749,6 @@
 				8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,
 				8A5D97F91F3CB532002E521F /* GlobalEventLog.swift in Sources */,
-				8AC754E11F31252B00C6B70A /* EmptyServiceWorkerRegistration.swift in Sources */,
 				8AC754E21F31252B00C6B70A /* NotificationShowOptions.swift in Sources */,
 				8AC755341F3240B500C6B70A /* Migration.swift in Sources */,
 				8AC754E31F31252B00C6B70A /* ServiceWorkerRegistrationProtocol.swift in Sources */,

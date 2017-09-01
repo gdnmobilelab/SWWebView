@@ -1,3 +1,3 @@
-self.addEventListener("activate", () => {
-    self.clients.claim();
+self.addEventListener("activate", e => {
+    e.waitUntil(self.clients.claim());
 });

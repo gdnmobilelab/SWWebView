@@ -11,6 +11,7 @@ import SWWebView
 import WebKit
 import GCDWebServers
 import ServiceWorkerContainer
+import ServiceWorker
 import PromiseKit
 
 class ViewController: UIViewController {
@@ -22,6 +23,8 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         self.addStubs()
         let config = WKWebViewConfiguration()
+
+        Log.info = { NSLog($0) }
 
         CoreDatabase.dbDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("testapp-db", isDirectory: true)

@@ -14,11 +14,12 @@ import ServiceWorker
 /// the WKURLSchemeHandler which instance of a URL is sending a command. So instead, we
 /// have them share a container between them.
 struct ContainerAndUsageNumber {
+    let webview: SWWebView
     let container: ServiceWorkerContainer
     var numUsing: Int
 }
 
-public class SWWebViewCoordinator: SWWebViewContainerDelegate {
+public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClientsDelegate {
 
     let workerFactory: WorkerFactory
     let registrationFactory: WorkerRegistrationFactory
@@ -26,62 +27,89 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate {
     public init() {
         self.workerFactory = WorkerFactory()
         self.registrationFactory = WorkerRegistrationFactory(withWorkerFactory: self.workerFactory)
+        self.workerFactory.clientsDelegate = self
     }
 
-    var inUseContainers: [SWWebView: [ContainerAndUsageNumber]] = [:]
+    
+    var inUseContainers: [ContainerAndUsageNumber] = []
 
     public func container(_ webview: SWWebView, createContainerFor url: URL) throws -> ServiceWorkerContainer {
 
-        if self.inUseContainers[webview] == nil {
-            self.inUseContainers[webview] = []
-        }
-
-        guard var containerArray = self.inUseContainers[webview] else {
-            // Given the above I can't see how this could happen, but...
-            throw ErrorMessage("Array does not exist")
-        }
-
-        if var alreadyExists = containerArray.first(where: { $0.container.url.absoluteString == url.absoluteString }) {
+        if var alreadyExists = self.inUseContainers.first(where: { $0.webview == webview && $0.container.url.absoluteString == url.absoluteString }) {
             alreadyExists.numUsing += 1
+            Log.info?("Returning existing ServiceWorkerContainer for \(url.absoluteString). It has \(alreadyExists.numUsing) other clients")
             return alreadyExists.container
         }
 
         let newContainer = try ServiceWorkerContainer(forURL: url, withFactory: self.registrationFactory)
-        let wrapper = ContainerAndUsageNumber(container: newContainer, numUsing: 1)
-        containerArray.append(wrapper)
+        let wrapper = ContainerAndUsageNumber(webview: webview, container: newContainer, numUsing: 1)
+        self.inUseContainers.append(wrapper)
 
-        // It makes NO sense to me that I need to set this variable again here. But I do.
-        self.inUseContainers[webview] = containerArray
-
+        Log.info?("Returning new ServiceWorkerContainer for \(url.absoluteString).")
         return newContainer
     }
 
     public func container(_ webview: SWWebView, getContainerFor url: URL) -> ServiceWorkerContainer? {
 
-        guard let containerDictionary = self.inUseContainers[webview] else {
-            return nil
-        }
-
-        return containerDictionary.first(where: { $0.container.url.absoluteString == url.absoluteString })?.container
+        return self.inUseContainers.first(where: { $0.webview == webview && $0.container.url.absoluteString == url.absoluteString })?.container
     }
 
     public func container(_ webview: SWWebView, freeContainer container: ServiceWorkerContainer) {
 
-        guard var containerArray = self.inUseContainers[webview] else {
+        guard let containerIndex = self.inUseContainers.index(where: {$0.webview == webview && $0.container == container }) else {
             Log.error?("Tried to remove a ServiceWorkerContainer that doesn't exist")
             return
         }
 
-        guard let containerIndex = containerArray.index(where: { $0.container == container }) else {
-            Log.error?("Tried to remove a ServiceWorkerContainer that doesn't exist")
-            return
-        }
+        self.inUseContainers[containerIndex].numUsing -= 1
 
-        containerArray[containerIndex].numUsing -= 1
+        let url = self.inUseContainers[containerIndex].container.url
 
-        if containerArray[containerIndex].numUsing == 0 {
+        if self.inUseContainers[containerIndex].numUsing == 0 {
             // If this is the only client using this container then we can safely dispose of it.
-            containerArray.remove(at: containerIndex)
+            Log.info?("Deleting existing ServiceWorkerContainer for \(url.absoluteString).")
+            self.inUseContainers.remove(at: containerIndex)
+        } else {
+            Log.info?("Released link to ServiceWorkerContainer for \(url.absoluteString). It has \(self.inUseContainers[containerIndex].numUsing) remaining clients")
         }
+    }
+    
+    public func clientsClaim(_ worker: ServiceWorker, _ cb: (Error?) -> Void) {
+        
+        if worker.state != .activated && worker.state != .activating {
+            cb(ErrorMessage("Service worker can only claim clients when in activated or activating state"))
+            return
+        }
+        
+        guard let registration = worker.registration else {
+            cb(ErrorMessage("ServiceWorker must have a registration to claim clients"))
+            return
+        }
+        
+        let scopeString = registration.scope.absoluteString
+        
+        let clientsInScope = self.inUseContainers.filter { client in
+            
+            if client.container.url.absoluteString.hasPrefix(scopeString) == false {
+                // must fall within our scope
+                return false
+            }
+            
+            guard let ready = client.container.readyRegistration else {
+                // if it has no ready registration we will always claim it.
+                return true
+            }
+            
+            // Otherwise, we need to check - is the current scope more specific than ours?
+            // If it is, we don't claim.
+            return ready.scope.absoluteString.count <= scopeString.count
+            
+        }
+        
+        clientsInScope.forEach { client in
+            client.container.claim(by: worker)
+        }
+        cb(nil)
+        
     }
 }
