@@ -91,7 +91,7 @@ import JavaScriptCore
         JSURL.addToWorkerContext(context: self.context)
         WorkerLocation.addToWorkerContext(context: self.context)
 
-        self.applyListenersTo(jsObject: self.context.globalObject)
+        applyListenersTo(jsObject: self.context.globalObject)
     }
 
     // Since these retain an open connection as long as they are alive, we need to
@@ -111,9 +111,9 @@ import JavaScriptCore
 
         let contents = try String(contentsOf: file)
 
-        let targetObj = JSValue(newObjectIn: self.context)!
+        let targetObj = JSValue(newObjectIn: context)!
 
-        let shimFunction = self.context.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
+        let shimFunction = context.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
 
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
@@ -143,8 +143,8 @@ import JavaScriptCore
         let config: [String: Any] = [
             "DEBUG": true,
             "win": [
-                "openDatabase": openDatabaseFunction,
-            ],
+                "openDatabase": openDatabaseFunction
+            ]
         ]
 
         self.openDatabaseFunction = openDatabaseFunction
@@ -154,10 +154,12 @@ import JavaScriptCore
 
         shimFunction.call(withArguments: [targetObj, config])
 
-        let keys = self.context.objectForKeyedSubscript("Object")
+        guard let keys = context.objectForKeyedSubscript("Object")
             .objectForKeyedSubscript("getOwnPropertyNames")
             .call(withArguments: [targetObj])
-            .toArray() as! [String]
+            .toArray() as? [String] else {
+            throw ErrorMessage("Could not get keys of indexeddb shim")
+        }
 
         keys.forEach { key in
 
@@ -189,8 +191,8 @@ import JavaScriptCore
             var scriptURLStrings: [String]
 
             // importScripts supports both single files and arrays
-            if scripts.isArray {
-                scriptURLStrings = scripts.toArray() as! [String]
+            if let scriptsAsArray = scripts.toArray() as? [String] {
+                scriptURLStrings = scriptsAsArray
             } else {
                 scriptURLStrings = [scripts.toString()]
             }

@@ -55,7 +55,7 @@ class SQLiteTests: XCTestCase {
     func testOpenDatabaseConnection() {
 
         var conn: SQLiteConnection?
-        XCTAssertNoThrow(conn = try SQLiteConnection(self.dbPath))
+        XCTAssertNoThrow(conn = try SQLiteConnection(dbPath))
         XCTAssert(conn!.open == true)
 
         XCTAssertNoThrow(try conn!.select(sql: "SELECT 1 as num") { resultSet in
@@ -298,7 +298,6 @@ class SQLiteTests: XCTestCase {
             try conn.close()
         }())
     }
-
 
     func testRowChangesNumber() {
 

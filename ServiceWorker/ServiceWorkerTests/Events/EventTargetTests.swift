@@ -14,7 +14,7 @@ class EventTargetTests: XCTestCase {
 
     func testShouldFireEvents() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         return sw.evaluateScript("""
             var didFire = false;
@@ -35,7 +35,7 @@ class EventTargetTests: XCTestCase {
 
         let testEvents = EventTarget()
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         let expect = expectation(description: "Code ran")
 

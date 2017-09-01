@@ -10,25 +10,22 @@ import Foundation
 import SQLite3
 import PromiseKit
 
-fileprivate let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
-fileprivate let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+private let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
+private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
 public class SQLiteConnection {
 
     var db: OpaquePointer?
     var open: Bool {
-        get {
-            return self.db != nil
-        }
+        return self.db != nil
     }
 
     static var temporaryStoreDirectory: URL?
 
     public init(_ dbURL: URL) throws {
 
-        let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &self.db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
-     
-        
+        let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
+
         if open != SQLITE_OK || self.db == nil {
             throw ErrorMessage("Could not create SQLite database instance: \(open)")
         }
@@ -69,18 +66,18 @@ public class SQLiteConnection {
     }
 
     public func close() throws {
-        
+
         guard let db = self.db else {
             throw ErrorMessage("SQLite connection is not open")
         }
-        
+
         let rc = sqlite3_close_v2(db)
         if rc != SQLITE_OK {
             throw ErrorMessage("Could not close SQLite Database: Error code \(rc)")
         }
-        
+
         self.db = nil
-        
+
         let freed = sqlite3_release_memory(Int32.max)
         if freed > 0 {
             Log.info?("Freed \(freed) bytes of SQLite memory")
@@ -88,28 +85,27 @@ public class SQLiteConnection {
     }
 
     fileprivate func throwSQLiteError(_ err: UnsafeMutablePointer<Int8>?) throws {
-        
+
         guard let errExists = err else {
             throw ErrorMessage("SQLITE return value was unexpected, but no error message was returned")
         }
-        
+
         let errMsg = String(cString: errExists)
         sqlite3_free(errExists)
         throw ErrorMessage("SQLite ERROR: \(errMsg)")
     }
-    
+
     fileprivate func getDBPointer() throws -> OpaquePointer {
         if let dbExists = self.db {
             return dbExists
         }
         throw ErrorMessage("Connection is not open")
-        
     }
 
     public func exec(sql: String) throws {
 
         var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try self.getDBPointer(), sql, nil, nil, &zErrMsg)
+        let rc = sqlite3_exec(try getDBPointer(), sql, nil, nil, &zErrMsg)
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
         }
@@ -117,7 +113,7 @@ public class SQLiteConnection {
 
     public func beginTransaction() throws {
         var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try self.getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
+        let rc = sqlite3_exec(try getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
 
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
@@ -126,7 +122,7 @@ public class SQLiteConnection {
 
     public func rollbackTransaction() throws {
         var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try self.getDBPointer(), "ROLLBACK TRANSACTION;", nil, nil, &zErrMsg)
+        let rc = sqlite3_exec(try getDBPointer(), "ROLLBACK TRANSACTION;", nil, nil, &zErrMsg)
 
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
@@ -135,7 +131,7 @@ public class SQLiteConnection {
 
     public func commitTransaction() throws {
         var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try self.getDBPointer(), "COMMIT TRANSACTION;", nil, nil, &zErrMsg)
+        let rc = sqlite3_exec(try getDBPointer(), "COMMIT TRANSACTION;", nil, nil, &zErrMsg)
 
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
@@ -145,7 +141,7 @@ public class SQLiteConnection {
     public func inTransaction<T>(_ closure: () throws -> T) throws -> T {
 
         var zErrMsg: UnsafeMutablePointer<Int8>?
-        var rc = sqlite3_exec(try self.getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
+        var rc = sqlite3_exec(try getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
 
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
@@ -153,17 +149,16 @@ public class SQLiteConnection {
 
         do {
             let result = try closure()
-            rc = sqlite3_exec(try self.getDBPointer(), "; COMMIT TRANSACTION;", nil, nil, &zErrMsg)
+            rc = sqlite3_exec(try getDBPointer(), "; COMMIT TRANSACTION;", nil, nil, &zErrMsg)
             if rc != SQLITE_OK {
                 try self.throwSQLiteError(zErrMsg!)
             }
             return result
-            
+
         } catch {
             rc = sqlite3_exec(try self.getDBPointer(), "; ROLLBACK TRANSACTION;", nil, nil, &zErrMsg)
             throw error
         }
-
     }
 
     fileprivate func bindValue(_ statement: OpaquePointer, idx: Int32, value: Any?) throws {
@@ -192,22 +187,22 @@ public class SQLiteConnection {
         }
     }
 
-    fileprivate func getLastError(_ dbPointer:OpaquePointer) -> ErrorMessage {
+    fileprivate func getLastError(_ dbPointer: OpaquePointer) -> ErrorMessage {
         let errMsg = String(cString: sqlite3_errmsg(dbPointer))
         return ErrorMessage(errMsg)
     }
 
     public func update(sql: String, values: [Any?]) throws {
-        
-        let db = try self.getDBPointer()
-        
+
+        let db = try getDBPointer()
+
         var statement: OpaquePointer?
 
         if sqlite3_prepare_v2(db, sql + ";", -1, &statement, nil) != SQLITE_OK {
             sqlite3_finalize(statement)
             throw self.getLastError(db)
         }
-        
+
         guard let setStatement = statement else {
             throw ErrorMessage("SQLite statement was not created successfully")
         }
@@ -237,7 +232,7 @@ public class SQLiteConnection {
 
     public func insert(sql: String, values: [Any?]) throws -> Int64 {
         try self.update(sql: sql, values: values)
-        
+
         guard let lastInserted = self.lastInsertRowId else {
             throw ErrorMessage("Could not fetch last inserted row ID")
         }
@@ -260,15 +255,15 @@ public class SQLiteConnection {
 
     public func select<T>(sql: String, values: [Any?], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
 
-        let db = try self.getDBPointer()
-        
+        let db = try getDBPointer()
+
         var statement: OpaquePointer?
 
         if sqlite3_prepare_v2(db, sql + ";", -1, &statement, nil) != SQLITE_OK {
             sqlite3_finalize(statement)
             throw self.getLastError(db)
         }
-        
+
         guard let setStatement = statement else {
             throw ErrorMessage("SQLite statement pointer was not set successfully")
         }
@@ -282,7 +277,7 @@ public class SQLiteConnection {
         do {
             let result = try cb(rs)
             try rs.close()
-           
+
             return result
         } catch {
             try rs.close()

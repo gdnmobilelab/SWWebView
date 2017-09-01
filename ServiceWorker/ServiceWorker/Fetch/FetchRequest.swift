@@ -133,12 +133,7 @@ public enum FetchRequestMode: String {
         }
     }
 
-    internal func applyOptions(opts: [String: AnyObject]) throws {
-
-        if let method = opts["method"] as? String {
-            self.method = method
-        }
-
+    internal func applyHeadersIfExist(opts: [String: AnyObject]) {
         if let headers = opts["headers"] as? FetchHeaders {
             self.headers = headers
         } else if let headers = opts["headers"] as? [String: String] {
@@ -151,6 +146,15 @@ public enum FetchRequestMode: String {
 
             self.headers = headersInstance
         }
+    }
+
+    internal func applyOptions(opts: [String: AnyObject]) throws {
+
+        if let method = opts["method"] as? String {
+            self.method = method
+        }
+
+        self.applyHeadersIfExist(opts: opts)
 
         if let body = opts["body"] as? String {
             if self.method == "GET" || self.method == "HEAD" {
@@ -162,30 +166,26 @@ public enum FetchRequestMode: String {
         }
 
         if let mode = opts["mode"] as? String {
-            let modeVal = FetchRequestMode(rawValue: mode)
-            if modeVal == nil {
+            guard let modeVal = FetchRequestMode(rawValue: mode) else {
                 throw ErrorMessage("Did not understand value for attribute 'mode'")
             }
-            self.mode = modeVal!
+            self.mode = modeVal
         }
 
         if let cache = opts["cache"] as? String {
-            let cacheVal = FetchRequestCache(rawValue: cache)
-            if cacheVal == nil {
+            guard let cacheVal = FetchRequestCache(rawValue: cache) else {
                 throw ErrorMessage("Did not understand value for attribute 'cache'")
             }
-            self.cache = cacheVal!
+            self.cache = cacheVal
         }
 
         if let redirect = opts["redirect"] as? String {
 
-            let redirectVal = FetchRequestRedirect(rawValue: redirect)
-
-            if redirectVal == nil {
+            guard let redirectVal = FetchRequestRedirect(rawValue: redirect) else {
                 throw ErrorMessage("Did not understand value for attribute 'redirect'")
             }
 
-            self.redirect = redirectVal!
+            self.redirect = redirectVal
         }
     }
 }

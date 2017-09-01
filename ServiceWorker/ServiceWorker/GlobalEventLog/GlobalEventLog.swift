@@ -20,7 +20,7 @@ public class GlobalEventLog {
 
     public static func addListener<T>(_ toRun: @escaping (T) -> Void) -> Listener<T> {
         let wrapper = Listener(toRun)
-        self.listeners.add(wrapper)
+        listeners.add(wrapper)
         return wrapper
     }
 

@@ -48,10 +48,10 @@ import JavaScriptCore
 
     @objc(protocol) public var _protocol: String {
         get {
-            return self.components.scheme != nil ? self.components.scheme! + ":" : ""
+            return components.scheme != nil ? components.scheme! + ":" : ""
         }
         set(value) {
-            self.components.scheme = value
+            components.scheme = value
         }
     }
 

@@ -26,8 +26,8 @@ import JavaScriptCore
     }
 
     func focus() -> JSValue {
-        let jsp = JSPromise(context: self.context)
-        self.wrapAroundWindow.focus { err, windowClientProtocol in
+        let jsp = JSPromise(context: context)
+        wrapAroundWindow.focus { err, windowClientProtocol in
             if err != nil {
                 jsp.reject(err!)
             } else {
@@ -39,7 +39,7 @@ import JavaScriptCore
 
     func navigate(_ url: String) -> JSValue {
 
-        let jsp = JSPromise(context: self.context)
+        let jsp = JSPromise(context: context)
 
         guard let parsedURL = URL(string: url, relativeTo: nil) else {
             jsp.reject(ErrorMessage("Could not parse URL returned by native implementation"))

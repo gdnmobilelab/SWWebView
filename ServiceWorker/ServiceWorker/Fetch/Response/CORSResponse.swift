@@ -8,13 +8,13 @@
 
 import Foundation
 
-fileprivate var CORSHeaders = [
+private var CORSHeaders = [
     "cache-control",
     "content-language",
     "content-type",
     "expires",
     "last-modified",
-    "pragma",
+    "pragma"
 ]
 
 @objc class CORSResponse: FetchResponseProxy {

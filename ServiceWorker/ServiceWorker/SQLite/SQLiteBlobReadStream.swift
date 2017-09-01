@@ -27,7 +27,7 @@ public class SQLiteBlobReadStream: SQLiteBlobStream {
         guard let state = self.openState else {
             throw ErrorMessage("Trying to read a closed stream")
         }
-        
+
         let bytesLeft = state.blobLength - state.currentPosition
 
         let lengthToRead = min(Int32(len), bytesLeft)
@@ -35,7 +35,7 @@ public class SQLiteBlobReadStream: SQLiteBlobStream {
         if sqlite3_blob_read(state.pointer, buffer, lengthToRead, state.currentPosition) != SQLITE_OK {
             throw ErrorMessage("Failed to read stream")
         }
-        state.currentPosition = state.currentPosition + lengthToRead
+        state.currentPosition += lengthToRead
         return Int(lengthToRead)
     }
 }

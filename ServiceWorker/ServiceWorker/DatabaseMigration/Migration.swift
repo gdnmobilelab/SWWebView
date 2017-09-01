@@ -8,14 +8,14 @@
 
 import Foundation
 
-fileprivate struct MigrationAndVersion {
+private struct MigrationAndVersion {
     let fileName: URL
     let version: Int
 }
 
 public class DatabaseMigration {
 
-    fileprivate static func ensureMigrationTableCreated(_ db: SQLiteConnection) throws {
+    private static func ensureMigrationTableCreated(_ db: SQLiteConnection) throws {
 
         try db.exec(sql: """
             CREATE TABLE IF NOT EXISTS _migrations (
@@ -28,7 +28,7 @@ public class DatabaseMigration {
         """)
     }
 
-    fileprivate static func getCurrentMigrationVersion(_ db: SQLiteConnection) throws -> Int {
+    private static func getCurrentMigrationVersion(_ db: SQLiteConnection) throws -> Int {
 
         return try db.select(sql: "SELECT value FROM _migrations WHERE identifier = 'currentVersion'") { rs -> Int in
             if try rs.next() == false {

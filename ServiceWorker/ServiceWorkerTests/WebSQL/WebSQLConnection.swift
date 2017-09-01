@@ -18,7 +18,7 @@ class WebSQLConnectionTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        ServiceWorkerTestDelegate.storageURL = self.webSQLTestPath
+        ServiceWorkerTestDelegate.storageURL = webSQLTestPath
 
         do {
 
@@ -50,9 +50,9 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testOpeningDatabase() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
-        self.injectOpenDBIntoWorker(sw)
+        injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
                 var db = openDatabase('test', 1, 'pretty name', 1024);
@@ -74,9 +74,9 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testTransactionCallback() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
-        self.injectOpenDBIntoWorker(sw)
+        injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
                    
@@ -105,9 +105,9 @@ class WebSQLConnectionTests: XCTestCase {
 
     func testResultSetSelect() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
-        self.injectOpenDBIntoWorker(sw)
+        injectOpenDBIntoWorker(sw)
             .then {
                 return sw.evaluateScript("""
                     var db = openDatabase('test', 1, 'pretty name', 1024);

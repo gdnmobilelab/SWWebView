@@ -32,27 +32,26 @@ class FetchHeadersTests: XCTestCase {
         XCTAssertEqual(cacheControl.count, 2)
         XCTAssertEqual(cacheControl[1], "max-age=1")
     }
-    
+
     func testShouldAppendGetAndDelete() {
-        
+
         let fh = FetchHeaders()
         fh.append("Test", "Value")
-        
+
         XCTAssertEqual(fh.get("Test"), "Value")
-        
-        fh.append("Test","Value2")
-        
+
+        fh.append("Test", "Value2")
+
         XCTAssertEqual(fh.get("Test"), "Value,Value2")
-        
+
         XCTAssertEqual(fh.getAll("test"), ["Value", "Value2"])
-        
+
         fh.set("test", "NEW VALUE")
-        
+
         XCTAssertEqual(fh.get("test"), "NEW VALUE")
-        
+
         fh.delete("test")
-        
+
         XCTAssertNil(fh.get("Test"))
     }
-
 }

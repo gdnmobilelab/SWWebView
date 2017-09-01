@@ -23,19 +23,18 @@ import JavaScriptCore
 
 /// Replicating the Fetch APIs Headers object: https://developer.mozilla.org/en-US/docs/Web/API/Headers
 @objc public class FetchHeaders: NSObject, FetchHeadersExports {
-    
+
     struct KeyValuePair {
         let key: String
         let value: String
     }
 
     fileprivate var values: [KeyValuePair] = []
-    
+
     public func set(_ name: String, _ value: String) {
-        
+
         self.delete(name)
         self.values.append(KeyValuePair(key: name.lowercased(), value: value))
-
     }
 
     public func delete(_ name: String) {
@@ -47,24 +46,24 @@ import JavaScriptCore
     }
 
     public func keys() -> [String] {
-        let nameSet = Set(self.values.map { $0.key })
+        let nameSet = Set(values.map { $0.key })
         return Array(nameSet)
     }
 
     public func get(_ name: String) -> String? {
-        let all = self.getAll(name)
-            
+        let all = getAll(name)
+
         if all.count == 0 {
             return nil
         }
-        
+
         return all.joined(separator: ",")
     }
 
     public func getAll(_ name: String) -> [String] {
         return self.values
-            .filter { $0.key == name.lowercased()}
-            .map { $0.value}
+            .filter { $0.key == name.lowercased() }
+            .map { $0.value }
     }
 
     public required override init() {
@@ -78,27 +77,27 @@ import JavaScriptCore
     /// - Returns: A complete FetchHeaders object with the headers provided in the JSON
     /// - Throws: If the JSON cannot be parsed successfully.
     public static func fromJSON(_ json: String) throws -> FetchHeaders {
-        
+
         guard let jsonAsData = json.data(using: String.Encoding.utf8) else {
             throw ErrorMessage("Could not parse JSON string")
         }
-        
+
         let headersObj = try JSONSerialization.jsonObject(with: jsonAsData, options: JSONSerialization.ReadingOptions())
         let fh = FetchHeaders()
-        
+
         guard let asArray = headersObj as? [[String: String]] else {
             throw ErrorMessage("JSON string not in the form expected")
         }
 
         try asArray.forEach { dictionary in
-            
+
             guard let key = dictionary["key"], let value = dictionary["value"] else {
                 throw ErrorMessage("Header entry does not have key/value pair")
             }
-            
+
             fh.append(key, value)
         }
-        
+
         return fh
     }
 
@@ -109,7 +108,7 @@ import JavaScriptCore
     public func toJSON() throws -> String {
 
         var dictionaryArray: [[String: String]] = []
-        self.keys().forEach { key in
+        keys().forEach { key in
             self.getAll(key).forEach { value in
                 dictionaryArray.append([
                     "key": key,
@@ -117,7 +116,7 @@ import JavaScriptCore
                 ])
             }
         }
-        
+
         let jsonData = try JSONSerialization.data(withJSONObject: dictionaryArray, options: JSONSerialization.WritingOptions())
 
         return String(data: jsonData, encoding: String.Encoding.utf8)!

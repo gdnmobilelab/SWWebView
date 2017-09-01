@@ -37,8 +37,8 @@ public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }
     var responseType: ResponseType { get }
-    func json(_: @escaping (Error?, Any?) -> Void) -> Void
-    func text(_: @escaping (Error?, String?) -> Void) -> Void
+    func json(_: @escaping (Error?, Any?) -> Void)
+    func text(_: @escaping (Error?, String?) -> Void)
     func text() -> Promise<String>
     func data() -> Promise<Data>
     var url: URL { get }

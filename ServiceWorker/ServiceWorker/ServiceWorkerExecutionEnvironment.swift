@@ -37,17 +37,17 @@ import PromiseKit
 
     @objc public init(_ worker: ServiceWorker) throws {
         self.worker = worker
-        self.jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
+        jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
 
         #if DEBUG
             ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
         #endif
 
-        self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
-        self.timeoutManager = TimeoutManager(withQueue: self.dispatchQueue, in: self.jsContext)
+        globalScope = try ServiceWorkerGlobalScope(context: jsContext, worker)
+        timeoutManager = TimeoutManager(withQueue: dispatchQueue, in: jsContext)
         super.init()
-        self.jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
+        jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
             // evaluating, we need to check whether there is a new exception.
             // unowned is *required* to avoid circular references that mean this never gets garbage
@@ -55,7 +55,7 @@ import PromiseKit
             self.currentException = error
         }
 
-        self.globalScope.delegate = self
+        globalScope.delegate = self
     }
 
     deinit {
@@ -71,9 +71,9 @@ import PromiseKit
     internal var currentException: JSValue?
 
     fileprivate func throwExceptionIfExists() throws {
-        if self.currentException != nil {
-            let exc = self.currentException!
-            self.currentException = nil
+        if currentException != nil {
+            let exc = currentException!
+            currentException = nil
             if let msg = exc.objectForKeyedSubscript("message") {
                 throw ErrorMessage(msg.toString())
             }
@@ -84,7 +84,7 @@ import PromiseKit
     public func evaluateScript(_ script: String, withSourceURL: URL? = nil) -> Promise<JSValue?> {
 
         return Promise(value: ())
-            .then(on: self.dispatchQueue, execute: { () -> JSValue? in
+            .then(on: dispatchQueue, execute: { () -> JSValue? in
                 if self.currentException != nil {
                     throw ErrorMessage("Cannot run script while context has an exception")
                 }
@@ -99,7 +99,7 @@ import PromiseKit
 
     func importScripts(urls: [URL]) throws {
 
-        self.dispatchQueue.sync {
+        dispatchQueue.sync {
 
             // We want our worker execution thread to pause at this point, so that
             // we can do remote fetching of content.
@@ -162,7 +162,7 @@ import PromiseKit
     public func withJSContext(_ cb: @escaping (JSContext) throws -> Void) -> Promise<Void> {
 
         return Promise(value: ())
-            .then(on: self.dispatchQueue, execute: { () -> Void in
+            .then(on: dispatchQueue, execute: { () -> Void in
                 try cb(self.jsContext)
                 try self.throwExceptionIfExists()
             })
@@ -171,7 +171,7 @@ import PromiseKit
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
         return Promise(value: ())
-            .then(on: self.dispatchQueue, execute: { () -> Void in
+            .then(on: dispatchQueue, execute: { () -> Void in
                 self.globalScope.dispatchEvent(event)
                 try self.throwExceptionIfExists()
             })

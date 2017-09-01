@@ -30,7 +30,7 @@ class FetchOperationTests: XCTestCase {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerDataResponse(jsonObject: [
-                "blah": "value",
+                "blah": "value"
             ])
             res!.statusCode = 201
             res!.setValue("TEST-VALUE", forAdditionalHeader: "X-Test-Header")
@@ -69,7 +69,7 @@ class FetchOperationTests: XCTestCase {
 
         when(fulfilled: [
             FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() },
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() },
+            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() }
         ])
             .then { responses -> Void in
                 XCTAssertEqual(responses[0], "this is some text")
@@ -79,7 +79,7 @@ class FetchOperationTests: XCTestCase {
 
         when(fulfilled: [
             FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() },
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() },
+            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() }
         ])
             .then { responses -> Void in
                 XCTAssertEqual(responses[0], "this is some text two")

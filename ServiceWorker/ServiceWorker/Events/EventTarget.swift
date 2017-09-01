@@ -9,7 +9,7 @@
 import Foundation
 import JavaScriptCore
 
-fileprivate struct EventListener {
+private struct EventListener {
     let eventName: String
     let funcToRun: JSValue
 }
@@ -21,7 +21,8 @@ fileprivate struct EventListener {
     func dispatchEvent(_ event: Event)
 }
 
-/// Replicating the base EventTarget class used throughout the browser: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
+/// Replicating the base EventTarget class used throughout the browser:
+/// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
 @objc class EventTarget: NSObject, EventTargetExports {
 
     fileprivate var listeners: [EventListener] = []

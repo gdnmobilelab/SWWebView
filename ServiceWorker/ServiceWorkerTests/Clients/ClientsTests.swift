@@ -71,7 +71,7 @@ class ClientsTests: XCTestCase {
 
         func clients(_: ServiceWorker, openWindow url: URL, _ cb: (Error?, ClientProtocol?) -> Void) {
             let newClient = TestWindowClient(id: "NEWCLIENT", type: .Window, url: url, focused: true, visibilityState: .Visible)
-            self.clients.append(newClient)
+            clients.append(newClient)
             return cb(nil, newClient)
         }
 
@@ -88,7 +88,7 @@ class ClientsTests: XCTestCase {
         let testAPI = TestClients()
         testAPI.clients.append(TestClient(id: "TESTCLIENT", type: .Window, url: URL(string: "http://www.example.com")!))
 
-        let worker = ServiceWorker.createTestWorker(id: self.name)
+        let worker = ServiceWorker.createTestWorker(id: name)
         worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""
@@ -124,7 +124,7 @@ class ClientsTests: XCTestCase {
         controlled.isControlled = false
         testAPI.clients.append(controlled)
 
-        let worker = ServiceWorker.createTestWorker(id: self.name)
+        let worker = ServiceWorker.createTestWorker(id: name)
         worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""
@@ -179,7 +179,7 @@ class ClientsTests: XCTestCase {
             claimed = true
         }
 
-        let worker = ServiceWorker.createTestWorker(id: self.name)
+        let worker = ServiceWorker.createTestWorker(id: name)
         worker.clientsDelegate = testAPI
 
         worker.evaluateScript("""

@@ -81,7 +81,7 @@ import JavaScriptCore
             .objectForKeyedSubscript("defineProperty")
             .call(withArguments: [jsInstance.objectForKeyedSubscript("prototype"), "hash", [
                 "get": unsafeBitCast(self.hashGetter, to: AnyObject.self),
-                "set": unsafeBitCast(self.hashSetter, to: AnyObject.self),
+                "set": unsafeBitCast(self.hashSetter, to: AnyObject.self)
             ]])
     }
 }

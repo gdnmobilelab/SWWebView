@@ -24,7 +24,7 @@ class ConsoleMirrorTests: XCTestCase {
 
         var functionsRun: Set<String> = []
 
-        let testWorker = ServiceWorker.createTestWorker(id: self.name)
+        let testWorker = ServiceWorker.createTestWorker(id: name)
 
         // We need to do this first because the exec environment creation uses
         // the logging.
@@ -78,7 +78,7 @@ class ConsoleMirrorTests: XCTestCase {
             expect.fulfill()
         }
 
-        let testWorker = ServiceWorker.createTestWorker(id: self.name)
+        let testWorker = ServiceWorker.createTestWorker(id: name)
 
         testWorker.evaluateScript("console.debug({test:'looks', like: 'this'})")
             .catch { error in

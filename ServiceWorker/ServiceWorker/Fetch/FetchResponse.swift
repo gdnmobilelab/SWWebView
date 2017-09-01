@@ -60,8 +60,10 @@ import PromiseKit
         let headers = FetchHeaders()
         response.allHeaderFields.keys.forEach { key in
 
-            let keyString = key as! String
-            let value = response.allHeaderFields[key] as! String
+            guard let keyString = key as? String, let value = response.allHeaderFields[key] as? String else {
+                Log.error?("Received a non-string key/value header pair?")
+                return
+            }
 
             if keyString.lowercased() == "content-encoding" {
                 // URLSession automatically decodes content (which we don't actually want it to do)

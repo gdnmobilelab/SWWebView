@@ -26,7 +26,7 @@ public class SQLiteBlobWriteStream: SQLiteBlobStream {
         guard let state = self.openState else {
             throw ErrorMessage("Cannot write to a stream that is not open")
         }
-        
+
         let bytesLeft = state.blobLength - state.currentPosition
         let lengthToWrite = min(Int32(len), bytesLeft)
 
@@ -34,7 +34,7 @@ public class SQLiteBlobWriteStream: SQLiteBlobStream {
             return -1
         }
 
-        state.currentPosition = state.currentPosition + lengthToWrite
+        state.currentPosition += lengthToWrite
 
         return Int(lengthToWrite)
     }

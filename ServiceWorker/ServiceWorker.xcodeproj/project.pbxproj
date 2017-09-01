@@ -577,6 +577,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8AC7547C1F3122FE00C6B70A /* Build configuration list for PBXNativeTarget "ServiceWorker" */;
 			buildPhases = (
+				8A35AEA41F59F65100E63EF5 /* Swiftformat */,
+				8A35AEA31F59F3E600E63EF5 /* Swiftlint */,
 				8A2360041F34F50000969268 /* Copy Carthage Frameworks */,
 				8AC754631F3122FE00C6B70A /* Sources */,
 				8AC754641F3122FE00C6B70A /* Frameworks */,
@@ -682,6 +684,34 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
+		8A35AEA31F59F3E600E63EF5 /* Swiftlint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Swiftlint;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\ncd $PROJECT_DIR/ServiceWorker\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
+		8A35AEA41F59F65100E63EF5 /* Swiftformat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Swiftformat;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftformat >/dev/null; then\n\nswiftformat $PROJECT_DIR --commas false --self insert\nelse\necho \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi";
 		};
 		8A5D981B1F3DFD7A002E521F /* Copy Carthage Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;

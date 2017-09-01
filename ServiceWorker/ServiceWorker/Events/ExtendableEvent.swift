@@ -11,7 +11,7 @@ import JavaScriptCore
 import PromiseKit
 
 @objc protocol ExtendableEventExports: JSExport {
-    func waitUntil(_: JSValue) -> Void
+    func waitUntil(_: JSValue)
 }
 
 @objc public class ExtendableEvent: Event, ExtendableEventExports {
@@ -33,7 +33,8 @@ import PromiseKit
             return
         }
         guard let managed = JSManagedValue(value: val, andOwner: self) else {
-            val.context.exception = JSValue(newErrorFromMessage: "Could not create JSManagedValue for waitUntil()", in: val.context)
+            let err = JSValue(newErrorFromMessage: "Could not create JSManagedValue for waitUntil()", in: val.context)
+            val.context.exception = err
             return
         }
         val.context.virtualMachine.addManagedReference(managed, withOwner: self)

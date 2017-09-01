@@ -47,11 +47,11 @@ class TimeoutManager {
 
         self.lastTimeoutIndex += 1
 
-        let intervalNumber = self.jsValueMaybeNullToDouble(interval)
+        let intervalNumber = jsValueMaybeNullToDouble(interval)
 
         let interval = Interval(timeout: intervalNumber, function: callback, timeoutIndex: lastTimeoutIndex)
 
-        self.fireInterval(interval)
+        fireInterval(interval)
 
         return self.lastTimeoutIndex
     }
@@ -96,7 +96,7 @@ class TimeoutManager {
         // turns out you can call setTimeout with undefined and it'll execute
         // immediately. So we need to handle that.
 
-        self.queue.asyncAfter(deadline: .now() + self.jsValueMaybeNullToDouble(timeout) / 1000, execute: {
+        queue.asyncAfter(deadline: .now() + jsValueMaybeNullToDouble(timeout) / 1000, execute: {
             if self.cancelledTimeouts.contains(thisTimeoutIndex) == true {
                 self.cancelledTimeouts.remove(thisTimeoutIndex)
                 return

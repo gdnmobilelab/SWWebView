@@ -15,7 +15,7 @@ class ExtendableEventTests: XCTestCase {
 
     func testExtendingAnEvent() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         let ev = ExtendableEvent(type: "test")
 
@@ -47,7 +47,7 @@ class ExtendableEventTests: XCTestCase {
 
     func testPromiseRejection() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         let ev = ExtendableEvent(type: "test")
 
@@ -77,7 +77,7 @@ class ExtendableEventTests: XCTestCase {
 
     func testMultiplePromises() {
 
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         let ev = ExtendableEvent(type: "test")
 
@@ -96,7 +96,6 @@ class ExtendableEventTests: XCTestCase {
                         resultArray.push(2);
                         fulfill();
                     },10);
-                    
                 }))
             """)
         }
@@ -119,7 +118,7 @@ class ExtendableEventTests: XCTestCase {
     }
 
     func testNoPromises() {
-        let sw = ServiceWorker.createTestWorker(id: self.name)
+        let sw = ServiceWorker.createTestWorker(id: name)
 
         let ev = ExtendableEvent(type: "test")
 

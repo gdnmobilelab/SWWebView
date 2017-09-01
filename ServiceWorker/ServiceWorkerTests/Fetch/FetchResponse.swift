@@ -82,7 +82,7 @@ class FetchResponseTests: XCTestCase {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.json", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerDataResponse(jsonObject: [
-                "test": "value",
+                "test": "value"
             ])
             res!.statusCode = 200
             return res

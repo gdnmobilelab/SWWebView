@@ -54,8 +54,8 @@ import PromiseKit
         var request: FetchRequest
         let promise = JSPromise(context: context)
 
-        if requestOrURL.isInstance(of: FetchRequest.self) {
-            request = requestOrURL.toObjectOf(FetchRequest.self) as! FetchRequest
+        if let fetchInstance = requestOrURL.toObjectOf(FetchRequest.self) as? FetchRequest {
+            request = fetchInstance
         } else if requestOrURL.isString {
             request = FetchRequest(url: URL(string: requestOrURL.toString())!)
         } else {
@@ -218,7 +218,10 @@ import PromiseKit
     /// object, and the JS can then call .text(), .json() etc.
     public func urlSession(_: URLSession, dataTask _: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
 
-        let asHTTP = response as! HTTPURLResponse
+        guard let asHTTP = response as? HTTPURLResponse else {
+            self.sendResponse(ErrorMessage("Received response was not an HTTPURLResponse"), nil)
+            return
+        }
 
         if self.redirected == true && self.request.redirect == .Error {
             // This is still run even when we cancel a task. So if we've already thrown

@@ -54,7 +54,7 @@ import JavaScriptCore
         }
 
         do {
-            let webResultSet = try self.connection.select(sql: sqlStatement, values: asObjects, { res in
+            let webResultSet = try connection.select(sql: sqlStatement, values: asObjects, { res in
                 try WebSQLResultSet(resultSet: res, connection: self.connection)
             })
             callback.call(withArguments: [webResultSet])

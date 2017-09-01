@@ -26,7 +26,7 @@ import JavaScriptCore
         guard let lastInsertedId = connection.lastInsertRowId, let lastNumberChanges = connection.lastNumberChanges else {
             throw ErrorMessage("Could not fetch last inserted ID/last number of changes from database")
         }
-        
+
         self.insertId = lastInsertedId
         self.rowsAffected = lastNumberChanges
 

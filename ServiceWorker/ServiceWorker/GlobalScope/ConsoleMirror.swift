@@ -9,7 +9,7 @@
 import Foundation
 import JavaScriptCore
 
-@objc fileprivate protocol ConsoleMirrorExports: JSExport {
+@objc private protocol ConsoleMirrorExports: JSExport {
     func mirror(_ level: String, _ msg: JSValue)
 }
 

@@ -35,7 +35,7 @@ class JSPromise {
 
         let val = self.context.objectForKeyedSubscript("Promise")!.construct(withArguments: [unsafeBitCast(capture, to: AnyObject.self)])
         promiseJSValue = JSManagedValue(value: val)
-        self.virtualMachine.addManagedReference(self.jsValue, withOwner: self)
+        virtualMachine.addManagedReference(self.jsValue, withOwner: self)
     }
 
     public var jsValue: JSValue {

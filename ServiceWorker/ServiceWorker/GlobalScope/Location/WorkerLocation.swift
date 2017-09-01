@@ -40,7 +40,7 @@ import JavaScriptCore
         context.objectForKeyedSubscript("Object")
             .objectForKeyedSubscript("defineProperty")
             .call(withArguments: [jsInstance.objectForKeyedSubscript("prototype"), "hash", [
-                "get": unsafeBitCast(self.hashGetter, to: AnyObject.self),
+                "get": unsafeBitCast(self.hashGetter, to: AnyObject.self)
             ]])
     }
 }
