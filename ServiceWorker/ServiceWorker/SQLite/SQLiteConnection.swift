@@ -151,7 +151,7 @@ public class SQLiteConnection {
             let result = try closure()
             rc = sqlite3_exec(try getDBPointer(), "; COMMIT TRANSACTION;", nil, nil, &zErrMsg)
             if rc != SQLITE_OK {
-                try self.throwSQLiteError(zErrMsg!)
+                try self.throwSQLiteError(zErrMsg)
             }
             return result
 

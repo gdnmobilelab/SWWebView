@@ -11,7 +11,7 @@ import PromiseKit
 import JavaScriptCore
 
 extension Promise {
-    func toJSPromise(in context: JSContext) -> JSValue {
+    func toJSPromise(in context: JSContext) -> JSValue? {
 
         let jsPromise = JSPromise(context: context)
 

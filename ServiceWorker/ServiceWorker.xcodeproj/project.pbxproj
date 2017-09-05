@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A19632A1F5F099800195BF4 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
 		8A2264AC1F33BCDA00B48902 /* WebSQLTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2264AB1F33BCDA00B48902 /* WebSQLTransaction.swift */; };
 		8A2264AE1F33C6C700B48902 /* WebSQLResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2264AD1F33C6C700B48902 /* WebSQLResultSet.swift */; };
 		8A235FF41F34C62100969268 /* SQLiteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FF31F34C62100969268 /* SQLiteTests.swift */; };
@@ -25,12 +26,12 @@
 		8A43C18E1F4F3391001221C1 /* WindowClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C18D1F4F3391001221C1 /* WindowClientProtocol.swift */; };
 		8A43C1901F4F346F001221C1 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C18F1F4F346F001221C1 /* Client.swift */; };
 		8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1911F4F3486001221C1 /* WindowClientVisibilityState.swift */; };
+		8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */; };
 		8A5D97F91F3CB532002E521F /* GlobalEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97F81F3CB532002E521F /* GlobalEventLog.swift */; };
 		8A5D98111F3DF8C2002E521F /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
 		8A5D98151F3DF8C2002E521F /* GCDWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98121F3DF8C2002E521F /* GCDWebServers.framework */; };
 		8A5D98161F3DF8C2002E521F /* FMDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98131F3DF8C2002E521F /* FMDB.framework */; };
 		8A5D98171F3DF8C2002E521F /* Gzip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98141F3DF8C2002E521F /* Gzip.framework */; };
-		8A5D98181F3DFAA8002E521F /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
 		8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */; };
 		8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */; };
 		8AC754721F3122FE00C6B70A /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC754681F3122FE00C6B70A /* ServiceWorker.framework */; };
@@ -129,6 +130,7 @@
 		8A43C18D1F4F3391001221C1 /* WindowClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClientProtocol.swift; sourceTree = "<group>"; };
 		8A43C18F1F4F346F001221C1 /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		8A43C1911F4F3486001221C1 /* WindowClientVisibilityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClientVisibilityState.swift; sourceTree = "<group>"; };
+		8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSArrayBuffer.swift; sourceTree = "<group>"; };
 		8A5D97F81F3CB532002E521F /* GlobalEventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalEventLog.swift; sourceTree = "<group>"; };
 		8A5D980F1F3DF89F002E521F /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PromiseKit.framework; path = ../Carthage/Build/iOS/PromiseKit.framework; sourceTree = "<group>"; };
 		8A5D98121F3DF8C2002E521F /* GCDWebServers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GCDWebServers.framework; path = ../Carthage/Build/iOS/GCDWebServers.framework; sourceTree = "<group>"; };
@@ -208,7 +210,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8A5D98181F3DFAA8002E521F /* PromiseKit.framework in Frameworks */,
+				8A19632A1F5F099800195BF4 /* PromiseKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,6 +376,7 @@
 				8AC7549C1F31235200C6B70A /* JSPromise.swift */,
 				8AC7549D1F31235200C6B70A /* PromiseToJSPromise.swift */,
 				8AC7549E1F31235200C6B70A /* TimeoutManager.swift */,
+				8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */,
 			);
 			path = JS;
 			sourceTree = "<group>";
@@ -579,9 +582,9 @@
 			buildPhases = (
 				8A35AEA41F59F65100E63EF5 /* Swiftformat */,
 				8A35AEA31F59F3E600E63EF5 /* Swiftlint */,
-				8A2360041F34F50000969268 /* Copy Carthage Frameworks */,
 				8AC754631F3122FE00C6B70A /* Sources */,
 				8AC754641F3122FE00C6B70A /* Frameworks */,
+				8A2360041F34F50000969268 /* Copy Carthage Frameworks */,
 				8AC754651F3122FE00C6B70A /* Headers */,
 				8AC754661F3122FE00C6B70A /* Resources */,
 			);
@@ -697,7 +700,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftlint >/dev/null; then\ncd $PROJECT_DIR/ServiceWorker\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
 		};
 		8A35AEA41F59F65100E63EF5 /* Swiftformat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -748,6 +751,7 @@
 				8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */,
 				8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */,
 				8AC754D31F31252B00C6B70A /* FetchOperation.swift in Sources */,
+				8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */,
 				8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */,
 				8AC754D41F31252B00C6B70A /* FetchRequest.swift in Sources */,
 				8A43C18E1F4F3391001221C1 /* WindowClientProtocol.swift in Sources */,
@@ -879,8 +883,8 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../Carthage/**",
 					"$(inherited)",
-					"${SRCROOT}/../Carthage/**",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -943,8 +947,8 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../Carthage/**",
 					"$(inherited)",
-					"${SRCROOT}/../Carthage/**",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -977,7 +981,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ServiceWorker/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.ServiceWorker;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1000,7 +1004,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = ServiceWorker/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.ServiceWorker;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

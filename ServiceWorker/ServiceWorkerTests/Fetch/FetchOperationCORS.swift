@@ -267,20 +267,15 @@ class FetchOperationCORSTests: XCTestCase {
         request.origin = URL(string: "http://not-localhost")
         request.mode = .NoCORS
 
-        let expect = expectation(description: "Fetch call works")
-
-        FetchOperation.fetch(request) { error, response in
-            XCTAssert(error == nil)
-            XCTAssert(response!.responseType == .Opaque)
-
-            response!.text { err, text in
-                XCTAssert(err == nil)
-                XCTAssertEqual(text, "")
-                expect.fulfill()
+        FetchOperation.fetch(request)
+            .then { response in
+                XCTAssert(response.responseType == .Opaque)
+                return response.text()
             }
-        }
-
-        wait(for: [expect], timeout: 1)
+            .then { text in
+                XCTAssertEqual(text, "")
+            }
+            .assertResolves()
     }
 
     func testReturnsBasicResponseWhenSameDomain() {

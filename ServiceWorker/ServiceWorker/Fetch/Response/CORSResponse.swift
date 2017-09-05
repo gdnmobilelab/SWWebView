@@ -31,15 +31,15 @@ private var CORSHeaders = [
 
     fileprivate let allowedHeaders: [String]?
 
-    init(from response: FetchResponse, allowedHeaders: [String]?) {
+    init(from response: FetchResponse, allowedHeaders: [String]?) throws {
 
         self.allowedHeaders = allowedHeaders
         let filteredHeaders = FetchHeaders()
 
         var allAllowedHeaders: [String] = []
         allAllowedHeaders.append(contentsOf: CORSHeaders)
-        if allowedHeaders != nil {
-            allAllowedHeaders.append(contentsOf: allowedHeaders!)
+        if let allowed = allowedHeaders {
+            allAllowedHeaders.append(contentsOf: allowed)
         }
 
         allAllowedHeaders.forEach { key in
@@ -50,7 +50,7 @@ private var CORSHeaders = [
 
         self.filteredHeaders = filteredHeaders
 
-        super.init(from: response)
+        try super.init(from: response)
     }
 
     override func clone() throws -> FetchResponseProtocol {
@@ -59,8 +59,8 @@ private var CORSHeaders = [
             throw ErrorMessage("Cannot clone response: body already used")
         }
 
-        let clone = cloneInternalResponse()
+        let clone = try cloneInternalResponse()
 
-        return CORSResponse(from: clone, allowedHeaders: self.allowedHeaders)
+        return try CORSResponse(from: clone, allowedHeaders: self.allowedHeaders)
     }
 }

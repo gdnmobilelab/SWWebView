@@ -87,22 +87,18 @@ class FetchResponseTests: XCTestCase {
             res!.statusCode = 200
             return res
         }
-        let expectResponse = expectation(description: "Response body is received")
 
-        FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.json").absoluteString) { err, res in
-            XCTAssert(err == nil)
-            res!.json { err, obj in
-
-                XCTAssert(err == nil)
+        FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.json"))
+            .then { response in
+                response.json()
+            }
+            .then { obj -> Void in
 
                 let json = obj as! [String: Any]
 
                 XCTAssertEqual(json["test"] as! String, "value")
-                expectResponse.fulfill()
             }
-        }
-
-        wait(for: [expectResponse], timeout: 1)
+            .assertResolves()
     }
 
     func testResponseInWorker() {
@@ -157,12 +153,36 @@ class FetchResponseTests: XCTestCase {
             .assertResolves()
     }
 
+    func testDataResponse() {
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.dat", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+
+            let d = Data(bytes: [1, 2, 3, 4, 254])
+            let res = GCDWebServerDataResponse(data: d, contentType: "application/binary")
+            res.statusCode = 200
+            return res
+        }
+
+        FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.dat"))
+            .then { res in
+                res.data()
+            }.then { data -> Void in
+
+                data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) in
+                    XCTAssertEqual(bytes[0], 1)
+                    XCTAssertEqual(bytes[1], 2)
+                    XCTAssertEqual(bytes[2], 3)
+                    XCTAssertEqual(bytes[3], 4)
+                    XCTAssertEqual(bytes[4], 254)
+                }
+            }
+            .assertResolves()
+    }
+
     func testArrayBufferResponse() {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.dat", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
 
             let d = Data(bytes: [1, 2, 3, 4, 255])
-            //            d.append(contentsOf: [1,2,3,4,255])
             let res = GCDWebServerDataResponse(data: d, contentType: "application/binary")
             res.statusCode = 200
             return res
@@ -175,6 +195,7 @@ class FetchResponseTests: XCTestCase {
             .then(function(res) { return res.arrayBuffer() })
             .then(function(arrBuffer) {
             let arr = new Uint8Array(arrBuffer);
+            
             return [arr[0],arr[1],arr[2],arr[3],arr[4]]
             })
         """)

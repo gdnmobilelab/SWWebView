@@ -1,4 +1,4 @@
-github "mxcl/PromiseKit" "master"
+github "mxcl/PromiseKit" ~> 4.4
 github "swisspol/GCDWebServer" ~> 3.2.5
 github "1024jp/GzipSwift" "swift4"
 github "ccgus/fmdb"

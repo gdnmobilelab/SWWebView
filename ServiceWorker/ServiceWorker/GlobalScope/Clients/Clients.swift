@@ -10,10 +10,10 @@ import Foundation
 import JavaScriptCore
 
 @objc protocol ClientsExports: JSExport {
-    func get(_: String) -> JSValue
-    func matchAll(_: [String: Any]?) -> JSValue
-    func openWindow(_: String) -> JSValue
-    func claim() -> JSValue
+    func get(_: String) -> JSValue?
+    func matchAll(_: [String: Any]?) -> JSValue?
+    func openWindow(_: String) -> JSValue?
+    func claim() -> JSValue?
 }
 
 @objc class Clients: NSObject, ClientsExports {
@@ -24,7 +24,7 @@ import JavaScriptCore
         self.worker = worker
     }
 
-    func get(_ id: String) -> JSValue {
+    func get(_ id: String) -> JSValue? {
 
         let jsp = JSPromise(context: JSContext.current())
 
@@ -43,7 +43,7 @@ import JavaScriptCore
         return jsp.jsValue
     }
 
-    func matchAll(_ options: [String: Any]?) -> JSValue {
+    func matchAll(_ options: [String: Any]?) -> JSValue? {
 
         let jsp = JSPromise(context: JSContext.current())
 
@@ -55,9 +55,11 @@ import JavaScriptCore
         if self.worker.clientsDelegate?.clients?(self.worker, matchAll: options, { err, clientProtocols in
             if let error = err {
                 jsp.reject(error)
-            } else {
-                let mapped = clientProtocols!.map({ Client.getOrCreate(from: $0, in: JSContext.current()) })
+            } else if let clientProtocolsExist = clientProtocols {
+                let mapped = clientProtocolsExist.map({ Client.getOrCreate(from: $0, in: JSContext.current()) })
                 jsp.fulfill(mapped)
+            } else {
+                jsp.reject(ErrorMessage("Callback did not error but did not send a response either"))
             }
         }) == nil {
             jsp.reject(ErrorMessage("ServiceWorkerDelegate does not implement matchAll()"))
@@ -66,7 +68,7 @@ import JavaScriptCore
         return jsp.jsValue
     }
 
-    func openWindow(_ url: String) -> JSValue {
+    func openWindow(_ url: String) -> JSValue? {
 
         let jsp = JSPromise(context: JSContext.current())
 
@@ -82,7 +84,7 @@ import JavaScriptCore
         return jsp.jsValue
     }
 
-    func claim() -> JSValue {
+    func claim() -> JSValue? {
 
         let jsp = JSPromise(context: JSContext.current())
 

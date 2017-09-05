@@ -34,15 +34,20 @@ import JavaScriptCore
 
     init(context: JSContext, _ worker: ServiceWorker) throws {
 
-        self.console = ConsoleMirror(console: context.objectForKeyedSubscript("console"))
+        self.console = try ConsoleMirror(console: context.objectForKeyedSubscript("console"))
         self.worker = worker
         self.context = context
         self.clients = Clients(for: worker)
-        self.location = WorkerLocation(withURL: worker.url)!
+
+        if let workerLocation = WorkerLocation(withURL: worker.url) {
+            self.location = workerLocation
+        } else {
+            throw ErrorMessage("Could not create worker location for this URL")
+        }
 
         super.init()
 
-        self.attachVariablesToContext()
+        try self.attachVariablesToContext()
         try self.loadIndexedDBShim()
     }
 
@@ -54,11 +59,11 @@ import JavaScriptCore
         }
     }
 
-    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue {
+    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue? {
         return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
     }
 
-    fileprivate func attachVariablesToContext() {
+    fileprivate func attachVariablesToContext() throws {
 
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
@@ -80,7 +85,7 @@ import JavaScriptCore
         }
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
 
-        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue = { [unowned self] requestOrURL, options in
+        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, options in
             FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
         }
         self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
@@ -88,8 +93,8 @@ import JavaScriptCore
 
         // These have weird hacks involving hash get/set, so we have specific functions
         // for adding them.
-        JSURL.addToWorkerContext(context: self.context)
-        WorkerLocation.addToWorkerContext(context: self.context)
+        try JSURL.addToWorkerContext(context: self.context)
+        try WorkerLocation.addToWorkerContext(context: self.context)
 
         applyListenersTo(jsObject: self.context.globalObject)
     }
@@ -111,9 +116,13 @@ import JavaScriptCore
 
         let contents = try String(contentsOf: file)
 
-        let targetObj = JSValue(newObjectIn: context)!
+        guard let targetObj = JSValue(newObjectIn: context) else {
+            throw ErrorMessage("Could not create a new object in JSContext")
+        }
 
-        let shimFunction = context.evaluateScript("(function() {\(contents); return indexeddbshim;})()")!
+        guard let shimFunction = context.evaluateScript("(function() {\(contents); return indexeddbshim;})()") else {
+            throw ErrorMessage("Could not extract IndexedDBShim function from JS file")
+        }
 
         // We use targetObj as the "window" object to apply the shim to. Then we read the keys
         // back out and apply them to our global object (so that you can use "indexedDB" as well as
@@ -191,10 +200,19 @@ import JavaScriptCore
             var scriptURLStrings: [String]
 
             // importScripts supports both single files and arrays
-            if let scriptsAsArray = scripts.toArray() as? [String] {
-                scriptURLStrings = scriptsAsArray
+
+            if scripts.isArray {
+                guard let scriptsArray = scripts.toArray() as? [String] else {
+                    throw ErrorMessage("Could not parse array sent in to importScripts()")
+                }
+                scriptURLStrings = scriptsArray
+            } else if scripts.isString {
+                guard let singleScript = scripts.toString() else {
+                    throw ErrorMessage("Could not parse string sent in to importScripts()")
+                }
+                scriptURLStrings = [singleScript]
             } else {
-                scriptURLStrings = [scripts.toString()]
+                throw ErrorMessage("Could not parse arguments passed to importScripts()")
             }
 
             let scriptURLs = try scriptURLStrings.map { urlString -> URL in

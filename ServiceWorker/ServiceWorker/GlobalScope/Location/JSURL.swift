@@ -67,10 +67,12 @@ import JavaScriptCore
 
     /// We can't use 'hash' as a property in native code because it's used by Objective C (grr)
     /// so we have to resort to this total hack to get hash back.
-    static func addToWorkerContext(context: JSContext) {
+    static func addToWorkerContext(context: JSContext) throws {
 
         context.globalObject.setValue(JSURL.self, forProperty: "URL")
-        let jsInstance = context.globalObject.objectForKeyedSubscript("URL")!
+        guard let jsInstance = context.globalObject.objectForKeyedSubscript("URL") else {
+            throw ErrorMessage("Could not retreive JS instance of URL class")
+        }
 
         // Also add it to the self object
         context.globalObject.objectForKeyedSubscript("self")

@@ -61,7 +61,7 @@ class GlobalScopeTests: XCTestCase {
             return 1
         }
         .recover { error -> Int in
-            XCTAssertEqual((error as! ErrorMessage).message, "oh no")
+            XCTAssertEqual((error as! ErrorMessage).message, "Error: oh no")
             return 0
         }
         .then { val in

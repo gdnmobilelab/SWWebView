@@ -17,17 +17,16 @@ import PromiseKit
 
     public let headers: FetchHeaders
     public var bodyUsed: Bool = false
-    internal var dataStream: ReadableStream?
-    fileprivate var streamController: ReadableStreamController?
+    internal var dataStream: ReadableStream
+    fileprivate var streamController: ReadableStreamController
 
-    public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) {
+    public init(headers: FetchHeaders, status: Int, url: URL, redirected: Bool, fetchOperation: FetchOperation?, stream: ReadableStream? = nil) throws {
         self.fetchOperation = fetchOperation
         self.responseCallback = nil
         self.headers = headers
         self.status = status
         self.url = url
         self.redirected = redirected
-        super.init()
 
         if let str = stream {
             // We can override the underlying stream if we want - this is used
@@ -39,22 +38,32 @@ import PromiseKit
             // Otherwise we create another new stream and hook up the fetch
             // operation.
 
-            self.dataStream = ReadableStream(start: { controller in
-                self.streamController = controller
-            })
+            self.dataStream = ReadableStream()
+            self.streamController = self.dataStream.controller
+        }
+        super.init()
 
+        if stream == nil {
+            // if we've created a new stream (as above) we now need to add ourselves as a delegate.
             if let op = fetchOperation {
                 op.add(delegate: self)
             }
         }
     }
 
-    init(response: HTTPURLResponse, operation: FetchOperation, callback: @escaping (URLSession.ResponseDisposition) -> Void) {
+    init(response: HTTPURLResponse, operation: FetchOperation, callback: @escaping (URLSession.ResponseDisposition) -> Void) throws {
         self.fetchOperation = operation
         self.responseCallback = callback
         self.status = response.statusCode
-        self.url = response.url!
+        guard let url = response.url else {
+            throw ErrorMessage("Response has no URL")
+        }
+        self.url = url
         self.redirected = operation.redirected
+
+        guard let task = operation.task else {
+            throw ErrorMessage("Incoming fetch operation has no task")
+        }
 
         // Convert to our custom FetchHeaders class
         let headers = FetchHeaders()
@@ -74,7 +83,7 @@ import PromiseKit
                 // Because of this same GZIP issue, the content length will be incorrect. It's actually
                 // also normally incorrect, but because we're stripping out all encoding we should
                 // update the content-length header to be accurate.
-                headers.set("Content-Length", String(operation.task!.countOfBytesExpectedToReceive))
+                headers.set("Content-Length", String(task.countOfBytesExpectedToReceive))
                 return
             }
 
@@ -83,11 +92,9 @@ import PromiseKit
 
         self.headers = headers
 
+        dataStream = ReadableStream()
+        self.streamController = dataStream.controller
         super.init()
-
-        dataStream = ReadableStream(start: { controller in
-            self.streamController = controller
-        })
 
         // since this is being created directly from native, we know we want
         // it to be a delegate
@@ -120,8 +127,8 @@ import PromiseKit
 
     public var statusText: String {
 
-        if HttpStatusCodes[self.status] != nil {
-            return HttpStatusCodes[self.status]!
+        if let status = HttpStatusCodes[self.status] {
+            return status
         }
         return "Unassigned"
     }
@@ -140,20 +147,25 @@ import PromiseKit
             // This can only be run once, so once we've done that, clear it out.
             self.internalResponse.responseCallback = nil
         }
-        return self.dataStream!
+
+        return self.dataStream
     }
 
     public func urlSession(_: URLSession, dataTask _: URLSessionDataTask, didReceive data: Data) {
 
         do {
-            try self.streamController!.enqueue(data)
+            try self.streamController.enqueue(data)
         } catch {
             Log.error?("Failed to enqueue data:")
         }
     }
 
     public func urlSession(_: URLSession, task _: URLSessionTask, didCompleteWithError _: Error?) {
-        self.streamController!.close()
+        do {
+            try self.streamController.close()
+        } catch {
+            Log.error?("Failed to close stream controller")
+        }
     }
 
     public func data() -> Promise<Data> {
@@ -161,25 +173,7 @@ import PromiseKit
         return firstly {
             let reader = try self.getReader()
 
-            var allData = Data()
-
-            // Annoying but I can't find any other way to get around Swift complaining
-            // about “Variable used within its own initial value”
-            return Promise { fulfill, _ in
-                var doRead: (() -> Void)?
-                doRead = {
-                    reader.read { read in
-                        if read.done {
-                            fulfill(allData)
-                        } else {
-                            allData.append(read.value!)
-                            doRead!()
-                        }
-                    }
-                }
-
-                doRead!()
-            }
+            return reader.readAll()
         }
     }
 
@@ -220,11 +214,16 @@ import PromiseKit
         // Because this needs to be run synchronously, we freeze the current (background) thread
         // and process our callback promise. Then resume the thread.
 
+        guard let downloadComplete = self.fileDownloadComplete else {
+            Log.error?("Download complete callback called but we have no handler for it. Should never happen")
+            return
+        }
+
         let semaphore = DispatchSemaphore(value: 0)
 
         DispatchQueue.global(qos: .background).async {
 
-            self.fileDownloadComplete!(location)
+            downloadComplete(location)
                 .always {
                     semaphore.signal()
                 }
@@ -233,45 +232,23 @@ import PromiseKit
         semaphore.wait()
     }
 
-    internal func data(_ callback: @escaping (Error?, Data?) -> Void) {
-
-        var reader: ReadableStream
-
-        do {
-            reader = try self.getReader()
-        } catch {
-            callback(error, nil)
-            return
-        }
-
-        var allData = Data()
-
-        // Annoying but I can't find any other way to get around Swift complaining
-        // about “Variable used within its own initial value”
-
-        var doRead: (() -> Void)?
-        doRead = {
-            reader.read { read in
-                if read.done {
-                    callback(nil, allData)
-                } else {
-                    allData.append(read.value!)
-                    doRead!()
-                }
-            }
-        }
-
-        doRead!()
-    }
-
     public func text() -> Promise<String> {
 
         let encoding = FetchResponse.guessCharsetFrom(headers: headers)
 
         return self.data()
             .then { data -> String in
-                let str = String(data: data, encoding: encoding)!
+                guard let str = String(data: data, encoding: encoding) else {
+                    throw ErrorMessage("Could not decode string content")
+                }
                 return str
+            }
+    }
+
+    public func json() -> Promise<Any?> {
+        return self.data()
+            .then { data -> Any in
+                try JSONSerialization.jsonObject(with: data, options: [])
             }
     }
 
@@ -316,122 +293,79 @@ import PromiseKit
         return charset
     }
 
-    public func text(_ callback: @escaping (Error?, String?) -> Void) {
-        self.data { err, data in
+    func json() -> JSValue? {
 
-            if err != nil {
-                callback(err, nil)
-                return
-            }
-
-            do {
-
-                var charset = String.Encoding.utf8
-
-                if let contentTypeHeader = self.headers.get("Content-Type") {
-                    let charsetRegex = try NSRegularExpression(pattern: ";\\s?charset=(.*)+", options: [])
-                    let charsetMatches = charsetRegex.matches(in: contentTypeHeader, options: [], range: NSRange(location: 0, length: contentTypeHeader.characters.count))
-
-                    if let relevantMatch = charsetMatches.first {
-
-                        let matchText = (contentTypeHeader as NSString).substring(with: relevantMatch.range).lowercased()
-
-                        if matchText == "utf-16" {
-                            charset = String.Encoding.utf16
-                        } else if matchText == "utf-32" {
-                            charset = String.Encoding.utf32
-                        } else if matchText == "iso-8859-1" {
-                            charset = String.Encoding.windowsCP1252
-                        }
-                    }
-                }
-
-                let asString = String(data: data!, encoding: charset)
-                callback(nil, asString)
-
-            } catch {
-                callback(error, nil)
-            }
-        }
+        return self.json().toJSPromise(in: JSContext.current())
     }
 
-    func json() -> JSValue {
-        let promise = JSPromise(context: JSContext.current())
+    func text() -> JSValue? {
 
-        json { err, json in
-            if err != nil {
-                promise.reject(err!)
-            } else {
-                promise.fulfill(json)
-            }
-        }
-
-        return promise.jsValue
+        return self.text().toJSPromise(in: JSContext.current())
     }
 
-    func text() -> JSValue {
+    internal func arrayBuffer() -> JSValue? {
 
-        let promise = JSPromise(context: JSContext.current())
-
-        text { err, text in
-            if err != nil {
-                promise.reject(err!)
-            } else {
-                promise.fulfill(text)
-            }
+        guard let currentContext = JSContext.current() else {
+            Log.error?("Tried to call arrayBuffer() outside of a JSContext")
+            return nil
         }
 
-        return promise.jsValue
+        return self.data()
+            .then { data -> JSValue in
+
+                JSArrayBuffer.make(from: data, in: currentContext)
+
+                //                var mutableData: Data = data
+                //
+                //                let arr = mutableData.withUnsafeMutableBytes { pointer -> JSObjectRef in
+                //                    return JSObjectMakeArrayBufferWithBytesNoCopy(currentContext.jsGlobalContextRef, pointer, data.count, { _, _ in
+                //                        // TODO: WTF to do with this
+                //
+                //                        NSLog("Deallocate data!")
+                //                    }, &mutableData, nil)
+                //                }
+
+                //                let test = Test(data: data, context: currentContext)
+                //                let arr = JSObjectMakeArrayBufferWithBytesNoCopy(currentContext.jsGlobalContextRef, test.data.mutableBytes, test.data.length, { _, _ in
+                //                    NSLog("done?")
+                //                }, nil, nil)
+                //                let js = JSValue(jsValueRef: arr, in: currentContext)
+
+                //                Test.map.setObject(test, forKey: js)
+
+                //                let val = JSValue(jsValueRef: test, in: currentContext)!
+                //                currentContext.virtualMachine.addManagedReference(test, withOwner: test.jsVal)
+                //                return js!
+            }
+            //            .toJSPromise(in: currentContext)
+            .toJSPromise(in: currentContext)
     }
 
-    internal func arrayBuffer() -> JSValue {
-
-        let promise = JSPromise(context: JSContext.current())
-
-        data { err, data in
-
-            if err != nil {
-                promise.reject(err!)
-                return
-            }
-
-            var d = data!
-
-            let arr = d.withUnsafeMutableBytes { pointer -> JSObjectRef in
-                return JSObjectMakeArrayBufferWithBytesNoCopy(promise.context.jsGlobalContextRef, pointer, data!.count, { _, _ in
-                    // TODO: WTF to do with this
-                    NSLog("Deallocate!")
-                }, nil, nil)
-            }
-            let asJSVal = JSValue(jsValueRef: arr, in: promise.context)
-            promise.fulfill(asJSVal)
-        }
-
-        return promise.jsValue
-    }
-
-    public func json(_ callback: @escaping (Error?, Any?) -> Void) {
-
-        self.data { err, data in
-
-            if err != nil {
-                callback(err, nil)
-                return
-            }
-
-            do {
-                let json = try JSONSerialization.jsonObject(with: data!, options: [])
-                callback(nil, json)
-            } catch {
-                callback(error, nil)
-            }
-        }
-    }
+    //    public func json(_ callback: @escaping (Error?, Any?) -> Void) {
+    //
+    //        self.data { err, data in
+    //
+    //            if err != nil {
+    //                callback(err, nil)
+    //                return
+    //            }
+    //
+    //            do {
+    //                let json = try JSONSerialization.jsonObject(with: data!, options: [])
+    //                callback(nil, json)
+    //            } catch {
+    //                callback(error, nil)
+    //            }
+    //        }
+    //    }
 
     deinit {
-        if self.fetchOperation?.task!.state == .running {
-            Log.warn?("Terminating currently pending fetch operation for: " + self.fetchOperation!.request.url.absoluteString)
-            self.fetchOperation!.task!.cancel()
+
+        if let operation = self.fetchOperation {
+            if let task = operation.task {
+                Log.warn?("Terminating currently pending fetch operation for: " + operation.request.url.absoluteString)
+                task.cancel()
+            }
         }
     }
 }

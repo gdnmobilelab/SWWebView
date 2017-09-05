@@ -21,18 +21,15 @@ import JavaScriptCore
         return self.filteredHeaders
     }
 
-    override init(from response: FetchResponse) {
+    override init(from response: FetchResponse) throws {
         let filteredHeaders = FetchHeaders()
 
-        response.headers.keys().forEach { key in
-            if key.lowercased() == "set-cookie" || key.lowercased() == "set-cookie2" {
-                return
-            }
-            filteredHeaders.set(key, response.headers.get(key)!)
+        filteredHeaders.values = response.headers.values.filter { header in
+            return header.key.lowercased() != "set-cookie" && header.key.lowercased() != "set-cookie2"
         }
 
         self.filteredHeaders = filteredHeaders
 
-        super.init(from: response)
+        try super.init(from: response)
     }
 }

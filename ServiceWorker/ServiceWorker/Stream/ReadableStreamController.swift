@@ -10,17 +10,19 @@ import Foundation
 
 @objc public class ReadableStreamController: NSObject {
 
-    let stream: ReadableStream
-
-    init(_ stream: ReadableStream) {
-        self.stream = stream
-    }
+    weak var stream: ReadableStream?
 
     public func enqueue(_ data: Data) throws {
-        try self.stream.enqueue(data)
+        guard let stream = self.stream else {
+            throw ErrorMessage("Controller has no stream")
+        }
+        try stream.enqueue(data)
     }
 
-    public func close() {
-        self.stream.close()
+    public func close() throws {
+        guard let stream = self.stream else {
+            throw ErrorMessage("Controller has no stream")
+        }
+        stream.close()
     }
 }

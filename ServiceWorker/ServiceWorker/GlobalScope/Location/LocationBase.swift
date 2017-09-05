@@ -48,7 +48,12 @@ import JavaScriptCore
 
     @objc(protocol) public var _protocol: String {
         get {
-            return components.scheme != nil ? components.scheme! + ":" : ""
+
+            if let scheme = components.scheme {
+                return scheme + ":"
+            } else {
+                return ""
+            }
         }
         set(value) {
             components.scheme = value
@@ -134,7 +139,11 @@ import JavaScriptCore
 
     @objc public var _hash: String {
         get {
-            return self.components.fragment != nil ? "#" + self.components.fragment! : ""
+            if let fragment = self.components.fragment {
+                return "#" + fragment
+            } else {
+                return ""
+            }
         }
         set(value) {
             self.components.fragment = value

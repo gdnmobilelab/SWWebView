@@ -23,7 +23,13 @@ import PromiseKit
     var responseIsReadyCallback: ResponseCallback?
 
     public static func fetch(_ url: String, _ callback: @escaping ResponseCallback) {
-        let request = FetchRequest(url: URL(string: url)!)
+
+        guard let parsedURL = URL(string: url) else {
+            callback(ErrorMessage("Could not parse request URL"), nil)
+            return
+        }
+
+        let request = FetchRequest(url: parsedURL)
         _ = FetchOperation(request, callback)
     }
 
@@ -40,40 +46,51 @@ import PromiseKit
 
         return Promise { fulfill, reject in
             fetch(request) { err, res in
-                if err != nil {
-                    reject(err!)
+                if let error = err {
+                    reject(error)
+                } else if let response = res {
+                    fulfill(response)
                 } else {
-                    fulfill(res!)
+                    reject(ErrorMessage("Callback returned no error but no response either"))
                 }
             }
         }
     }
 
-    internal static func jsFetch(context: JSContext, origin: URL?, requestOrURL: JSValue, options: JSValue?) -> JSValue {
+    internal static func jsFetch(context: JSContext, origin: URL?, requestOrURL: JSValue, options: JSValue?) -> JSValue? {
 
         var request: FetchRequest
         let promise = JSPromise(context: context)
 
-        if let fetchInstance = requestOrURL.toObjectOf(FetchRequest.self) as? FetchRequest {
-            request = fetchInstance
-        } else if requestOrURL.isString {
-            request = FetchRequest(url: URL(string: requestOrURL.toString())!)
-        } else {
-            promise.reject(ErrorMessage("Did not understand first argument passed in"))
-            return promise.jsValue
-        }
+        do {
+            if let fetchInstance = requestOrURL.toObjectOf(FetchRequest.self) as? FetchRequest {
+                request = fetchInstance
+            } else if requestOrURL.isString {
 
-        if options != nil {
-            do {
-                if let opts = options!.toObject() as? [String: AnyObject] {
-                    try request.applyOptions(opts: opts)
-                } else if options!.isNull == false && options!.isUndefined == false {
+                guard let requestString = requestOrURL.toString() else {
+                    throw ErrorMessage("Could not convert request to string")
+                }
+
+                guard let parsedURL = URL(string: requestString) else {
+                    throw ErrorMessage("Could not parse URL string")
+                }
+
+                request = FetchRequest(url: parsedURL)
+            } else {
+                throw ErrorMessage("Did not understand first argument passed in")
+            }
+
+            if let opts = options {
+                if let optionsObject = opts.toObject() as? [String: AnyObject] {
+                    try request.applyOptions(opts: optionsObject)
+                } else if opts.isNull == false && opts.isUndefined == false {
                     throw ErrorMessage("Did not understand options parameter")
                 }
-            } catch {
-                promise.reject(error)
-                return promise.jsValue
             }
+
+        } catch {
+            promise.reject(error)
+            return promise.jsValue
         }
 
         if let originURL = origin {
@@ -93,7 +110,16 @@ import PromiseKit
 
     fileprivate func performCORSCheck() -> Promise<Void> {
 
-        if self.request.mode != .CORS || self.request.origin == nil || self.request.origin!.host == self.request.url.host {
+        guard let origin = self.request.origin else {
+            // Not a CORS request
+            return Promise(value: ())
+        }
+
+        guard let host = origin.host, let scheme = origin.scheme else {
+            return Promise(error: ErrorMessage("Origin must have a host and a scheme"))
+        }
+
+        if self.request.mode != .CORS || origin.host == self.request.url.host {
             // This is not a CORS request, so we can skip all this.
             return Promise(value: ())
         }
@@ -106,7 +132,7 @@ import PromiseKit
 
                 let allowedOrigin = res.headers.get("Access-Control-Allow-Origin")
 
-                if allowedOrigin != "*" && allowedOrigin != self.request.origin!.scheme! + "://" + self.request.origin!.host! {
+                if allowedOrigin != "*" && allowedOrigin != scheme + "://" + host {
                     throw ErrorMessage("Access-Control-Allow-Origin does not match or does not exist")
                 }
 
@@ -151,8 +177,8 @@ import PromiseKit
 
         nsRequest.httpMethod = self.request.method
 
-        request.headers.keys().forEach { name in
-            nsRequest.addValue(request.headers.get(name)!, forHTTPHeaderField: name)
+        request.headers.values.forEach { keyvalPair in
+            nsRequest.addValue(keyvalPair.value, forHTTPHeaderField: keyvalPair.key)
         }
 
         if let body = self.request.body {
@@ -164,24 +190,32 @@ import PromiseKit
         self.performCORSCheck()
             .then { () -> Void in
 
-                self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+                let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+                self.session = session
 
-                self.task = self.session!.dataTask(with: nsRequest)
+                let task = session.dataTask(with: nsRequest)
+                self.task = task
 
-                self.task!.resume()
+                task.resume()
             }.catch { error in
                 callback(error, nil)
             }
     }
 
     fileprivate func sendResponse(_ err: Error?, _ res: FetchResponseProtocol?) {
-        self.responseIsReadyCallback!(err, res)
+        guard let readyCallback = self.responseIsReadyCallback else {
+            Log.error?("Ready callback does not exist when it is needed. Not sure what to do here.")
+            return
+        }
+        readyCallback(err, res)
         self.responseIsReadyCallback = nil
     }
 
     public override func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         super.urlSession(session, task: task, didCompleteWithError: error)
         if let errorExists = error {
+            // cancel errors are when we/the user has manually cancelled navigation. We don't
+            // want to pass them along (need more details here)
             if errorExists.localizedDescription.contains("cancel") == false {
                 self.sendResponse(errorExists, nil)
             }
@@ -190,7 +224,6 @@ import PromiseKit
 
     public override func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         super.urlSession(session, didBecomeInvalidWithError: error)
-        NSLog("sdfsdf")
     }
 
     public func urlSession(_: URLSession, task _: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
@@ -204,7 +237,13 @@ import PromiseKit
             completionHandler(nil)
             let err = ErrorMessage("Response redirected when this was not expected")
             sendResponse(err, nil)
-            task!.cancel()
+
+            guard let task = self.task else {
+                Log.error?("Task doesn't exist when it was expected.")
+                return completionHandler(nil)
+            }
+
+            task.cancel()
 
         } else {
             completionHandler(nil)
@@ -228,20 +267,32 @@ import PromiseKit
             // we want to ignore this completion event
             return
         }
+        do {
+            let internalResponse = try FetchResponse(response: asHTTP, operation: self, callback: completionHandler)
+            var filteredResponse: FetchResponseProtocol
 
-        let internalResponse = FetchResponse(response: asHTTP, operation: self, callback: completionHandler)
-        var filteredResponse: FetchResponseProtocol
+            var isCrossDomain = false
 
-        let isCrossDomain = request.origin != nil && request.origin!.host != internalResponse.url.host
+            if let origin = request.origin {
 
-        if self.request.mode == .NoCORS && isCrossDomain {
-            filteredResponse = OpaqueResponse(from: internalResponse)
-        } else if self.request.mode == .CORS && isCrossDomain {
-            filteredResponse = CORSResponse(from: internalResponse, allowedHeaders: self.allowedCORSHeaders)
-        } else {
-            filteredResponse = BasicResponse(from: internalResponse)
+                guard let originHost = origin.host, let responseHost = internalResponse.url.host else {
+                    throw ErrorMessage("Both origin and response URLs must have hosts")
+                }
+
+                isCrossDomain = originHost != responseHost
+            }
+
+            if self.request.mode == .NoCORS && isCrossDomain {
+                filteredResponse = try OpaqueResponse(from: internalResponse)
+            } else if self.request.mode == .CORS && isCrossDomain {
+                filteredResponse = try CORSResponse(from: internalResponse, allowedHeaders: self.allowedCORSHeaders)
+            } else {
+                filteredResponse = try BasicResponse(from: internalResponse)
+            }
+
+            self.sendResponse(nil, filteredResponse)
+        } catch {
+            self.sendResponse(error, nil)
         }
-
-        self.sendResponse(nil, filteredResponse)
     }
 }

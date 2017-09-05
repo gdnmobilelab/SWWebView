@@ -18,10 +18,21 @@ class JSPromise {
     fileprivate var reject: JSManagedValue?
     fileprivate var promiseJSValue: JSManagedValue?
 
+    fileprivate let thereWasNoPromiseConstructor: Bool
+
     public init(context: JSContext) {
         self.context = context
         self.virtualMachine = context.virtualMachine
-        let capture: @convention(block) (JSValue, JSValue) -> Void = { (fulfillVal: JSValue, rejectVal: JSValue) in
+
+        guard let promiseConstructor = self.context.objectForKeyedSubscript("Promise") else {
+            context.exception = JSValue(newErrorFromMessage: "Tried to create a Promise, but this context has no Promise constructor", in: context)
+            self.thereWasNoPromiseConstructor = true
+            return
+        }
+
+        self.thereWasNoPromiseConstructor = false
+
+        let capture: @convention(block) (JSValue, JSValue) -> Void = { [unowned self] (fulfillVal: JSValue, rejectVal: JSValue) in
 
             let fulfillManaged = JSManagedValue(value: fulfillVal)
             let rejectManaged = JSManagedValue(value: rejectVal)
@@ -33,13 +44,13 @@ class JSPromise {
             self.reject = rejectManaged
         }
 
-        let val = self.context.objectForKeyedSubscript("Promise")!.construct(withArguments: [unsafeBitCast(capture, to: AnyObject.self)])
+        let val = promiseConstructor.construct(withArguments: [unsafeBitCast(capture, to: AnyObject.self)])
         promiseJSValue = JSManagedValue(value: val)
-        virtualMachine.addManagedReference(self.jsValue, withOwner: self)
+        virtualMachine.addManagedReference(self.promiseJSValue, withOwner: self)
     }
 
-    public var jsValue: JSValue {
-        return self.promiseJSValue!.value
+    public var jsValue: JSValue? {
+        return self.promiseJSValue?.value
     }
 
     deinit {
@@ -49,36 +60,60 @@ class JSPromise {
     }
 
     public func fulfill(_ value: Any?) {
-        if value == nil {
-            self.fulfill!.value.call(withArguments: [NSNull()])
+
+        if let fulfill = self.fulfill {
+            if let val = value {
+                fulfill.value.call(withArguments: [val])
+            } else {
+                fulfill.value.call(withArguments: [NSNull()])
+            }
+        } else if self.thereWasNoPromiseConstructor == true {
+            Log.warn?("Tried to resolve a promise in a JS context that has no promise constructor")
         } else {
-            self.fulfill!.value.call(withArguments: [value!])
+            Log.error?("Tried to resolve a JS promise but the reference to fulfill has been lost")
         }
     }
 
     public func reject(_ error: Error) {
 
-        var str = String(describing: error)
-        if let errMsg = error as? ErrorMessage {
-            str = errMsg.message
+        if let reject = self.reject {
+            guard let err = JSValue(newErrorFromMessage: "\(error)", in: context) else {
+                Log.error?("Could not create JS instance of promise rejection error")
+                return
+            }
+            reject.value.call(withArguments: [err])
+        } else if self.thereWasNoPromiseConstructor == true {
+            Log.warn?("Tried to reject a promise in a JS context that has no promise constructor")
+        } else {
+            Log.error?("Tried to reject a JS promise but the reference to reject has been lost")
         }
-
-        let err = JSValue(newErrorFromMessage: str, in: context)
-
-        reject!.value.call(withArguments: [err!])
     }
 
     public func processCallback(_ error: Error?, _ returnObject: Any?) {
-        if error != nil {
-            self.reject(error!)
+        if let err = error {
+            self.reject(err)
+        } else if let ret = returnObject {
+            self.fulfill(ret)
         } else {
-            self.fulfill(returnObject!)
+            self.reject(ErrorMessage("A callback returned neither an error nor a response"))
+        }
+    }
+
+    public func processCallback<I, O>(transformer: @escaping (I) -> O) -> (Error?, I?) -> Void {
+        return { error, result in
+            if let errorExists = error {
+                self.reject(errorExists)
+            } else if let resultExists = result {
+                self.fulfill(transformer(resultExists))
+            } else {
+                self.reject(ErrorMessage("Callback returned no error and also no result"))
+            }
         }
     }
 
     public func processCallback(_ error: Error?) {
-        if error != nil {
-            self.reject(error!)
+        if let err = error {
+            self.reject(err)
         } else {
             self.fulfill(nil)
         }
@@ -95,7 +130,9 @@ class JSPromise {
                 fulfill(JSManagedValue(value: result))
             }
 
-            let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})")!
+            guard let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})") else {
+                throw ErrorMessage("Could not wrap JS promise into PromiseKit promise")
+            }
 
             bindFunc.call(withArguments: [promise, unsafeBitCast(fulfill, to: AnyObject.self), unsafeBitCast(reject, to: AnyObject.self)])
         }
@@ -110,7 +147,10 @@ class JSPromise {
             cb(nil, result)
         }
 
-        let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})")!
+        guard let bindFunc = promise.context.evaluateScript("(function(promise,thenFunc,catchFunc) { return promise.then(thenFunc).catch(catchFunc)})") else {
+            cb(ErrorMessage("Could not wrap promise in JS"), nil)
+            return
+        }
 
         bindFunc.call(withArguments: [promise, unsafeBitCast(fulfill, to: AnyObject.self), unsafeBitCast(reject, to: AnyObject.self)])
     }

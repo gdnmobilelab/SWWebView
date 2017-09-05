@@ -18,7 +18,7 @@ import JavaScriptCore
 /// to override the functions on the console object itself.
 @objc class ConsoleMirror: NSObject, ConsoleMirrorExports {
 
-    init(console: JSValue) {
+    init(console: JSValue) throws {
         super.init()
         let interceptorJS = """
             var originalFunction = console[level];
@@ -32,9 +32,11 @@ import JavaScriptCore
         // new Function(level, interceptor, {js})
         // to create a function we then apply to each console level we want to mirror.
 
-        let interceptorFunc = console.context
+        guard let interceptorFunc = console.context
             .objectForKeyedSubscript("Function")
-            .construct(withArguments: ["level", "interceptor", interceptorJS])!
+            .construct(withArguments: ["level", "interceptor", interceptorJS]) else {
+            throw ErrorMessage("Could not construct JS console interceptor")
+        }
 
         // Now replace the functions on the console object for each level
 

@@ -11,12 +11,13 @@ import PromiseKit
 
 @objc public class ReadableStream: NSObject {
 
-    var controller: ReadableStreamController?
-    fileprivate var enqeueuedData = NSMutableData()
+    let controller: ReadableStreamController
+    fileprivate var enqeueuedData = Data()
     fileprivate var pendingReads: [PendingRead] = []
     var closed = false
     public typealias PendingRead = (StreamReadResult) -> Void
-    typealias StreamOperation = (ReadableStreamController) -> Void
+    typealias StreamOperation = (ReadableStreamController) throws -> Void
+    typealias StreamOperationNoThrow = (ReadableStreamController) -> Void
 
     // The readable stream needs to be thread-safe, so we ensure that all
     // read operations happen on the same queue.
@@ -26,19 +27,20 @@ import PromiseKit
     let pull: StreamOperation?
     let cancel: StreamOperation?
 
-    init(start: StreamOperation? = nil, pull: StreamOperation? = nil, cancel: StreamOperation? = nil) {
+    init(start: StreamOperationNoThrow? = nil, pull: StreamOperation? = nil, cancel: StreamOperation? = nil) {
         self.start = start
         self.pull = pull
         self.cancel = cancel
+        self.controller = ReadableStreamController()
         super.init()
-        self.controller = ReadableStreamController(self)
 
-        if self.start != nil {
-            self.start!(self.controller!)
+        self.controller.stream = self
+        if let startExists = start {
+            startExists(self.controller)
         }
     }
 
-    public static func fromInputStream(stream: InputStream, bufferSize: Int) -> ReadableStream {
+    public static func fromInputStream(stream: InputStream, bufferSize: Int) throws -> ReadableStream {
 
         var bufferData = Data(count: bufferSize)
 
@@ -52,10 +54,10 @@ import PromiseKit
                 return
             }
             if stream.hasBytesAvailable == false {
-                c.close()
+                try c.close()
                 stream.close()
             }
-            bufferData.withUnsafeMutableBytes { (body: UnsafeMutablePointer<UInt8>) -> Void in
+            try bufferData.withUnsafeMutableBytes { (body: UnsafeMutablePointer<UInt8>) -> Void in
                 let length = stream.read(body, maxLength: bufferSize)
 
                 if length > 0 {
@@ -72,14 +74,14 @@ import PromiseKit
 
                 if stream.hasBytesAvailable == false {
                     stream.close()
-                    c.close()
+                    try c.close()
                 }
             }
         }
 
         let cancel = { (c: ReadableStreamController) in
             cancelled = true
-            c.close()
+            try c.close()
         }
 
         return ReadableStream(start: start, pull: pull, cancel: cancel)
@@ -105,25 +107,45 @@ import PromiseKit
 
     public func read(cb: @escaping PendingRead) {
         self.dispatchQueue.sync {
-            if self.enqeueuedData.length > 0 {
+            if self.enqeueuedData.count > 0 {
+                // save a reference to our current pending data
                 let data = enqeueuedData
-                enqeueuedData = NSMutableData()
-                DispatchQueue.main.async {
-                    cb(StreamReadResult(done: false, value: data as Data))
+                // now set self.enqueuedData to be a new Data object
+                enqeueuedData = Data()
+                // now send our current pending data
+                DispatchQueue.global().async {
+                    cb(StreamReadResult(done: false, value: data))
                 }
 
             } else if self.closed == true {
                 // If we're already closed then just push a done
                 // block for good measure
-                DispatchQueue.main.async {
+                DispatchQueue.global().async {
                     cb(StreamReadResult(done: true, value: nil))
                 }
 
             } else {
                 self.pendingReads.append(cb)
-                DispatchQueue.main.async {
-                    self.pull?(self.controller!)
+                DispatchQueue.global().async {
+                    do {
+                        try self.pull?(self.controller)
+                    } catch {
+                        Log.error?("Pull operation on stream failed: \(error)")
+                    }
                 }
+            }
+        }
+    }
+
+    fileprivate func dataReadToEnd(targetData: NSMutableData = NSMutableData(), fulfill: @escaping (Data) -> Void, reject: @escaping (Error) -> Void) {
+        self.read { read in
+            if read.done {
+                fulfill(targetData as Data)
+            } else if let value = read.value {
+                targetData.append(value)
+                self.dataReadToEnd(targetData: targetData, fulfill: fulfill, reject: reject)
+            } else {
+                reject(ErrorMessage("Stream read returned neither an error nor data"))
             }
         }
     }
@@ -138,28 +160,10 @@ import PromiseKit
         }
     }
 
-    public func readToEnd(transformer: @escaping (Data) throws -> Void) -> Promise<Void> {
+    public func readAll() -> Promise<Data> {
 
         return Promise { fulfill, reject in
-
-            var doRead: (() -> Void)?
-
-            doRead = {
-                self.read { read in
-                    if read.done {
-                        fulfill(())
-                    } else {
-                        do {
-                            try transformer(read.value!)
-                            doRead!()
-                        } catch {
-                            reject(error)
-                        }
-                    }
-                }
-            }
-
-            doRead!()
+            self.dataReadToEnd(fulfill: fulfill, reject: reject)
         }
     }
 

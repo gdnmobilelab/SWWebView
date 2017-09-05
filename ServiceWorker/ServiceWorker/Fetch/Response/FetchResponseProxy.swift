@@ -26,7 +26,7 @@ import PromiseKit
 
     let _internal: FetchResponse
 
-    init(from response: FetchResponse) {
+    init(from response: FetchResponse) throws {
         self._internal = response
     }
 
@@ -38,19 +38,15 @@ import PromiseKit
         return self._internal.data()
     }
 
-    func json(_ cb: @escaping (Error?, Any?) -> Void) {
-        self._internal.json(cb)
-    }
-
-    func text(_ cb: @escaping (Error?, String?) -> Void) {
-        self._internal.text(cb)
-    }
-
-    func json() -> JSValue {
+    func json() -> Promise<Any?> {
         return self._internal.json()
     }
 
-    func text() -> JSValue {
+    func json() -> JSValue? {
+        return self._internal.json()
+    }
+
+    func text() -> JSValue? {
         return self._internal.text()
     }
 
@@ -58,12 +54,12 @@ import PromiseKit
         return self._internal.text()
     }
 
-    func arrayBuffer() -> JSValue {
+    func arrayBuffer() -> JSValue? {
         return self._internal.arrayBuffer()
     }
 
-    func cloneInternalResponse() -> FetchResponse {
-        return FetchResponse(headers: self._internal.headers, status: self._internal.status, url: self._internal.url, redirected: self._internal.redirected, fetchOperation: self._internal.fetchOperation)
+    func cloneInternalResponse() throws -> FetchResponse {
+        return try FetchResponse(headers: self._internal.headers, status: self._internal.status, url: self._internal.url, redirected: self._internal.redirected, fetchOperation: self._internal.fetchOperation)
     }
 
     func clone() throws -> FetchResponseProtocol {
@@ -72,12 +68,12 @@ import PromiseKit
             throw ErrorMessage("Cannot clone response: body already used")
         }
 
-        let clonedInternalResponse = cloneInternalResponse()
+        let clonedInternalResponse = try cloneInternalResponse()
 
         if self.responseType == .Basic {
-            return BasicResponse(from: clonedInternalResponse)
+            return try BasicResponse(from: clonedInternalResponse)
         } else if self.responseType == .Opaque {
-            return OpaqueResponse(from: clonedInternalResponse)
+            return try OpaqueResponse(from: clonedInternalResponse)
         } else {
             // CORS overrides this, so that we can handle allowed headers
             throw ErrorMessage("Do not know how to clone this type of response")

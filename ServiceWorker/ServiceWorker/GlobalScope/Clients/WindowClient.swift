@@ -10,8 +10,8 @@ import Foundation
 import JavaScriptCore
 
 @objc protocol WindowClientExports: JSExport {
-    func focus() -> JSValue
-    func navigate(_ url: String) -> JSValue
+    func focus() -> JSValue?
+    func navigate(_ url: String) -> JSValue?
     var focused: Bool { get }
     var visibilityState: String { get }
 }
@@ -25,19 +25,17 @@ import JavaScriptCore
         super.init(wrapping: wrapping, in: context)
     }
 
-    func focus() -> JSValue {
+    func focus() -> JSValue? {
         let jsp = JSPromise(context: context)
-        wrapAroundWindow.focus { err, windowClientProtocol in
-            if err != nil {
-                jsp.reject(err!)
-            } else {
-                jsp.fulfill(Client.getOrCreate(from: windowClientProtocol!, in: self.context))
-            }
-        }
+
+        wrapAroundWindow.focus(jsp.processCallback(transformer: { windowClientProtocol in
+            Client.getOrCreate(from: windowClientProtocol, in: self.context)
+        }))
+
         return jsp.jsValue
     }
 
-    func navigate(_ url: String) -> JSValue {
+    func navigate(_ url: String) -> JSValue? {
 
         let jsp = JSPromise(context: context)
 
@@ -46,13 +44,9 @@ import JavaScriptCore
             return jsp.jsValue
         }
 
-        self.wrapAroundWindow.navigate(to: parsedURL) { err, windowClient in
-            if err != nil {
-                jsp.reject(err!)
-            } else {
-                jsp.fulfill(Client.getOrCreate(from: windowClient!, in: self.context))
-            }
-        }
+        self.wrapAroundWindow.navigate(to: parsedURL, jsp.processCallback(transformer: { windowClient in
+            Client.getOrCreate(from: windowClient, in: self.context)
+        }))
 
         return jsp.jsValue
     }

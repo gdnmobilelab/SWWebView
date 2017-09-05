@@ -18,7 +18,7 @@ import PromiseKit
     let dispatchQueue = DispatchQueue.global(qos: .background)
     let timeoutManager: TimeoutManager
 
-    fileprivate static var virtualMachine = JSVirtualMachine()!
+    fileprivate static var virtualMachine = JSVirtualMachine()
 
     #if DEBUG
         // We use this in tests to check whether all our JSContexts have been
@@ -37,7 +37,12 @@ import PromiseKit
 
     @objc public init(_ worker: ServiceWorker) throws {
         self.worker = worker
-        jsContext = JSContext(virtualMachine: ServiceWorkerExecutionEnvironment.virtualMachine)
+
+        guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
+            throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
+        }
+
+        jsContext = JSContext(virtualMachine: virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
 
         #if DEBUG
@@ -71,13 +76,9 @@ import PromiseKit
     internal var currentException: JSValue?
 
     fileprivate func throwExceptionIfExists() throws {
-        if currentException != nil {
-            let exc = currentException!
+        if let exc = currentException {
             currentException = nil
-            if let msg = exc.objectForKeyedSubscript("message") {
-                throw ErrorMessage(msg.toString())
-            }
-            throw ErrorMessage(exc.toString())
+            throw ErrorMessage("\(exc)")
         }
     }
 

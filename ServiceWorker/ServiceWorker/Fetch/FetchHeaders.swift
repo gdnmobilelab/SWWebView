@@ -29,7 +29,7 @@ import JavaScriptCore
         let value: String
     }
 
-    fileprivate var values: [KeyValuePair] = []
+    internal var values: [KeyValuePair] = []
 
     public func set(_ name: String, _ value: String) {
 
@@ -119,6 +119,9 @@ import JavaScriptCore
 
         let jsonData = try JSONSerialization.data(withJSONObject: dictionaryArray, options: JSONSerialization.WritingOptions())
 
-        return String(data: jsonData, encoding: String.Encoding.utf8)!
+        guard let string = String(data: jsonData, encoding: String.Encoding.utf8) else {
+            throw ErrorMessage("Could not encode JSON to string")
+        }
+        return string
     }
 }

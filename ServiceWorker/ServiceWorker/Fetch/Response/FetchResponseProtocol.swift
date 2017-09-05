@@ -25,9 +25,9 @@ import PromiseKit
     var urlString: String { get }
 
     func getReader() throws -> ReadableStream
-    func json() -> JSValue
-    func text() -> JSValue
-    func arrayBuffer() -> JSValue
+    func json() -> JSValue?
+    func text() -> JSValue?
+    func arrayBuffer() -> JSValue?
 
     @objc(clone)
     func cloneResponseExports() -> FetchResponseJSExports?
@@ -37,9 +37,8 @@ public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }
     var responseType: ResponseType { get }
-    func json(_: @escaping (Error?, Any?) -> Void)
-    func text(_: @escaping (Error?, String?) -> Void)
     func text() -> Promise<String>
     func data() -> Promise<Data>
+    func json() -> Promise<Any?>
     var url: URL { get }
 }

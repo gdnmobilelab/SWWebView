@@ -17,18 +17,18 @@ import PromiseKit
 @objc public class ExtendableEvent: Event, ExtendableEventExports {
 
     public enum ExtendableEventState {
-        case Valid
-        case Invalid
-        case Resolved
+        case valid
+        case invalid
+        case resolved
     }
 
-    var state: ExtendableEventState = .Valid
+    var state: ExtendableEventState = .valid
 
     fileprivate var pendingPromises: [JSManagedValue] = []
 
     func waitUntil(_ val: JSValue) {
 
-        if self.state == .Invalid {
+        if self.state == .invalid {
             val.context.exception = JSValue(newErrorFromMessage: "Invalid state for waitUntil()", in: val.context)
             return
         }
@@ -55,7 +55,7 @@ import PromiseKit
 
     public func resolve(in worker: ServiceWorker) -> Promise<Void> {
 
-        self.state = .Resolved
+        self.state = .resolved
 
         return Promise<Void> { fulfill, reject in
 
@@ -80,7 +80,10 @@ import PromiseKit
                     return
                 }
 
-                jsFunc.call(withArguments: [self.pendingPromises, unsafeBitCast(success, to: AnyObject.self), unsafeBitCast(failure, to: AnyObject.self)])
+                let successCast = unsafeBitCast(success, to: AnyObject.self)
+                let failureCast = unsafeBitCast(failure, to: AnyObject.self)
+
+                jsFunc.call(withArguments: [self.pendingPromises, successCast, failureCast])
 
                 if context.exception != nil {
                     throw ErrorMessage(context.exception.toString())

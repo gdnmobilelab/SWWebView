@@ -8,6 +8,7 @@
 
 import Foundation
 import JavaScriptCore
+import PromiseKit
 
 @objc class OpaqueResponse: FetchResponseProxy {
 
@@ -26,34 +27,34 @@ import JavaScriptCore
         return self.emptyStream
     }
 
-    override func text() -> JSValue {
+    override func text() -> Promise<String> {
+        return Promise(value: "")
+    }
+
+    override func text() -> JSValue? {
 
         let promise = JSPromise(context: JSContext.current())
         promise.fulfill("")
         return promise.jsValue
     }
 
-    override func text(_ cb: @escaping (Error?, String?) -> Void) {
-        cb(nil, "")
+    override func json() -> Promise<Any?> {
+        return Promise(error: ErrorMessage("Could not decode JSON content in opaque response"))
     }
 
-    override func json() -> JSValue {
+    override func json() -> JSValue? {
 
         let promise = JSPromise(context: JSContext.current())
         promise.fulfill(NSNull())
         return promise.jsValue
     }
 
-    override func json(_ cb: @escaping (Error?, Any?) -> Void) {
-        cb(nil, NSNull())
-    }
+    override init(from response: FetchResponse) throws {
 
-    override init(from response: FetchResponse) {
+        self.emptyStream = ReadableStream()
 
-        self.emptyStream = ReadableStream(start: { controller in
-            controller.close()
-        })
+        try self.emptyStream.controller.close()
 
-        super.init(from: response)
+        try super.init(from: response)
     }
 }

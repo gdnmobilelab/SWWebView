@@ -616,8 +616,8 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
-					"${inherited}",
-					"${SRCROOT}/../Carthage/**",
+					"$(inherited)",
+					"$(SRCROOT)/../Carthage/Build/iOS/**",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainer/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -643,8 +643,8 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
-					"${inherited}",
-					"${SRCROOT}/../Carthage/**",
+					"$(inherited)",
+					"$(SRCROOT)/../Carthage/Build/iOS/**",
 				);
 				INFOPLIST_FILE = ServiceWorkerContainer/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

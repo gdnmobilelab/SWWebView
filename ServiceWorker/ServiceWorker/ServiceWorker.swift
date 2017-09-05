@@ -90,8 +90,8 @@ import PromiseKit
 
     internal func getExecutionEnvironment() -> Promise<ServiceWorkerExecutionEnvironment> {
 
-        if _executionEnvironment != nil {
-            return Promise(value: _executionEnvironment!)
+        if let exec = _executionEnvironment {
+            return Promise(value: exec)
         }
 
         if isDestroyed {
@@ -155,10 +155,10 @@ import PromiseKit
     }
 
     public var skipWaitingStatus: Bool {
-        if _executionEnvironment == nil {
-            return false
+        if let exec = self._executionEnvironment {
+            return exec.globalScope.skipWaitingStatus
         } else {
-            return _executionEnvironment!.globalScope.skipWaitingStatus
+            return false
         }
     }
 }
