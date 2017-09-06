@@ -296,6 +296,8 @@ import JavaScriptCore
                 try self.factory.workerFactory.update(worker: slot.value, toInstallState: .redundant)
             }
 
+            self.workers.removeAll()
+
             try self.factory.delete(self)
             self._unregistered = true
             GlobalEventLog.notifyChange(self)

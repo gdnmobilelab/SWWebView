@@ -28,12 +28,14 @@ import Foundation
         self.listeners.forEach { l in
             l.urlSession?(session, task: task, didCompleteWithError: error)
         }
+        self.listeners.removeAll()
     }
 
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         self.listeners.forEach { l in
             l.urlSession?(session, didBecomeInvalidWithError: error)
         }
+        self.listeners.removeAll()
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
@@ -46,5 +48,6 @@ import Foundation
         self.listeners.forEach { l in
             l.urlSession(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
         }
+        self.listeners.removeAll()
     }
 }

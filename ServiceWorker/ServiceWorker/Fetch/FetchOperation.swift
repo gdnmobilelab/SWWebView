@@ -15,7 +15,7 @@ import PromiseKit
     public typealias ResponseCallback = (Error?, FetchResponseProtocol?) -> Void
 
     let request: FetchRequest
-    weak var task: URLSessionTask?
+    var task: URLSessionTask?
 
     var redirected = false
 
@@ -201,6 +201,12 @@ import PromiseKit
             }
     }
 
+    deinit {
+        if let task = self.task {
+            task.cancel()
+        }
+    }
+
     fileprivate func sendResponse(_ err: Error?, _ res: FetchResponseProtocol?) {
         guard let readyCallback = self.responseIsReadyCallback else {
             Log.error?("Ready callback does not exist when it is needed. Not sure what to do here.")
@@ -219,13 +225,15 @@ import PromiseKit
                 self.sendResponse(errorExists, nil)
             }
         }
+        self.task = nil
     }
 
     public override func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         super.urlSession(session, didBecomeInvalidWithError: error)
+        self.task = nil
     }
 
-    public func urlSession(_: URLSession, task _: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+    public func urlSession(_: URLSession, task: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
 
         // Control whether we follow HTTP redirects or not. If we return nil, it won't.
 
@@ -237,12 +245,13 @@ import PromiseKit
             let err = ErrorMessage("Response redirected when this was not expected")
             sendResponse(err, nil)
 
-            guard let task = self.task else {
-                Log.error?("Task doesn't exist when it was expected.")
-                return completionHandler(nil)
-            }
+            //            guard let task = self.task else {
+            //                Log.error?("Task doesn't exist when it was expected.")
+            //                return completionHandler(nil)
+            //            }
 
             task.cancel()
+            self.task = nil
 
         } else {
             completionHandler(nil)
@@ -267,6 +276,7 @@ import PromiseKit
             return
         }
         do {
+
             let internalResponse = try FetchResponse(response: asHTTP, operation: self, callback: completionHandler)
             var filteredResponse: FetchResponseProtocol
 

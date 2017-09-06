@@ -62,7 +62,7 @@ import PromiseKit
         self.redirected = operation.redirected
 
         guard let task = operation.task else {
-            throw ErrorMessage("Incoming fetch operation has no task")
+            throw ErrorMessage("FetchOperation has no task")
         }
 
         // Convert to our custom FetchHeaders class
@@ -208,6 +208,9 @@ import PromiseKit
                     }
                     .recover { error in
                         reject(error)
+                    }
+                    .always {
+                        self.fileDownloadComplete = nil
                     }
                 }
             }
