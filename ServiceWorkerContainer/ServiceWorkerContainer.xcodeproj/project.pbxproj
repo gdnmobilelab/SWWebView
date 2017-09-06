@@ -286,6 +286,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8A2360251F35FDCC00969268 /* Build configuration list for PBXNativeTarget "ServiceWorkerContainer" */;
 			buildPhases = (
+				8A5B361B1F5F57AE009F72AC /* SwiftFormat */,
+				8A5B361D1F5F57C9009F72AC /* SwiftLint */,
 				8A23600C1F35FDCC00969268 /* Sources */,
 				8A23600D1F35FDCC00969268 /* Frameworks */,
 				8A23600E1F35FDCC00969268 /* Headers */,
@@ -404,6 +406,34 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8A5B361B1F5F57AE009F72AC /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = SwiftFormat;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftformat >/dev/null; then\n\nswiftformat $PROJECT_DIR --commas false --self insert\nelse\necho \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi";
+		};
+		8A5B361D1F5F57C9009F72AC /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
 		8AB72E251F35FFDD0049117E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

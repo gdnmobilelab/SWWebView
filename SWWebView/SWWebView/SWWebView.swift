@@ -15,11 +15,11 @@ public class SWWebView: WKWebView {
     static let ServiceWorkerScheme = "sw"
 
     public var serviceWorkerPermittedDomains: [String] = []
-    fileprivate let swNavigationDelegate: SWWebViewNavigationDelegate
+    fileprivate weak var swNavigationDelegate: SWWebViewNavigationDelegate?
     fileprivate var bridge: SWWebViewBridge!
     public weak var containerDelegate: SWWebViewContainerDelegate?
 
-    fileprivate var outerNavigationDelegate: WKNavigationDelegate?
+    fileprivate weak var outerNavigationDelegate: WKNavigationDelegate?
 
     /// Because we're doing all sorts of weird things with URLs, we have two
     /// navigation delegates - one internal, that handles the URL mapping,
@@ -100,18 +100,21 @@ public class SWWebView: WKWebView {
             return super.load(request)
         }
 
-        let transformedRequest = self.swNavigationDelegate.makeServiceWorkerSuitableURLRequest(self, request: request)
-
-        return super.load(transformedRequest)
+        if let navigationDelegate = self.swNavigationDelegate {
+            let transformedRequest = navigationDelegate.makeServiceWorkerSuitableURLRequest(self, request: request)
+            return super.load(transformedRequest)
+        } else {
+            return super.load(request)
+        }
     }
 
     /// We need to ensure that we return the non-SW scheme URL no matter what.
     public override var url: URL? {
         if let url = super.url {
-            if url.scheme != SWWebView.ServiceWorkerScheme {
-                return url
+            if let navigationDelegate = self.swNavigationDelegate, url.scheme == SWWebView.ServiceWorkerScheme {
+                return navigationDelegate.makeNonServiceWorker(url: url)
             } else {
-                return self.swNavigationDelegate.makeNonServiceWorker(url: url)
+                return url
             }
         } else {
             return nil

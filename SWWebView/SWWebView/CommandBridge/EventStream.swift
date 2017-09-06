@@ -59,7 +59,7 @@ class EventStream: NSObject {
         }
 
         try task.didReceiveHeaders(statusCode: 200, headers: [
-            "Content-Type": "text/event-stream",
+            "Content-Type": "text/event-stream"
         ])
 
         // It's possible that this event stream was interrupted as a result of the page being
@@ -76,12 +76,31 @@ class EventStream: NSObject {
                 // need to push those too.
                 regs.forEach { self.sendUpdate(identifier: "serviceworkeregistration", object: $0) }
             }
+            .catch { error in
+                Log.error?("Failed to send existing registrations to event stream: \(error)")
+            }
     }
 
     func shutdown() {
-        GlobalEventLog.removeListener(self.workerListener!)
-        GlobalEventLog.removeListener(self.registrationListener!)
-        GlobalEventLog.removeListener(self.containerListener!)
+
+        if let workerListener = self.workerListener {
+            GlobalEventLog.removeListener(workerListener)
+        } else {
+            Log.error?("Shutting down an event stream with no worker listener")
+        }
+
+        if let registrationListener = self.registrationListener {
+            GlobalEventLog.removeListener(registrationListener)
+        } else {
+            Log.error?("Shutting down an event stream with no registration listener")
+        }
+
+        if let containerListener = self.containerListener {
+            GlobalEventLog.removeListener(containerListener)
+        } else {
+            Log.error?("Shutting down an event stream with no container listener")
+        }
+
         self.workerListener = nil
         self.registrationListener = nil
     }
@@ -89,34 +108,20 @@ class EventStream: NSObject {
     func sendUpdate(identifier: String, object: ToJSON) {
         do {
             let json = try JSONSerialization.data(withJSONObject: object.toJSONSuitableObject(), options: [])
-            let jsonString = String(data: json, encoding: .utf8)!
+
+            guard let jsonString = String(data: json, encoding: .utf8) else {
+                throw ErrorMessage("Could not convert JSON data to a string")
+            }
+
             let str = "\(identifier): \(jsonString)\n"
 
-            try self.task.didReceive(str.data(using: String.Encoding.utf8)!)
+            guard let stringToSend = str.data(using: String.Encoding.utf8) else {
+                throw ErrorMessage("Could not convert event payload back into data")
+            }
+
+            try self.task.didReceive(stringToSend)
         } catch {
             Log.error?("Error when trying to send update to webview: \(error)")
         }
     }
-
-    //    static func create(for task: SWURLSchemeTask) {
-    //        if EventStream.currentEventStreams[task.hash] != nil {
-    //            Log.error?("Tried to create an EventStream for a task when it already exists")
-    //            task.didFailWithError(ErrorMessage("EventStream already exists for this task"))
-    //            return
-    //        }
-    //        do {
-    //            let newStream = try EventStream(for: task)
-    //            EventStream.currentEventStreams[task.hash] = newStream
-    //        } catch {
-    //            task.didFailWithError(error)
-    //        }
-    //    }
-    //
-    //    static func remove(for task: SWURLSchemeTask) {
-    //        if EventStream.currentEventStreams[task.hash] == nil {
-    //            Log.error?("Tried to remove an EventStream that does not exist")
-    //        }
-    //        EventStream.currentEventStreams[task.hash]!.shutdown()
-    //        EventStream.currentEventStreams[task.hash] = nil
-    //    }
 }

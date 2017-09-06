@@ -31,7 +31,7 @@ class ServiceWorkerRegistrationCommands {
             }
             .then {
                 [
-                    "success": true,
+                    "success": true
                 ]
             }
     }

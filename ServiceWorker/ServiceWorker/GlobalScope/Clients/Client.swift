@@ -53,7 +53,6 @@ import JavaScriptCore
     }
 
     func postMessage(_ toSend: JSValue, _: [JSValue]) {
-        // TODO: work out transferrables. Gulp.
         self.wrapAround.postMessage(message: toSend.toObject(), transferable: nil)
     }
 

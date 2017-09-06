@@ -15,8 +15,7 @@ import PromiseKit
     public typealias ResponseCallback = (Error?, FetchResponseProtocol?) -> Void
 
     let request: FetchRequest
-    var task: URLSessionTask?
-    var session: URLSession?
+    weak var task: URLSessionTask?
 
     var redirected = false
 
@@ -191,7 +190,7 @@ import PromiseKit
             .then { () -> Void in
 
                 let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
-                self.session = session
+                //                self.session = session
 
                 let task = session.dataTask(with: nsRequest)
                 self.task = task

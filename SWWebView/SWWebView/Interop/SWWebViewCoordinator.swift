@@ -27,10 +27,9 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
     public init() {
         self.workerFactory = WorkerFactory()
         self.registrationFactory = WorkerRegistrationFactory(withWorkerFactory: self.workerFactory)
-        self.workerFactory.clientsDelegate = self
+        self.workerFactory.clientsDelegateProvider = self
     }
 
-    
     var inUseContainers: [ContainerAndUsageNumber] = []
 
     public func container(_ webview: SWWebView, createContainerFor url: URL) throws -> ServiceWorkerContainer {
@@ -56,7 +55,7 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
 
     public func container(_ webview: SWWebView, freeContainer container: ServiceWorkerContainer) {
 
-        guard let containerIndex = self.inUseContainers.index(where: {$0.webview == webview && $0.container == container }) else {
+        guard let containerIndex = self.inUseContainers.index(where: { $0.webview == webview && $0.container == container }) else {
             Log.error?("Tried to remove a ServiceWorkerContainer that doesn't exist")
             return
         }
@@ -73,43 +72,41 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
             Log.info?("Released link to ServiceWorkerContainer for \(url.absoluteString). It has \(self.inUseContainers[containerIndex].numUsing) remaining clients")
         }
     }
-    
+
     public func clientsClaim(_ worker: ServiceWorker, _ cb: (Error?) -> Void) {
-        
+
         if worker.state != .activated && worker.state != .activating {
             cb(ErrorMessage("Service worker can only claim clients when in activated or activating state"))
             return
         }
-        
+
         guard let registration = worker.registration else {
             cb(ErrorMessage("ServiceWorker must have a registration to claim clients"))
             return
         }
-        
+
         let scopeString = registration.scope.absoluteString
-        
+
         let clientsInScope = self.inUseContainers.filter { client in
-            
+
             if client.container.url.absoluteString.hasPrefix(scopeString) == false {
                 // must fall within our scope
                 return false
             }
-            
+
             guard let ready = client.container.readyRegistration else {
                 // if it has no ready registration we will always claim it.
                 return true
             }
-            
+
             // Otherwise, we need to check - is the current scope more specific than ours?
             // If it is, we don't claim.
             return ready.scope.absoluteString.count <= scopeString.count
-            
         }
-        
+
         clientsInScope.forEach { client in
             client.container.claim(by: worker)
         }
         cb(nil)
-        
     }
 }

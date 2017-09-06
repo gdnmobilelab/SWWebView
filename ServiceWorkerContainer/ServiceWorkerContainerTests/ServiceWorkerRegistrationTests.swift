@@ -65,7 +65,7 @@ class ServiceWorkerRegistrationTests: XCTestCase {
                     "DUMMY_HEADERS",
                     "DUMMY_CONTENT",
                     ServiceWorkerInstallState.activated.rawValue,
-                    "TEST_ID",
+                    "TEST_ID"
                 ]
 
                 _ = try connection.insert(sql: "INSERT INTO workers (worker_id, url, headers, content, install_state, registration_id) VALUES (?,?,?,?,?,?)", values: dummyWorkerValues)

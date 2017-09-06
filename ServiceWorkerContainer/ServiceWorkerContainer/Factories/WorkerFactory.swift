@@ -14,8 +14,8 @@ import PromiseKit
 public class WorkerFactory {
 
     fileprivate let workerStorage = NSHashTable<ServiceWorker>.weakObjects()
-    public var clientsDelegate: ServiceWorkerClientsDelegate?
-    public var serviceWorkerDelegate: ServiceWorkerDelegate?
+    public var clientsDelegateProvider: ServiceWorkerClientsDelegate?
+    public var serviceWorkerDelegateProvider: ServiceWorkerDelegate?
 
     public init() {
     }
@@ -34,21 +34,34 @@ public class WorkerFactory {
 
         let dbWorker = try CoreDatabase.inConnection { db -> ServiceWorker in
             return try db.select(sql: "SELECT registration_id, url, install_state FROM workers WHERE worker_id = ?", values: [id]) { (resultSet) -> ServiceWorker in
-                if resultSet.next() == false {
+
+                if try resultSet.next() == false {
                     throw ErrorMessage("Worker does not exist")
                 }
 
-                let registrationId = try resultSet.string("registration_id")!
+                guard let registrationId = try resultSet.string("registration_id") else {
+                    throw ErrorMessage("Could not fetch worker ID")
+                }
 
                 if registration.id != registrationId {
                     throw ErrorMessage("Trying to create a worker with the wrong registration")
                 }
 
-                let state = ServiceWorkerInstallState(rawValue: try resultSet.string("install_state")!)!
+                guard let rawState = try resultSet.string("install_state") else {
+                    throw ErrorMessage("Worker does not have an install state in the database")
+                }
 
-                let worker = ServiceWorker(id: id, url: try resultSet.url("url")!, state: state, loadContent: ServiceWorkerHooks.loadContent)
-                worker.clientsDelegate = self.clientsDelegate
-                worker.delegate = self.serviceWorkerDelegate
+                guard let state = ServiceWorkerInstallState(rawValue: rawState) else {
+                    throw ErrorMessage("Worker has an invalid install state")
+                }
+
+                guard let workerURL = try resultSet.url("url") else {
+                    throw ErrorMessage("Service worker does not have a valid URL")
+                }
+
+                let worker = ServiceWorker(id: id, url: workerURL, state: state, loadContent: ServiceWorkerHooks.loadContent)
+                worker.clientsDelegate = self.clientsDelegateProvider
+                worker.delegate = self.serviceWorkerDelegateProvider
                 worker.registration = registration
                 return worker
             }
@@ -73,7 +86,7 @@ public class WorkerFactory {
                 newWorkerID,
                 url,
                 ServiceWorkerInstallState.installing.rawValue,
-                registration.id,
+                registration.id
             ])
         }
 
@@ -103,7 +116,7 @@ public class WorkerFactory {
                 FROM workers
                 WHERE worker_id = ?
             """, values: [worker.id]) { rs in
-                if rs.next() != true {
+                if try rs.next() != true {
                     throw ErrorMessage("Existing content DB check didn't work")
                 }
                 let num = try rs.int("num")
@@ -120,16 +133,13 @@ public class WorkerFactory {
             // you to establish a blob with length. So instead, we are streaming the download to disk, then
             // manually streaming into the DB when we have the length available.
 
-            res.internalResponse.fileDownload(withDownload: { url in
-
-                let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
-                let size = fileAttributes[.size] as! Int64
+            res.internalResponse.fileDownload(withDownload: { url, fileSize in
 
                 // ISSUE: do we update the URL here, if the response was redirected? If we do, it'll mean
                 // future update() calls won't check the original URL, which feels wrong. But having this
                 // URL next to content from another URL also feels wrong.
 
-                return CoreDatabase.inConnection { db -> Promise<Void> in
+                CoreDatabase.inConnection { db -> Promise<Void> in
                     try db.update(sql: """
                         UPDATE workers SET
                             headers = ?,
@@ -138,19 +148,30 @@ public class WorkerFactory {
                             worker_id = ?
                     """, values: [
                         try res.headers.toJSON(),
-                        size,
-                        worker.id,
+                        fileSize,
+                        worker.id
                     ])
 
                     let rowID = try db.select(sql: "SELECT rowid FROM workers WHERE worker_id = ?", values: [worker.id]) { rs -> Int64 in
-                        _ = rs.next()
-                        return try rs.int64("rowid")!
+
+                        if try rs.next() == false {
+                            throw ErrorMessage("Could not find service worker we're importing a script to in the database")
+                        }
+
+                        guard let rowid = try rs.int64("rowid") else {
+                            throw ErrorMessage("Could not get row ID for service worker")
+                        }
+
+                        return rowid
                     }
 
-                    let inputStream = InputStream(url: url)!
-                    let writeStream = db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
+                    //                    guard let inputStream = InputStream(url: url) else {
+                    //                        throw ErrorMessage("Could not create InputStream for locally downloaded file")
+                    //                    }
 
-                    return writeStream.pipeReadableStream(stream: ReadableStream.fromInputStream(stream: inputStream, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
+                    let writeStream = try db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
+
+                    return try writeStream.pipeReadableStream(stream: ReadableStream.fromLocalURL(url, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
                         .then { hash -> Void in
 
                             try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, worker.id])
@@ -181,10 +202,9 @@ public class WorkerFactory {
                 WHERE one.worker_id = ?
                 AND two.worker_id = ?
 
-               
             """, values: [workerOne.id, workerTwo.id]) { rs in
 
-                if rs.next() == false {
+                if try rs.next() == false {
                     throw ErrorMessage("Could not find both worker IDs")
                 }
 
@@ -205,11 +225,14 @@ public class WorkerFactory {
 
             let existingHeaders = try db.select(sql: "SELECT headers FROM workers WHERE worker_id = ?", values: [worker.id]) { resultSet -> FetchHeaders? in
 
-                if resultSet.next() == false {
+                if try resultSet.next() == false {
                     return nil
                 }
 
-                let jsonString = try resultSet.string("headers")!
+                guard let jsonString = try resultSet.string("headers") else {
+                    throw ErrorMessage("Database row does not contain response headers")
+                }
+
                 return try FetchHeaders.fromJSON(jsonString)
             }
 

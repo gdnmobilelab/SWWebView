@@ -163,6 +163,7 @@ import PromiseKit
     public func urlSession(_: URLSession, task _: URLSessionTask, didCompleteWithError _: Error?) {
         do {
             try self.streamController.close()
+            self.fetchOperation = nil
         } catch {
             Log.error?("Failed to close stream controller")
         }
@@ -179,7 +180,7 @@ import PromiseKit
 
     fileprivate var fileDownloadComplete: ((URL) -> Promise<Void>)?
 
-    public func fileDownload<T>(withDownload: @escaping (URL) throws -> Promise<T>) -> Promise<T> {
+    public func fileDownload<T>(withDownload: @escaping (URL, Int64) throws -> Promise<T>) -> Promise<T> {
 
         return firstly {
             try self.markBodyUsed()
@@ -196,7 +197,11 @@ import PromiseKit
                 self.fileDownloadComplete = { url in
 
                     firstly {
-                        return try withDownload(url)
+                        let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
+                        guard let size = fileAttributes[.size] as? Int64 else {
+                            throw ErrorMessage("Could not get size of downloaded file")
+                        }
+                        return try withDownload(url, size)
                     }
                     .then { response in
                         fulfill(response)
@@ -218,6 +223,8 @@ import PromiseKit
             Log.error?("Download complete callback called but we have no handler for it. Should never happen")
             return
         }
+
+        self.fetchOperation = nil
 
         let semaphore = DispatchSemaphore(value: 0)
 
@@ -312,52 +319,10 @@ import PromiseKit
 
         return self.data()
             .then { data -> JSValue in
-
                 JSArrayBuffer.make(from: data, in: currentContext)
-
-                //                var mutableData: Data = data
-                //
-                //                let arr = mutableData.withUnsafeMutableBytes { pointer -> JSObjectRef in
-                //                    return JSObjectMakeArrayBufferWithBytesNoCopy(currentContext.jsGlobalContextRef, pointer, data.count, { _, _ in
-                //                        // TODO: WTF to do with this
-                //
-                //                        NSLog("Deallocate data!")
-                //                    }, &mutableData, nil)
-                //                }
-
-                //                let test = Test(data: data, context: currentContext)
-                //                let arr = JSObjectMakeArrayBufferWithBytesNoCopy(currentContext.jsGlobalContextRef, test.data.mutableBytes, test.data.length, { _, _ in
-                //                    NSLog("done?")
-                //                }, nil, nil)
-                //                let js = JSValue(jsValueRef: arr, in: currentContext)
-
-                //                Test.map.setObject(test, forKey: js)
-
-                //                let val = JSValue(jsValueRef: test, in: currentContext)!
-                //                currentContext.virtualMachine.addManagedReference(test, withOwner: test.jsVal)
-                //                return js!
             }
-            //            .toJSPromise(in: currentContext)
             .toJSPromise(in: currentContext)
     }
-
-    //    public func json(_ callback: @escaping (Error?, Any?) -> Void) {
-    //
-    //        self.data { err, data in
-    //
-    //            if err != nil {
-    //                callback(err, nil)
-    //                return
-    //            }
-    //
-    //            do {
-    //                let json = try JSONSerialization.jsonObject(with: data!, options: [])
-    //                callback(nil, json)
-    //            } catch {
-    //                callback(error, nil)
-    //            }
-    //        }
-    //    }
 
     deinit {
 

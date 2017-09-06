@@ -24,7 +24,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         "/ServiceWorkerContainer/register": ServiceWorkerContainerCommands.register,
         "/ServiceWorkerContainer/getregistration": ServiceWorkerContainerCommands.getRegistration,
         "/ServiceWorkerContainer/getregistrations": ServiceWorkerContainerCommands.getRegistrations,
-        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister,
+        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister
     ]
 
     /// Track the streams we currently have open, so that when one is stopped we know where
@@ -54,12 +54,16 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
                 throw ErrorMessage("SWWebViewBridge must be used with an SWWebView")
             }
 
+            guard let requestURL = modifiedTask.request.url else {
+                throw ErrorMessage("Task must have a request URL")
+            }
+
             if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
                 return try self.startServiceWorkerTask(modifiedTask, webview: swWebView)
             }
 
             // Need to flesh this out, but for now we're using this for tests
-            let req = FetchRequest(url: modifiedTask.request.url!)
+            let req = FetchRequest(url: requestURL)
             req.cache = .NoCache
 
             return FetchOperation.fetch(req)
@@ -143,12 +147,14 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         }
 
         .then { response in
-            var encodedResponse = "null".data(using: .utf8)!
+            guard var encodedResponse = "null".data(using: .utf8) else {
+                throw ErrorMessage("Could not create default null response")
+            }
             if let responseExists = response {
                 encodedResponse = try JSONSerialization.data(withJSONObject: responseExists, options: [])
             }
             try task.didReceiveHeaders(statusCode: 200, headers: [
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             ])
             try task.didReceive(encodedResponse)
             try task.didFinish()

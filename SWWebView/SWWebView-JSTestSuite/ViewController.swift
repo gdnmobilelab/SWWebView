@@ -49,7 +49,7 @@ class ViewController: UIViewController {
         swView.containerDelegate = self.coordinator!
         self.view.addSubview(swView)
 
-        var url = URLComponents(string: "sw://localhost:4567/tests.html")!
+        var url = URLComponents(string: "sw://alastairtest.ngrok.io/tests.html")!
         URLCache.shared.removeAllCachedResponses()
         NSLog("Loading \(url.url!.absoluteString)")
         swView.load(URLRequest(url: url.url!))
@@ -59,7 +59,7 @@ class ViewController: UIViewController {
         SWWebViewBridge.routes["/ping"] = { _, _ in
 
             Promise(value: [
-                "pong": true,
+                "pong": true
             ])
         }
 
@@ -68,7 +68,7 @@ class ViewController: UIViewController {
             var responseText = json?["value"] as? String ?? "no body found"
 
             return Promise(value: [
-                "pong": responseText,
+                "pong": responseText
             ])
         }
     }

@@ -18,7 +18,7 @@ class SWWebViewTests: XCTestCase {
         CommandBridge.routes["/ping"] = { task, _ in
 
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             ])
             task.didReceive(response!)
             task.didReceive("{\"pong\":true}".data(using: String.Encoding.utf8)!)
@@ -40,7 +40,7 @@ class SWWebViewTests: XCTestCase {
             }
 
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             ])
             task.didReceive(response!)
             task.didReceive("{\"pong\":\"\(responseText)\"}".data(using: String.Encoding.utf8)!)
@@ -50,7 +50,7 @@ class SWWebViewTests: XCTestCase {
         CommandBridge.routes["/stream"] = { task, _ in
 
             let response = HTTPURLResponse(url: task.request.url!, statusCode: 200, httpVersion: "1.1", headerFields: [
-                "Content-Type": "text/event-stream",
+                "Content-Type": "text/event-stream"
             ])
             task.didReceive(response!)
             task.didReceive("test-event: {\"test\":\"hello\"}".data(using: String.Encoding.utf8)!)
@@ -107,7 +107,7 @@ class SWWebViewTests: XCTestCase {
 
         let sw = SWWebView(frame: CGRect(x: 0, y: 0, width: 0, height: 0), configuration: config)
         sw.serviceWorkerPermittedDomains = [
-            "www.example.com",
+            "www.example.com"
         ]
 
         let pathToJS = Bundle(for: SWWebViewTests.self).bundleURL

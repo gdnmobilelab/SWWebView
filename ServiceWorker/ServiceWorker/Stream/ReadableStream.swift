@@ -40,25 +40,44 @@ import PromiseKit
         }
     }
 
-    public static func fromInputStream(stream: InputStream, bufferSize: Int) throws -> ReadableStream {
+    deinit {
+        NSLog("deinit?")
+    }
+
+    public static func fromLocalURL(_ url: URL, bufferSize: Int) throws -> ReadableStream {
 
         var bufferData = Data(count: bufferSize)
 
+        var streamToUse: InputStream? = InputStream(url: url)
+
         var cancelled = false
         let start = { (_: ReadableStreamController) in
-            stream.open()
+
+            guard let inputStream = streamToUse else {
+                Log.error?("Trying to start a nil stream")
+                return
+            }
+
+            inputStream.open()
         }
 
         let pull = { (c: ReadableStreamController) in
+
+            guard let inputStream = streamToUse else {
+                Log.error?("Trying to pull from nil stream")
+                return
+            }
+
             if cancelled == true {
                 return
             }
-            if stream.hasBytesAvailable == false {
+            if inputStream.hasBytesAvailable == false {
                 try c.close()
-                stream.close()
+                inputStream.close()
+                streamToUse = nil
             }
             try bufferData.withUnsafeMutableBytes { (body: UnsafeMutablePointer<UInt8>) -> Void in
-                let length = stream.read(body, maxLength: bufferSize)
+                let length = inputStream.read(body, maxLength: bufferSize)
 
                 if length > 0 {
                     // We might have read less data than the size of our buffer.
@@ -72,8 +91,9 @@ import PromiseKit
                     }
                 }
 
-                if stream.hasBytesAvailable == false {
-                    stream.close()
+                if inputStream.hasBytesAvailable == false {
+                    inputStream.close()
+                    streamToUse = nil
                     try c.close()
                 }
             }
@@ -81,6 +101,7 @@ import PromiseKit
 
         let cancel = { (c: ReadableStreamController) in
             cancelled = true
+            streamToUse = nil
             try c.close()
         }
 
@@ -89,25 +110,37 @@ import PromiseKit
 
     internal func enqueue(_ data: Data) throws {
 
-        try self.dispatchQueue.sync {
-            if self.closed == true {
+        try self.dispatchQueue.sync { [weak self] in
+
+            guard let selfInstance = self else {
+                Log.error?("Trying to enqueue into a disposed stream")
+                return
+            }
+
+            if selfInstance.closed == true {
                 throw ErrorMessage("Cannot enqueue data after stream is closed")
             }
 
-            if self.pendingReads.count > 0 {
+            if selfInstance.pendingReads.count > 0 {
                 let read = pendingReads.remove(at: 0)
                 DispatchQueue.main.async {
                     read(StreamReadResult(done: false, value: data))
                 }
             } else {
-                self.enqeueuedData.append(data)
+                selfInstance.enqeueuedData.append(data)
             }
         }
     }
 
     public func read(cb: @escaping PendingRead) {
-        self.dispatchQueue.sync {
-            if self.enqeueuedData.count > 0 {
+        self.dispatchQueue.sync { [weak self] in
+
+            guard let selfInstance = self else {
+                Log.error?("Trying to read from a stream that has been disposed")
+                return
+            }
+
+            if selfInstance.enqeueuedData.count > 0 {
                 // save a reference to our current pending data
                 let data = enqeueuedData
                 // now set self.enqueuedData to be a new Data object
@@ -117,7 +150,7 @@ import PromiseKit
                     cb(StreamReadResult(done: false, value: data))
                 }
 
-            } else if self.closed == true {
+            } else if selfInstance.closed == true {
                 // If we're already closed then just push a done
                 // block for good measure
                 DispatchQueue.global().async {
@@ -125,10 +158,10 @@ import PromiseKit
                 }
 
             } else {
-                self.pendingReads.append(cb)
+                selfInstance.pendingReads.append(cb)
                 DispatchQueue.global().async {
                     do {
-                        try self.pull?(self.controller)
+                        try selfInstance.pull?(selfInstance.controller)
                     } catch {
                         Log.error?("Pull operation on stream failed: \(error)")
                     }
@@ -168,9 +201,16 @@ import PromiseKit
     }
 
     func close() {
-        self.dispatchQueue.sync {
-            self.closed = true
-            self.pendingReads.forEach { $0(StreamReadResult(done: true, value: nil)) }
+        self.dispatchQueue.sync { [weak self] in
+
+            guard let selfInstance = self else {
+                Log.error?("Trying to close stream that has already been disposed")
+                return
+            }
+
+            selfInstance.closed = true
+            selfInstance.pendingReads.forEach { $0(StreamReadResult(done: true, value: nil)) }
+            selfInstance.pendingReads.removeAll()
         }
     }
 }

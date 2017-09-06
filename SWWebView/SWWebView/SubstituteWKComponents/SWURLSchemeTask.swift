@@ -23,8 +23,8 @@ public class SWURLSchemeTask {
     // that the URL exists, we can provide a non-optional var here.
     //    public let url:URL
 
-    public var originalServiceWorkerURL: URL {
-        return self.underlyingTask.request.url!
+    public var originalServiceWorkerURL: URL? {
+        return self.underlyingTask.request.url
     }
 
     // There doesn't seem to be any built in functionality for tracking when
@@ -103,7 +103,7 @@ public class SWURLSchemeTask {
 
     public func didReceive(_ data: Data) throws {
         if self.open == false {
-            NSLog("DEAD JIM \(self.request.url!.absoluteString)")
+            Log.warn?("URL task trying to send data to a closed connection")
             return
         }
         self.underlyingTask.didReceive(data)
@@ -115,7 +115,11 @@ public class SWURLSchemeTask {
         // Always want to make sure API responses aren't cached
         modifiedHeaders["Cache-Control"] = "no-cache"
 
-        guard let response = HTTPURLResponse(url: self.originalServiceWorkerURL, statusCode: statusCode, httpVersion: nil, headerFields: modifiedHeaders) else {
+        guard let originalWorkerURL = self.originalServiceWorkerURL else {
+            throw ErrorMessage("No original service worker URL available")
+        }
+
+        guard let response = HTTPURLResponse(url: originalWorkerURL, statusCode: statusCode, httpVersion: nil, headerFields: modifiedHeaders) else {
             throw ErrorMessage("Was not able to create HTTPURLResponse, unknown reason")
         }
 
@@ -129,7 +133,7 @@ public class SWURLSchemeTask {
     public func didFinish() throws {
 
         if self.open == false {
-            NSLog("DEAD JIM FINISH \(self.request.url!.absoluteString)")
+            Log.warn?("URL task trying to finish an already closed connection")
             return
         }
         self.underlyingTask.didFinish()
@@ -138,7 +142,7 @@ public class SWURLSchemeTask {
     /// This doesn't throw because what's the point - if it fails, it fails
     public func didFailWithError(_ error: Error) {
         if self.open == false {
-            NSLog("DEAD JIM FAIL \(self.request.url!.absoluteString)")
+            Log.warn?("URL task trying to finish with error when it's already finished")
             return
         }
         self.underlyingTask.didFailWithError(error)

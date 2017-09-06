@@ -16,45 +16,46 @@ class ServiceWorkerHooks {
         return FetchOperation.fetch(url)
             .then { res in
 
-                // This is kind of convoluted, but two reasons for us to stream into DB
-                // then immediately select it back again:
-                // 1. if we did res.text() we wouldn't be able to get the hash
-                // 2. if we did res.data() then converted to string after hashing,
-                //    we'd use more memory
+                // We have to download to a local file first, because we can't rely on a
+                // Content-Length header always existing.
 
-                let lengthString = res.headers.get("Content-Length")
-                if lengthString == nil {
-                    throw ErrorMessage("Content-Length header must be provided")
-                }
+                res.internalResponse.fileDownload(withDownload: { _, fileSize in
+                    CoreDatabase.inConnection { db in
+                        let rowID = try db.insert(sql: """
+                            INSERT INTO worker_imported_scripts (worker_id, url, headers, content)
+                            VALUES (?,?,?,zeroblob(?))
+                        """, values: [id, url, try res.headers.toJSON(), fileSize])
 
-                let length = Int64(lengthString!)
-                if length == nil {
-                    throw ErrorMessage("Content-Length header must be a number")
-                }
+                        let stream = try db.openBlobWriteStream(table: "worker_imported_scripts", column: "content", row: rowID)
 
-                return CoreDatabase.inConnection { db in
-                    let rowID = try db.insert(sql: """
-                        INSERT INTO worker_imported_scripts (worker_id, url, headers, content)
-                        VALUES (?,?,?,zeroblob(?))
-                    """, values: [id, url, try res.headers.toJSON(), length!])
+                        //                        guard let inputStream = InputStream(url: url) else {
+                        //                            throw ErrorMessage("Could not open input stream to local file")
+                        //                        }
 
-                    let stream = db.openBlobWriteStream(table: "worker_imported_scripts", column: "content", row: rowID)
-                    let reader = try res.getReader()
-                    return stream.pipeReadableStream(stream: reader)
-                        .then { hash -> String in
+                        let readableStream = try ReadableStream.fromLocalURL(url, bufferSize: 8192)
 
-                            // Now we update the hash for the script
-                            try db.update(sql: "UPDATE worker_imported_scripts SET content_hash = ? WHERE worker_id = ?", values: [hash, id])
+                        return stream.pipeReadableStream(stream: readableStream)
+                            .then { hash -> String in
 
-                            // Having done all this, we now pull the text directly back out
-                            return try db.select(sql: "SELECT content FROM worker_imported_scripts WHERE worker_id = ?", values: [id]) { resultSet in
-                                if resultSet.next() == false {
-                                    throw ErrorMessage("Somehow cannot retreive the script we just inserted")
+                                // Now we update the hash for the script
+                                try db.update(sql: "UPDATE worker_imported_scripts SET content_hash = ? WHERE worker_id = ?", values: [hash, id])
+
+                                // Having done all this, we now pull the text directly back out
+                                return try db.select(sql: "SELECT content FROM worker_imported_scripts WHERE worker_id = ?", values: [id]) { resultSet in
+
+                                    if try resultSet.next() == false {
+                                        throw ErrorMessage("Somehow cannot retreive the script we just inserted")
+                                    }
+
+                                    guard let content = try resultSet.string("content") else {
+                                        throw ErrorMessage("Could not get content of script from DB")
+                                    }
+
+                                    return content
                                 }
-                                return try resultSet.string("content")!
                             }
-                        }
-                }
+                    }
+                })
             }
     }
 
@@ -83,14 +84,15 @@ class ServiceWorkerHooks {
             scripts.forEach { params.append($0) }
             //            params.append(contentsOf: scripts)
 
-            return try db.select(sql: "SELECT url, content FROM worker_imported_scripts WHERE worker_id = ? AND url IN (\(parameters))", values: params) {
-                resultSet in
+            return try db.select(sql: "SELECT url, content FROM worker_imported_scripts WHERE worker_id = ? AND url IN (\(parameters))", values: params) { resultSet in
 
                 var scriptBodies: [String: String] = [:]
 
-                while resultSet.next() {
-                    let url = try resultSet.string("url")!
-                    scriptBodies[url] = try resultSet.string("content")!
+                while try resultSet.next() {
+                    guard let url = try resultSet.string("url"), let content = try resultSet.string("content") else {
+                        throw ErrorMessage("An imported script was missing a URL or content")
+                    }
+                    scriptBodies[url] = content
                 }
 
                 return Promise(value: scriptBodies)
@@ -113,7 +115,14 @@ class ServiceWorkerHooks {
 
             return when(fulfilled: fetchPromises)
                 .then { _ -> Void in
-                    scriptBodies = scripts.map { allScripts[$0.absoluteString]! }
+                    scriptBodies = try scripts.map { url in
+
+                        guard let scriptContent = allScripts[url.absoluteString] else {
+                            throw ErrorMessage("Imported script is still not in dictionary")
+                        }
+
+                        return scriptContent
+                    }
                 }
         }
         .catch { error in
@@ -127,11 +136,15 @@ class ServiceWorkerHooks {
         // now we wait until our async operation has completed.
         _ = semaphore.wait(timeout: .distantFuture)
 
-        if errorEncountered != nil {
-            throw errorEncountered!
+        if let error = errorEncountered {
+            throw error
         }
 
-        return scriptBodies!
+        if let bodies = scriptBodies {
+            return bodies
+        } else {
+            throw ErrorMessage("No errir was encountered, but script bodies are not populated")
+        }
     }
 
     static func loadContent(worker: ServiceWorker) -> String {
@@ -140,10 +153,13 @@ class ServiceWorkerHooks {
         do {
             script = try CoreDatabase.inConnection { db in
                 return try db.select(sql: "SELECT content FROM workers WHERE worker_id = ?", values: [worker.id]) { resultSet in
-                    if resultSet.next() == false {
+                    if try resultSet.next() == false {
                         throw ErrorMessage("Worker does not exist")
                     }
-                    return try resultSet.string("content")!
+                    guard let content = try resultSet.string("content") else {
+                        throw ErrorMessage("Worker does not have any content")
+                    }
+                    return content
                 }
             }
         } catch {

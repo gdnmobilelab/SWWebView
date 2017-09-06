@@ -18,8 +18,8 @@ import ServiceWorker
 
     public let origin: URL
     public var readyRegistration: ServiceWorkerRegistrationProtocol?
-//    fileprivate var _ready: Promise<ServiceWorkerRegistration>?
-//    fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)?
+    //    fileprivate var _ready: Promise<ServiceWorkerRegistration>?
+    //    fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)?
     fileprivate var registrationChangeListener: Listener<ServiceWorkerRegistration>?
     fileprivate var workerChangeListener: Listener<ServiceWorker>?
 
@@ -27,16 +27,16 @@ import ServiceWorker
 
     public var controller: ServiceWorker?
 
-//    fileprivate var _pendingReadyPromise: Promise<ServiceWorkerRegistration>? = nil
-//    fileprivate var _pendingReadyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
-//
-//    public var ready: Promise<ServiceWorkerRegistration> {
-//        get {
-//            return self._pendingReadyPromise
-//        }
-//    }
-    
-    public func claim(by worker:ServiceWorker) {
+    //    fileprivate var _pendingReadyPromise: Promise<ServiceWorkerRegistration>? = nil
+    //    fileprivate var _pendingReadyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
+    //
+    //    public var ready: Promise<ServiceWorkerRegistration> {
+    //        get {
+    //            return self._pendingReadyPromise
+    //        }
+    //    }
+
+    public func claim(by worker: ServiceWorker) {
         self.controller = worker
         self.readyRegistration = worker.registration
         GlobalEventLog.notifyChange(self)
@@ -51,16 +51,16 @@ import ServiceWorker
 
         if self.readyRegistration != nil {
             self.controller = self.readyRegistration?.active
-//            self._ready = Promise(value: self.readyRegistration!)
+            //            self._ready = Promise(value: self.readyRegistration!)
         } else {
             self.controller = nil
-//            self._ready = Promise { fulfill, _ in
-//                self._readyFulfill = fulfill
-//            }
-//            .then { reg -> ServiceWorkerRegistration in
-//                GlobalEventLog.notifyChange(self)
-//                return reg
-//            }
+            //            self._ready = Promise { fulfill, _ in
+            //                self._readyFulfill = fulfill
+            //            }
+            //            .then { reg -> ServiceWorkerRegistration in
+            //                GlobalEventLog.notifyChange(self)
+            //                return reg
+            //            }
         }
     }
 
@@ -68,68 +68,21 @@ import ServiceWorker
         self.url = forURL
         self.id = UUID().uuidString
 
-        var components = URLComponents(url: forURL, resolvingAgainstBaseURL: true)!
+        guard var components = URLComponents(url: forURL, resolvingAgainstBaseURL: true) else {
+            throw ErrorMessage("Could not parse container URL")
+        }
         components.path = "/"
         components.queryItems = nil
-        self.origin = components.url!
+
+        guard let origin = components.url else {
+            throw ErrorMessage("Could not create container URL")
+        }
+        self.origin = origin
 
         self.registrationFactory = withFactory
 
         super.init()
         try self.resetReadyRegistration()
-
-        // No matter if we have an active registration already, we need to listen if a new
-        // one comes along - if its scope is more specific than our currently active one,
-        // we need to replace it.
-        //        self.registrationChangeListener = GlobalEventLog.addListener { [unowned self] (reg: ServiceWorkerRegistration) in
-        //
-        //            if reg.unregistered == true && reg == self.readyRegistration {
-        //                // if this is already our active registration, the only thing we
-        //                // care about is if it has become unregistered.
-        //
-        //                do {
-        //                    try self.resetReadyRegistration()
-        //                } catch {
-        //                    Log.error?("Unable to reset ready registration: \(error)")
-        //                }
-        //
-        //                GlobalEventLog.notifyChange(self)
-        //
-        //                return
-        //            } else if reg == self.readyRegistration || reg.unregistered == true || reg.active == nil {
-        //                return
-        //            }
-        //
-        //            if self.url.absoluteString.hasPrefix(reg.scope.absoluteString) == false {
-        //                // not in scope, disregard
-        //                return
-        //            }
-        //
-        //            if self.readyRegistration != nil && reg.scope.absoluteString.count <= self.readyRegistration!.scope.absoluteString.count {
-        //                NSLog("Scope of \(reg.scope.absoluteString) does not replace \(self.readyRegistration!.scope.absoluteString)")
-        //                // scope is less specific than the one we currently have, disregard
-        //                return
-        //            }
-        //
-        //            self.readyRegistration = reg
-        //            if let fulfill = self._readyFulfill {
-        //                fulfill(self.readyRegistration!)
-        //                self._readyFulfill = nil
-        //            }
-        //            self._ready = Promise(value: reg)
-        //
-        //            GlobalEventLog.notifyChange(self)
-        //        }
-
-        //        self.workerChangeListener = GlobalEventLog.addListener { [unowned self] (worker:ServiceWorker) in
-        //            if self.readyRegistration?.active == worker && worker.state == .activated {
-        //                self.controller = worker
-        //                GlobalEventLog.notifyChange(self)
-        //            } else if self.controller == worker && worker.state == .redundant {
-        //                self.controller = nil
-        //                GlobalEventLog.notifyChange(self)
-        //            }
-        //        }
     }
 
     fileprivate var defaultScope: URL {
@@ -148,14 +101,23 @@ import ServiceWorker
             }
             components.path = "/"
 
-            let like = components.url!.absoluteString + "%"
+            guard let rootURL = components.url else {
+                throw ErrorMessage("Could not create root URL for container")
+            }
+
+            let like = rootURL.absoluteString + "%"
 
             return try db.select(sql: "SELECT registration_id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
 
                 var ids: [String] = []
 
-                while resultSet.next() {
-                    ids.append(try resultSet.string("registration_id")!)
+                while try resultSet.next() {
+
+                    guard let regID = try resultSet.string("registration_id") else {
+                        throw ErrorMessage("Found a registration with no ID")
+                    }
+
+                    ids.append(regID)
                 }
 
                 return try ids.map { id in
@@ -186,7 +148,7 @@ import ServiceWorker
                 ORDER BY length(scope) DESC
                 LIMIT 1
             """, values: [scopeToCheck.absoluteString]) { resultSet -> Promise<String?> in
-                if resultSet.next() == false {
+                if try resultSet.next() == false {
                     return Promise(value: nil)
                 }
                 guard let id = try resultSet.string("registration_id") else {
@@ -208,30 +170,29 @@ import ServiceWorker
     public func register(workerURL: URL, options: ServiceWorkerRegistrationOptions?) -> Promise<ServiceWorkerRegistration> {
 
         return firstly {
-            
+
             if workerURL.host != url.host {
                 throw ErrorMessage("Service worker scope must be on the same domain as both the page and worker URL")
             }
-            
+
             // let's say, workerURL = "/test/worker.js?thing=this"
             guard var scopeComponents = URLComponents(url: workerURL, resolvingAgainstBaseURL: true) else {
                 throw ErrorMessage("Could not parse worker URL")
             }
-            
+
             // strip our querystring items, so it's now "/test/worker.js"
             scopeComponents.queryItems = nil
-            
-            if workerURL.path.last! != "/" {
+
+            if workerURL.path.last != "/" {
                 // if our worker URL is a file (and it usually is) strip that out.
                 // so, scopeURL is now "/test/". For some reason this strips out the "/"
                 // at the end of the path, so we need to add it back in.
                 scopeComponents.path = workerURL.deletingLastPathComponent().path + "/"
             }
-            
+
             guard var scopeURL = scopeComponents.url else {
                 throw ErrorMessage("Could not parse out default scope URL from worker URL")
             }
-            
 
             // A register command can provide a custom scope. BUT it cannot exceed our current scope
             // so we keep a reference to the originally calculated value.
@@ -268,7 +229,6 @@ import ServiceWorker
                                 self.readyRegistration = reg
                                 GlobalEventLog.notifyChange(self)
                             }
-
                         }
                         .catch { error in
                             GlobalEventLog.notifyChange(WorkerInstallationError(worker: result.worker, container: self, error: error))
@@ -279,7 +239,7 @@ import ServiceWorker
         }
     }
 
-    public var windowClientDelegate: WindowClientProtocol?
+    public weak var windowClientDelegate: WindowClientProtocol?
 
     public func focus(_ cb: (Error?, WindowClientProtocol?) -> Void) {
         if let delegate = self.windowClientDelegate {

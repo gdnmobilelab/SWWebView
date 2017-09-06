@@ -67,8 +67,7 @@ class ReadableStreamTests: XCTestCase {
         firstly { () -> Promise<Void> in
             try testContent.write(to: targetURL, atomically: false, encoding: .utf8)
 
-            let stream = InputStream(url: targetURL)!
-            let readableStream = try ReadableStream.fromInputStream(stream: stream, bufferSize: 2)
+            let readableStream = try ReadableStream.fromLocalURL(targetURL, bufferSize: 2)
 
             return readableStream.read()
                 .then { result -> Promise<StreamReadResult> in

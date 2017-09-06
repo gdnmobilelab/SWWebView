@@ -30,7 +30,7 @@ public class WorkerRegistrationFactory {
 
             try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
 
-                if rs.next() == false {
+                if try rs.next() == false {
                     return nil
                 }
 
@@ -79,7 +79,7 @@ public class WorkerRegistrationFactory {
 
             try connection.select(sql: "SELECT registration_id FROM registrations WHERE scope = ?", values: [scope]) { rs -> String? in
 
-                if rs.next() == false {
+                if try rs.next() == false {
                     return nil
                 }
 
@@ -147,11 +147,13 @@ public class WorkerRegistrationFactory {
                 LIMIT 1
             """, values: [containerURL]) { resultSet in
 
-                if resultSet.next() == false {
+                if try resultSet.next() == false {
                     return nil
                 }
 
-                let id = try resultSet.string("registration_id")!
+                guard let id = try resultSet.string("registration_id") else {
+                    throw ErrorMessage("Ready registration does not have an ID value")
+                }
 
                 return try self.get(byId: id)
             }
@@ -168,7 +170,7 @@ public class WorkerRegistrationFactory {
                 WHERE registration_id = ?
             """, values: [
                 worker?.id,
-                registration.id,
+                registration.id
             ])
         }
     }

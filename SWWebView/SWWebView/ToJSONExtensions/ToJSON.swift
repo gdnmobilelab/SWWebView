@@ -13,21 +13,26 @@ protocol ToJSON {
 }
 
 extension URL {
-    var sWWebviewSuitableAbsoluteString: String {
-        var components = URLComponents(url: self, resolvingAgainstBaseURL: true)!
+    var sWWebviewSuitableAbsoluteString: String? {
+        guard var components = URLComponents(url: self, resolvingAgainstBaseURL: true) else {
+            return nil
+        }
         components.scheme = SWWebView.ServiceWorkerScheme
-        return components.url!.absoluteString
+
+        return components.url?.absoluteString ?? nil
     }
 
     init?(swWebViewString: String) {
-        var urlComponents = URLComponents(string: swWebViewString)
-        if urlComponents != nil {
-            urlComponents!.scheme = urlComponents!.host == "localhost" ? "http" : "https"
-        }
-        if urlComponents?.url == nil {
+        guard var urlComponents = URLComponents(string: swWebViewString) else {
             return nil
+        }
+
+        urlComponents.scheme = urlComponents.host == "localhost" ? "http" : "https"
+
+        if let url = urlComponents.url {
+            self = url
         } else {
-            self = urlComponents!.url!
+            return nil
         }
     }
 }

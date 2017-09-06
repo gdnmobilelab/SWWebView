@@ -19,7 +19,6 @@
 		8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */; };
 		8A5D98271F3E0D77002E521F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98261F3E0D77002E521F /* AppDelegate.swift */; };
 		8A5D98291F3E0D77002E521F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98281F3E0D77002E521F /* ViewController.swift */; };
-		8A5D982C1F3E0D77002E521F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982A1F3E0D77002E521F /* Main.storyboard */; };
 		8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982D1F3E0D77002E521F /* Assets.xcassets */; };
 		8A5D98311F3E0D77002E521F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */; };
 		8A5D98361F3E0E6A002E521F /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
@@ -30,6 +29,12 @@
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8AABC41F1F6082DA00429EF3 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
+		8AABC4201F6082DA00429EF3 /* SWWebView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8AABC4271F60839600429EF3 /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AABC4261F60839600429EF3 /* ServiceWorker.framework */; };
+		8AABC4281F60839600429EF3 /* ServiceWorker.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8AABC4261F60839600429EF3 /* ServiceWorker.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8AABC42A1F60839D00429EF3 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */; };
+		8AABC42B1F60839D00429EF3 /* ServiceWorkerContainer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8AC7BBC21F47751B0001CD49 /* ServiceWorkerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */; };
 		8AF85D531F38BA1D001B0A87 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */; };
 		8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF85D561F38BB70001B0A87 /* SWWebView.swift */; };
@@ -49,7 +54,30 @@
 			remoteGlobalIDString = 8AA76F4D1F38B81600EFB4E1;
 			remoteInfo = SWWebView;
 		};
+		8AABC41D1F60827500429EF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8AA76F451F38B81600EFB4E1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8AA76F4D1F38B81600EFB4E1;
+			remoteInfo = SWWebView;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8AABC4211F6082DA00429EF3 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8AABC42B1F60839D00429EF3 /* ServiceWorkerContainer.framework in Embed Frameworks */,
+				8AABC4281F60839600429EF3 /* ServiceWorker.framework in Embed Frameworks */,
+				8AABC4201F6082DA00429EF3 /* SWWebView.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewContainerDelegate.swift; sourceTree = "<group>"; };
@@ -65,7 +93,6 @@
 		8A5D98241F3E0D77002E521F /* SWWebView-JSTestSuite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SWWebView-JSTestSuite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A5D98261F3E0D77002E521F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8A5D98281F3E0D77002E521F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		8A5D982B1F3E0D77002E521F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		8A5D982D1F3E0D77002E521F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A5D98301F3E0D77002E521F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8A5D98321F3E0D77002E521F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -79,6 +106,8 @@
 		8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SWWebViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewTests.swift; sourceTree = "<group>"; };
 		8AA76F5E1F38B81700EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8AABC4261F60839600429EF3 /* ServiceWorker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ServiceWorker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ServiceWorkerContainer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
 		8AF85D521F38BA1D001B0A87 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceWorkerContainer.framework; path = "../ServiceWorkerContainer/build/Debug-iphoneos/ServiceWorkerContainer.framework"; sourceTree = "<group>"; };
 		8AF85D561F38BB70001B0A87 /* SWWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebView.swift; sourceTree = "<group>"; };
@@ -96,7 +125,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A5D98381F3E0F49002E521F /* GCDWebServers.framework in Frameworks */,
+				8AABC41F1F6082DA00429EF3 /* SWWebView.framework in Frameworks */,
+				8AABC4271F60839600429EF3 /* ServiceWorker.framework in Frameworks */,
 				8A5D98361F3E0E6A002E521F /* SWWebView.framework in Frameworks */,
+				8AABC42A1F60839D00429EF3 /* ServiceWorkerContainer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,7 +189,6 @@
 				8A5D98391F3E0F82002E521F /* js-tests */,
 				8A5D98261F3E0D77002E521F /* AppDelegate.swift */,
 				8A5D98281F3E0D77002E521F /* ViewController.swift */,
-				8A5D982A1F3E0D77002E521F /* Main.storyboard */,
 				8A5D982D1F3E0D77002E521F /* Assets.xcassets */,
 				8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */,
 				8A5D98321F3E0D77002E521F /* Info.plist */,
@@ -168,6 +199,8 @@
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
+				8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */,
+				8AABC4261F60839600429EF3 /* ServiceWorker.framework */,
 				8AA76F501F38B81600EFB4E1 /* SWWebView */,
 				8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */,
 				8A5D98251F3E0D77002E521F /* SWWebView-JSTestSuite */,
@@ -266,10 +299,12 @@
 				8A5D98211F3E0D77002E521F /* Frameworks */,
 				8A5D98221F3E0D77002E521F /* Resources */,
 				8A5D983B1F3E1030002E521F /* Copy Carthage Dependencies */,
+				8AABC4211F6082DA00429EF3 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8AABC41E1F60827500429EF3 /* PBXTargetDependency */,
 			);
 			name = "SWWebView-JSTestSuite";
 			productName = "SWWebView-JSTestSuite";
@@ -280,6 +315,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8AA76F621F38B81700EFB4E1 /* Build configuration list for PBXNativeTarget "SWWebView" */;
 			buildPhases = (
+				8A5B361F1F604B6F009F72AC /* SwiftFormat */,
+				8A5B36201F604B8A009F72AC /* SwiftLint */,
 				8AF85DAF1F3A4780001B0A87 /* Compile runtime JS */,
 				8AA76F491F38B81600EFB4E1 /* Sources */,
 				8AA76F4A1F38B81600EFB4E1 /* Frameworks */,
@@ -365,7 +402,6 @@
 				8A5D98311F3E0D77002E521F /* LaunchScreen.storyboard in Resources */,
 				8A5D983C1F3E167A002E521F /* js-tests in Resources */,
 				8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */,
-				8A5D982C1F3E0D77002E521F /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +423,34 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8A5B361F1F604B6F009F72AC /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = SwiftFormat;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftformat >/dev/null; then\n\nswiftformat $PROJECT_DIR --commas false --self insert\nelse\necho \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi";
+		};
+		8A5B36201F604B8A009F72AC /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
 		8A5D983B1F3E1030002E521F /* Copy Carthage Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -500,17 +564,14 @@
 			target = 8AA76F4D1F38B81600EFB4E1 /* SWWebView */;
 			targetProxy = 8AA76F591F38B81700EFB4E1 /* PBXContainerItemProxy */;
 		};
+		8AABC41E1F60827500429EF3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8AA76F4D1F38B81600EFB4E1 /* SWWebView */;
+			targetProxy = 8AABC41D1F60827500429EF3 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		8A5D982A1F3E0D77002E521F /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				8A5D982B1F3E0D77002E521F /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		8A5D982F1F3E0D77002E521F /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -525,6 +586,7 @@
 		8A5D98341F3E0D77002E521F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
 				INFOPLIST_FILE = "SWWebView-JSTestSuite/Info.plist";
@@ -539,6 +601,7 @@
 		8A5D98351F3E0D77002E521F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 998P9U5NGJ;
 				INFOPLIST_FILE = "SWWebView-JSTestSuite/Info.plist";

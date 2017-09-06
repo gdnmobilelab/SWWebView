@@ -19,7 +19,7 @@ extension ServiceWorkerRegistration: ToJSON {
             "waiting": self.waiting?.toJSONSuitableObject(),
             "installing": self.installing?.toJSONSuitableObject(),
             "redundant": self.redundant?.toJSONSuitableObject(),
-            "unregistered": self.unregistered,
+            "unregistered": self.unregistered
         ]
     }
 }
