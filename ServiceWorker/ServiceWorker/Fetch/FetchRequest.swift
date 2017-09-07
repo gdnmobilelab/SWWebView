@@ -188,4 +188,34 @@ public enum FetchRequestMode: String {
             self.redirect = redirectVal
         }
     }
+
+    internal func toURLRequest() -> URLRequest {
+
+        var cachePolicy: URLRequest.CachePolicy = .returnCacheDataElseLoad
+        if self.cache == FetchRequestCache.NoCache {
+            cachePolicy = .reloadIgnoringLocalCacheData
+        } else if self.cache == .Reload {
+            cachePolicy = .reloadRevalidatingCacheData
+        }
+
+        if self.redirect == .Manual {
+            // For some reason the combination of not following redirects and using caches will break.
+            // Appears to be this: http://www.openradar.me/31284156
+            cachePolicy = .reloadIgnoringLocalCacheData
+        }
+
+        var nsRequest = URLRequest(url: self.url, cachePolicy: cachePolicy, timeoutInterval: 60)
+
+        nsRequest.httpMethod = self.method
+
+        self.headers.values.forEach { keyvalPair in
+            nsRequest.addValue(keyvalPair.value, forHTTPHeaderField: keyvalPair.key)
+        }
+
+        if let body = self.body {
+            nsRequest.httpBody = body
+        }
+
+        return nsRequest
+    }
 }
