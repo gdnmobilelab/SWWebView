@@ -59,7 +59,7 @@ private var CORSHeaders = [
             throw ErrorMessage("Cannot clone response: body already used")
         }
 
-        let clone = try cloneInternalResponse()
+        let clone = try self._internal.clone()
 
         return try CORSResponse(from: clone, allowedHeaders: self.allowedHeaders)
     }

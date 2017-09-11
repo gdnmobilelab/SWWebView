@@ -16,7 +16,7 @@ public class TestBootstrap: NSObject {
         //        Log.enable()
 
         let p = Promise(value: ())
-        
+
         Log.debug = { NSLog($0) }
         Log.info = { NSLog($0) }
         Log.warn = { NSLog($0) }

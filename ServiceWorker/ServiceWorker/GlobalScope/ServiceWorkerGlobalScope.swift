@@ -59,9 +59,9 @@ import JavaScriptCore
         }
     }
 
-    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue? {
-        return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
-    }
+    //    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue? {
+    //        return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
+    //    }
 
     fileprivate func attachVariablesToContext() throws {
 
@@ -85,8 +85,11 @@ import JavaScriptCore
         }
         self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
 
-        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, options in
-            FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
+        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, _ in
+
+            FetchSession.default.fetch(requestOrURL, fromOrigin: self.worker.url)
+
+            //            FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
         }
         self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
         self.context.globalObject.setValue(FetchRequest.self, forProperty: "Request")

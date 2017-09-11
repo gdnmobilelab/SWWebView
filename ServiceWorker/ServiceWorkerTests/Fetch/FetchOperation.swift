@@ -39,16 +39,17 @@ class FetchOperationTests: XCTestCase {
 
         let request = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
 
-        let expect = expectation(description: "Fetch call returns")
-
-        FetchOperation.fetch(request) { _, response in
-            XCTAssert(response != nil)
-            XCTAssertEqual(response!.status, 201)
-            XCTAssertEqual(response!.headers.get("X-Test-Header"), "TEST-VALUE")
-            expect.fulfill()
-        }
-
-        wait(for: [expect], timeout: 1)
+        FetchSession.default.fetch(request)
+            .then { response -> Promise<Any?> in
+                XCTAssertEqual(response.status, 201)
+                XCTAssertEqual(response.headers.get("X-Test-Header"), "TEST-VALUE")
+                return response.json()
+            }
+            .then { obj -> Void in
+                let json = obj as! [String: String]
+                XCTAssertEqual(json["blah"], "value")
+            }
+            .assertResolves()
     }
 
     func testMultipleFetches() {
@@ -68,8 +69,8 @@ class FetchOperationTests: XCTestCase {
         }
 
         when(fulfilled: [
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() },
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() }
+            FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() },
+            FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() }
         ])
             .then { responses -> Void in
                 XCTAssertEqual(responses[0], "this is some text")
@@ -78,8 +79,8 @@ class FetchOperationTests: XCTestCase {
             .assertResolves()
 
         when(fulfilled: [
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() },
-            FetchOperation.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() }
+            FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test2.txt")).then { $0.text() },
+            FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt")).then { $0.text() }
         ])
             .then { responses -> Void in
                 XCTAssertEqual(responses[0], "this is some text two")
@@ -90,14 +91,8 @@ class FetchOperationTests: XCTestCase {
 
     func testFailedFetch() {
 
-        let expect = expectation(description: "Fetch call returns")
-
-        FetchOperation.fetch("http://localhost:23423") { error, _ in
-            XCTAssert(error != nil)
-            expect.fulfill()
-        }
-
-        wait(for: [expect], timeout: 1)
+        FetchSession.default.fetch(URL(string: "http://localhost:23423")!)
+            .assertRejects()
     }
 
     fileprivate func setupRedirectURLs() {
@@ -121,19 +116,15 @@ class FetchOperationTests: XCTestCase {
 
         self.setupRedirectURLs()
 
-        let expectRedirect = expectation(description: "Fetch call returns")
-
         let request = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/redirect-me"))
 
-        FetchOperation.fetch(request) { _, response in
-            XCTAssert(response != nil)
-            XCTAssertEqual(response!.status, 201)
+        FetchSession.default.fetch(request)
+            .then { response -> Void in
+                XCTAssertEqual(response.status, 201)
 
-            XCTAssert(response!.url.absoluteString == TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)
-            expectRedirect.fulfill()
-        }
-
-        wait(for: [expectRedirect], timeout: 10)
+                XCTAssertEqual(response.url.absoluteString, TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)
+            }
+            .assertResolves()
     }
 
     func testRedirectNoFollow() {
@@ -144,13 +135,13 @@ class FetchOperationTests: XCTestCase {
         let noRedirectRequest = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/redirect-me"))
         noRedirectRequest.redirect = .Manual
 
-        FetchOperation.fetch(noRedirectRequest) { _, response in
-            XCTAssert(response != nil, "Response should exist")
-            XCTAssert(response!.status == 301, "Should be a 301 status")
-            XCTAssert(response!.headers.get("Location") == "/test.txt", "URL should be correct")
-            XCTAssert(response!.url.absoluteString == TestWeb.serverURL.appendingPathComponent("/redirect-me").absoluteString)
-            expectNotRedirect.fulfill()
-        }
+        FetchSession.default.fetch(noRedirectRequest)
+            .then { response -> Void in
+                XCTAssert(response.status == 301, "Should be a 301 status")
+                XCTAssert(response.headers.get("Location") == "/test.txt", "URL should be correct")
+                XCTAssert(response.url.absoluteString == TestWeb.serverURL.appendingPathComponent("/redirect-me").absoluteString)
+                expectNotRedirect.fulfill()
+            }
 
         wait(for: [expectNotRedirect], timeout: 10)
     }
@@ -158,17 +149,11 @@ class FetchOperationTests: XCTestCase {
     func testRedirectError() {
         self.setupRedirectURLs()
 
-        let expectError = expectation(description: "Fetch call errors on redirect")
-
         let errorRequest = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/redirect-me"))
         errorRequest.redirect = .Error
 
-        FetchOperation.fetch(errorRequest) { error, _ in
-            XCTAssert(error != nil, "Error should exist")
-            expectError.fulfill()
-        }
-
-        wait(for: [expectError], timeout: 100)
+        FetchSession.default.fetch(errorRequest)
+            .assertRejects()
     }
 
     func testFetchRequestBody() {
@@ -190,11 +175,8 @@ class FetchOperationTests: XCTestCase {
         postRequest.body = "TEST STRING".data(using: String.Encoding.utf8)
         postRequest.method = "POST"
 
-        FetchOperation.fetch(postRequest) { error, _ in
-            XCTAssert(error == nil, "Should not error")
-        }
-
-        wait(for: [expectResponse], timeout: 1)
+        FetchSession.default.fetch(postRequest)
+            .assertResolves()
     }
 
     func testJSFetch() {

@@ -58,17 +58,13 @@ import PromiseKit
         return self._internal.arrayBuffer()
     }
 
-    func cloneInternalResponse() throws -> FetchResponse {
-        return try FetchResponse(headers: self._internal.headers, status: self._internal.status, url: self._internal.url, redirected: self._internal.redirected, fetchOperation: self._internal.fetchOperation)
-    }
-
     func clone() throws -> FetchResponseProtocol {
 
         if self.bodyUsed {
             throw ErrorMessage("Cannot clone response: body already used")
         }
 
-        let clonedInternalResponse = try cloneInternalResponse()
+        let clonedInternalResponse = try self._internal.clone()
 
         if self.responseType == .Basic {
             return try BasicResponse(from: clonedInternalResponse)
