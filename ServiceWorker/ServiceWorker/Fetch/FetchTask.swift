@@ -75,6 +75,20 @@ class FetchTask: NSObject {
             guard let keyString = key as? String, let valString = val as? String else {
                 throw ErrorMessage("Could not parse HTTPURLResponse headers")
             }
+
+            if keyString.lowercased() == "content-encoding" {
+                // URLSession automatically decodes content (which we don't actually want it to do)
+                // so the only way to continue to use this is to strip out the Content-Encoding
+                // header, otherwise the browser will try to decode it again
+                return
+            } else if keyString.lowercased() == "content-length" {
+                // Because of this same GZIP issue, the content length will be incorrect. It's actually
+                // also normally incorrect, but because we're stripping out all encoding we should
+                // update the content-length header to be accurate.
+                headers.set("Content-Length", String(self.task.countOfBytesExpectedToReceive))
+                return
+            }
+
             headers.append(keyString, valString)
         }
 

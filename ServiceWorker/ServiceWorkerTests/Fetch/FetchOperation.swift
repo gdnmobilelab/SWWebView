@@ -175,8 +175,16 @@ class FetchOperationTests: XCTestCase {
         postRequest.body = "TEST STRING".data(using: String.Encoding.utf8)
         postRequest.method = "POST"
 
+        let fulfilled = expectation(description: "The promise returned")
         FetchSession.default.fetch(postRequest)
-            .assertResolves()
+            .then { _ in
+                fulfilled.fulfill()
+            }
+            .catch { error in
+                XCTFail("\(error)")
+            }
+
+        wait(for: [fulfilled, expectResponse], timeout: 1)
     }
 
     func testJSFetch() {

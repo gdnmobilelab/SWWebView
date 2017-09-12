@@ -9,7 +9,7 @@
 import Foundation
 import PromiseKit
 
-class MemoryStream: WrappedStream {
+class MemoryWriteStream: WrappedWriteStream {
 
     init() {
         super.init(baseStream: OutputStream.toMemory())
@@ -23,5 +23,11 @@ class MemoryStream: WrappedStream {
             }
             return data
         }
+    }
+
+    override func close() {
+        super.close()
+        // For some reason memory stream isn't emitting event?
+        self.closedPromise.fulfill(())
     }
 }

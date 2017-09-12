@@ -112,9 +112,11 @@ import JavaScriptCore
             return Promise(error: ErrorMessage("Origin must have a host and a scheme"))
         }
 
+        let isCrossOrigin = host != request.url.host
+
         if request.mode != .CORS || origin.host == request.url.host {
             // This is not a CORS request, so we can skip all this.
-            return Promise(value: FetchCORSRestrictions(isCrossDomain: false, allowedHeaders: []))
+            return Promise(value: FetchCORSRestrictions(isCrossDomain: isCrossOrigin, allowedHeaders: []))
         }
 
         let optionsRequest = FetchRequest(url: request.url)
@@ -148,7 +150,7 @@ import JavaScriptCore
                         .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
                 }
 
-                return FetchCORSRestrictions(isCrossDomain: true, allowedHeaders: exposedHeaders)
+                return FetchCORSRestrictions(isCrossDomain: isCrossOrigin, allowedHeaders: exposedHeaders)
             }
     }
 

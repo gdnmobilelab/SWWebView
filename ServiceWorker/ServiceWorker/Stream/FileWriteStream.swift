@@ -9,7 +9,7 @@
 import Foundation
 import PromiseKit
 
-class FileStream: WrappedStream {
+class FileWriteStream: WrappedWriteStream {
 
     typealias FileDownloadReturn = (filePath: URL, fileSize: Int64)
 
@@ -26,7 +26,7 @@ class FileStream: WrappedStream {
         super.init(baseStream: stream)
     }
 
-    func withDownload(_ callback: @escaping (FileDownloadReturn) -> AnyPromise) -> Promise<Void> {
+    func withDownload<T>(_ callback: @escaping (FileDownloadReturn) throws -> Promise<T>) -> Promise<T> {
 
         return self.closed
             .then {
@@ -36,10 +36,7 @@ class FileStream: WrappedStream {
                     throw ErrorMessage("Could not get size of downloaded file")
                 }
 
-                return callback(FileStream.FileDownloadReturn(filePath: self.localURL, fileSize: size))
-                    .then { _ in
-                        ()
-                    }
+                return try callback(FileWriteStream.FileDownloadReturn(filePath: self.localURL, fileSize: size))
             }
     }
 }

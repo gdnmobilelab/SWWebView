@@ -25,7 +25,7 @@ import JavaScriptCore
     let url: URL
     let redirected: Bool
 
-    internal var dataStream: WritableStreamProtocol = MemoryStream()
+    internal var dataStream: WritableStreamProtocol = MemoryWriteStream()
 
     public var ok: Bool {
         return self.status >= 200 && self.status < 300
@@ -85,7 +85,7 @@ import JavaScriptCore
 
             self.fetchTask?.beginDownloadIfNotAlreadyStarted()
 
-            guard let memoryStream = self.dataStream as? MemoryStream else {
+            guard let memoryStream = self.dataStream as? MemoryWriteStream else {
                 // shouldn't ever happen - markBodyUsed() would throw if this happened.
                 throw ErrorMessage("The stream in this response has already been altered from a memory stream")
             }
@@ -94,29 +94,30 @@ import JavaScriptCore
         }
     }
 
-    func fileDownload(_ callback: @escaping (FileStream.FileDownloadReturn) -> AnyPromise) -> Promise<Void> {
+    func fileDownload<T>(_ callback: @escaping (FileWriteStream.FileDownloadReturn) throws -> Promise<T>) -> Promise<T> {
 
         return firstly {
             try self.markBodyUsed()
             let downloadPath = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-                .appendingPathComponent("temp.download")
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension("download")
             // add temporary file name
 
             // We now need to replace our stream with one that writes to disk, but also
             // grab any existing content in the memory stream, which can happen if the
             // response has been cloned.
 
-            guard let existingStream = self.dataStream as? MemoryStream else {
+            guard let existingStream = self.dataStream as? MemoryWriteStream else {
                 throw ErrorMessage("Response stream has already been transformed")
             }
 
-            guard let fileWriteStream = FileStream(downloadPath) else {
+            guard let fileWriteStream = FileWriteStream(downloadPath) else {
                 throw ErrorMessage("Could not create local file download stream")
             }
 
             self.dataStream.close()
             return existingStream.allData
-                .then { dataSoFar in
+                .then { dataSoFar -> Promise<T> in
                     fileWriteStream.enqueue(dataSoFar)
                     self.dataStream = fileWriteStream
 
@@ -124,9 +125,9 @@ import JavaScriptCore
 
                     return fileWriteStream.withDownload(callback)
                 }
-                .then { () -> Void in
+                .then { result -> T in
                     try FileManager.default.removeItem(at: downloadPath)
-                    return ()
+                    return result
                 }
         }
     }

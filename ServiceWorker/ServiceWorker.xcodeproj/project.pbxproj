@@ -32,14 +32,13 @@
 		8A5D98151F3DF8C2002E521F /* GCDWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98121F3DF8C2002E521F /* GCDWebServers.framework */; };
 		8A5D98161F3DF8C2002E521F /* FMDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98131F3DF8C2002E521F /* FMDB.framework */; };
 		8A5D98171F3DF8C2002E521F /* Gzip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98141F3DF8C2002E521F /* Gzip.framework */; };
-		8A67ABB71F66F9D700936D35 /* FileStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A67ABB61F66F9D700936D35 /* FileStream.swift */; };
-		8A67ABB91F66FB7C00936D35 /* MemoryStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A67ABB81F66FB7C00936D35 /* MemoryStream.swift */; };
+		8A653E811F68465600115228 /* MemoryWriteStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A653E801F68465600115228 /* MemoryWriteStream.swift */; };
+		8A67ABB71F66F9D700936D35 /* FileWriteStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A67ABB61F66F9D700936D35 /* FileWriteStream.swift */; };
 		8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */; };
 		8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */; };
 		8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9831C01F60C5D100ED23F0 /* FetchSession.swift */; };
 		8A9831C31F60C9D300ED23F0 /* FetchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9831C21F60C9D300ED23F0 /* FetchResponse.swift */; };
 		8A9831C41F618DAE00ED23F0 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
-		8AB834591F6191A000733F42 /* FetchTaskWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB834581F6191A000733F42 /* FetchTaskWrapper.swift */; };
 		8AB8345D1F61D81F00733F42 /* DuplexStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB8345C1F61D81F00733F42 /* DuplexStream.swift */; };
 		8AB8345F1F61D9C100733F42 /* WritableStreamProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB8345E1F61D9C100733F42 /* WritableStreamProtocol.swift */; };
 		8AB834611F61DA0D00733F42 /* WrappedStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB834601F61DA0D00733F42 /* WrappedStream.swift */; };
@@ -54,11 +53,8 @@
 		8AC754D01F31252B00C6B70A /* EventTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754991F31235200C6B70A /* EventTarget.swift */; };
 		8AC754D11F31252B00C6B70A /* ExtendableEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7549A1F31235200C6B70A /* ExtendableEvent.swift */; };
 		8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754A81F31235200C6B70A /* FetchHeaders.swift */; };
-		8AC754D31F31252B00C6B70A /* FetchOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754A91F31235200C6B70A /* FetchOperation.swift */; };
 		8AC754D41F31252B00C6B70A /* FetchRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754AA1F31235200C6B70A /* FetchRequest.swift */; };
-		8AC754D51F31252B00C6B70A /* FetchResponseOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754AB1F31235200C6B70A /* FetchResponseOld.swift */; };
 		8AC754D61F31252B00C6B70A /* HttpStatusCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754AC1F31235200C6B70A /* HttpStatusCodes.swift */; };
-		8AC754D71F31252B00C6B70A /* MultiDataDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754AD1F31235200C6B70A /* MultiDataDelegate.swift */; };
 		8AC754D81F31252B00C6B70A /* BasicResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754AF1F31235200C6B70A /* BasicResponse.swift */; };
 		8AC754D91F31252B00C6B70A /* CORSResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754B01F31235200C6B70A /* CORSResponse.swift */; };
 		8AC754DA1F31252B00C6B70A /* FetchResponseProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754B11F31235200C6B70A /* FetchResponseProtocol.swift */; };
@@ -147,13 +143,12 @@
 		8A5D98121F3DF8C2002E521F /* GCDWebServers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GCDWebServers.framework; path = ../Carthage/Build/iOS/GCDWebServers.framework; sourceTree = "<group>"; };
 		8A5D98131F3DF8C2002E521F /* FMDB.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FMDB.framework; path = ../Carthage/Build/iOS/FMDB.framework; sourceTree = "<group>"; };
 		8A5D98141F3DF8C2002E521F /* Gzip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Gzip.framework; path = ../Carthage/Build/iOS/Gzip.framework; sourceTree = "<group>"; };
-		8A67ABB61F66F9D700936D35 /* FileStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStream.swift; sourceTree = "<group>"; };
-		8A67ABB81F66FB7C00936D35 /* MemoryStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryStream.swift; sourceTree = "<group>"; };
+		8A653E801F68465600115228 /* MemoryWriteStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWriteStream.swift; sourceTree = "<group>"; };
+		8A67ABB61F66F9D700936D35 /* FileWriteStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWriteStream.swift; sourceTree = "<group>"; };
 		8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClient.swift; sourceTree = "<group>"; };
 		8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsTests.swift; sourceTree = "<group>"; };
 		8A9831C01F60C5D100ED23F0 /* FetchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchSession.swift; sourceTree = "<group>"; };
 		8A9831C21F60C9D300ED23F0 /* FetchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchResponse.swift; sourceTree = "<group>"; };
-		8AB834581F6191A000733F42 /* FetchTaskWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchTaskWrapper.swift; sourceTree = "<group>"; };
 		8AB8345C1F61D81F00733F42 /* DuplexStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplexStream.swift; sourceTree = "<group>"; };
 		8AB8345E1F61D9C100733F42 /* WritableStreamProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritableStreamProtocol.swift; sourceTree = "<group>"; };
 		8AB834601F61DA0D00733F42 /* WrappedStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStream.swift; sourceTree = "<group>"; };
@@ -174,11 +169,8 @@
 		8AC7549D1F31235200C6B70A /* PromiseToJSPromise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromiseToJSPromise.swift; sourceTree = "<group>"; };
 		8AC7549E1F31235200C6B70A /* TimeoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeoutManager.swift; sourceTree = "<group>"; };
 		8AC754A81F31235200C6B70A /* FetchHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchHeaders.swift; sourceTree = "<group>"; };
-		8AC754A91F31235200C6B70A /* FetchOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchOperation.swift; sourceTree = "<group>"; };
 		8AC754AA1F31235200C6B70A /* FetchRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequest.swift; sourceTree = "<group>"; };
-		8AC754AB1F31235200C6B70A /* FetchResponseOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchResponseOld.swift; sourceTree = "<group>"; };
 		8AC754AC1F31235200C6B70A /* HttpStatusCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpStatusCodes.swift; sourceTree = "<group>"; };
-		8AC754AD1F31235200C6B70A /* MultiDataDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDataDelegate.swift; sourceTree = "<group>"; };
 		8AC754AF1F31235200C6B70A /* BasicResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicResponse.swift; sourceTree = "<group>"; };
 		8AC754B01F31235200C6B70A /* CORSResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CORSResponse.swift; sourceTree = "<group>"; };
 		8AC754B11F31235200C6B70A /* FetchResponseProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchResponseProtocol.swift; sourceTree = "<group>"; };
@@ -405,15 +397,11 @@
 			isa = PBXGroup;
 			children = (
 				8AC754A81F31235200C6B70A /* FetchHeaders.swift */,
-				8AC754A91F31235200C6B70A /* FetchOperation.swift */,
 				8AC754AA1F31235200C6B70A /* FetchRequest.swift */,
-				8AC754AB1F31235200C6B70A /* FetchResponseOld.swift */,
 				8AC754AC1F31235200C6B70A /* HttpStatusCodes.swift */,
-				8AC754AD1F31235200C6B70A /* MultiDataDelegate.swift */,
 				8AC754AE1F31235200C6B70A /* Response */,
 				8A9831C01F60C5D100ED23F0 /* FetchSession.swift */,
 				8A9831C21F60C9D300ED23F0 /* FetchResponse.swift */,
-				8AB834581F6191A000733F42 /* FetchTaskWrapper.swift */,
 				8AB834621F6223EC00733F42 /* FetchCORSRestrictions.swift */,
 				8A1D939C1F632821003CD121 /* FetchTask.swift */,
 			);
@@ -436,14 +424,14 @@
 		8AC754C11F31235200C6B70A /* Stream */ = {
 			isa = PBXGroup;
 			children = (
+				8A653E801F68465600115228 /* MemoryWriteStream.swift */,
 				8AC754C21F31235200C6B70A /* ReadableStream.swift */,
-				8A67ABB81F66FB7C00936D35 /* MemoryStream.swift */,
 				8AC754C31F31235200C6B70A /* ReadableStreamController.swift */,
 				8AC754C41F31235200C6B70A /* StreamReadResult.swift */,
 				8AB8345C1F61D81F00733F42 /* DuplexStream.swift */,
 				8AB8345E1F61D9C100733F42 /* WritableStreamProtocol.swift */,
 				8AB834601F61DA0D00733F42 /* WrappedStream.swift */,
-				8A67ABB61F66F9D700936D35 /* FileStream.swift */,
+				8A67ABB61F66F9D700936D35 /* FileWriteStream.swift */,
 			);
 			path = Stream;
 			sourceTree = "<group>";
@@ -781,26 +769,22 @@
 				8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */,
 				8A9831C31F60C9D300ED23F0 /* FetchResponse.swift in Sources */,
 				8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */,
-				8AC754D31F31252B00C6B70A /* FetchOperation.swift in Sources */,
 				8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */,
 				8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */,
 				8AC754D41F31252B00C6B70A /* FetchRequest.swift in Sources */,
 				8A43C18E1F4F3391001221C1 /* WindowClientProtocol.swift in Sources */,
 				8AB8345F1F61D9C100733F42 /* WritableStreamProtocol.swift in Sources */,
 				8A2264AC1F33BCDA00B48902 /* WebSQLTransaction.swift in Sources */,
-				8AC754D51F31252B00C6B70A /* FetchResponseOld.swift in Sources */,
 				8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */,
 				8AC754D61F31252B00C6B70A /* HttpStatusCodes.swift in Sources */,
 				8AB834611F61DA0D00733F42 /* WrappedStream.swift in Sources */,
 				8A35AE941F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift in Sources */,
-				8AC754D71F31252B00C6B70A /* MultiDataDelegate.swift in Sources */,
 				8AC754D81F31252B00C6B70A /* BasicResponse.swift in Sources */,
 				8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */,
 				8AC754D91F31252B00C6B70A /* CORSResponse.swift in Sources */,
 				8AC754DA1F31252B00C6B70A /* FetchResponseProtocol.swift in Sources */,
 				8AC754DB1F31252B00C6B70A /* FetchResponseProxy.swift in Sources */,
 				8AC754F41F31292800C6B70A /* ErrorMessage.swift in Sources */,
-				8A67ABB91F66FB7C00936D35 /* MemoryStream.swift in Sources */,
 				8AB8345D1F61D81F00733F42 /* DuplexStream.swift in Sources */,
 				8AC754DC1F31252B00C6B70A /* OpaqueResponse.swift in Sources */,
 				8AC754DD1F31252B00C6B70A /* ResponseType.swift in Sources */,
@@ -811,7 +795,7 @@
 				8AB834631F6223EC00733F42 /* FetchCORSRestrictions.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,
 				8A5D97F91F3CB532002E521F /* GlobalEventLog.swift in Sources */,
-				8A67ABB71F66F9D700936D35 /* FileStream.swift in Sources */,
+				8A67ABB71F66F9D700936D35 /* FileWriteStream.swift in Sources */,
 				8AC754E21F31252B00C6B70A /* NotificationShowOptions.swift in Sources */,
 				8AC755341F3240B500C6B70A /* Migration.swift in Sources */,
 				8AC754E31F31252B00C6B70A /* ServiceWorkerRegistrationProtocol.swift in Sources */,
@@ -825,7 +809,6 @@
 				8AC755361F3240BB00C6B70A /* SQLiteBlobStream.swift in Sources */,
 				8A2264AE1F33C6C700B48902 /* WebSQLResultSet.swift in Sources */,
 				8A235FF91F34D0D300969268 /* SQLiteDataType.swift in Sources */,
-				8AB834591F6191A000733F42 /* FetchTaskWrapper.swift in Sources */,
 				8AC754E91F31252B00C6B70A /* ServiceWorker.swift in Sources */,
 				8AC754EA1F31252B00C6B70A /* ServiceWorkerExecutionEnvironment.swift in Sources */,
 				8AC755371F3240BB00C6B70A /* SQLiteBlobWriteStream.swift in Sources */,
@@ -841,6 +824,7 @@
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
 				8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */,
 				8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */,
+				8A653E811F68465600115228 /* MemoryWriteStream.swift in Sources */,
 				8A43C1901F4F346F001221C1 /* Client.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

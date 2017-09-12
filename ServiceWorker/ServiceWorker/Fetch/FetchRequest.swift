@@ -59,7 +59,7 @@ public enum FetchRequestMode: String {
     public var cache: FetchRequestCache = FetchRequestCache.Default
     public var body: Data?
 
-    internal var origin: URL?
+    //    internal var origin: URL?
 
     public var urlString: String {
         return self.url.absoluteString
@@ -119,19 +119,19 @@ public enum FetchRequestMode: String {
 
     /// The Fetch API has various rules regarding the origin of requests. We try to respect
     /// that as best we can.
-    internal func enforceOrigin(origin: URL) throws {
-        self.origin = origin
-
-        if self.mode == .SameOrigin {
-            if self.url.scheme != origin.scheme || self.url.host != origin.host {
-                throw ErrorMessage("URL is not valid for a same-origin request")
-            }
-        } else if self.mode == .NoCORS {
-            if self.method != "HEAD" && self.method != "GET" && self.method != "POST" {
-                throw ErrorMessage("Can only send HEAD, GET and POST requests with no-cors requests")
-            }
-        }
-    }
+    //    internal func enforceOrigin(origin: URL) throws {
+    //        self.origin = origin
+    //
+    //        if self.mode == .SameOrigin {
+    //            if self.url.scheme != origin.scheme || self.url.host != origin.host {
+    //                throw ErrorMessage("URL is not valid for a same-origin request")
+    //            }
+    //        } else if self.mode == .NoCORS {
+    //            if self.method != "HEAD" && self.method != "GET" && self.method != "POST" {
+    //                throw ErrorMessage("Can only send HEAD, GET and POST requests with no-cors requests")
+    //            }
+    //        }
+    //    }
 
     internal func applyHeadersIfExist(opts: [String: AnyObject]) {
         if let headers = opts["headers"] as? FetchHeaders {
