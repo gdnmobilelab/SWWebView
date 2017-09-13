@@ -13,13 +13,13 @@ import PromiseKit
 class ServiceWorkerHooks {
 
     fileprivate static func downloadAndCacheScript(id: String, url: URL) -> Promise<String> {
-        return FetchOperation.fetch(url)
+        return FetchSession.default.fetch(url)
             .then { res in
 
                 // We have to download to a local file first, because we can't rely on a
                 // Content-Length header always existing.
 
-                res.internalResponse.fileDownload(withDownload: { _, fileSize in
+                res.internalResponse.fileDownload({ _, fileSize in
                     CoreDatabase.inConnection { db in
                         let rowID = try db.insert(sql: """
                             INSERT INTO worker_imported_scripts (worker_id, url, headers, content)

@@ -18,7 +18,7 @@ import JavaScriptCore
     // we'll stop downloading
     fileprivate var pendingTasks = NSHashTable<FetchTask>.weakObjects()
 
-    static let `default` = FetchSession()
+    public static let `default` = FetchSession()
 
     fileprivate var session: URLSession!
 

@@ -137,6 +137,7 @@ public class SWURLSchemeTask {
             return
         }
         self.underlyingTask.didFinish()
+        self.close()
     }
 
     /// This doesn't throw because what's the point - if it fails, it fails
@@ -146,6 +147,7 @@ public class SWURLSchemeTask {
             return
         }
         self.underlyingTask.didFailWithError(error)
+        self.close()
     }
 
     var hash: Int {

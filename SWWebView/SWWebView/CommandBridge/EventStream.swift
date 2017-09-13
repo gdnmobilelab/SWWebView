@@ -101,8 +101,16 @@ class EventStream: NSObject {
             Log.error?("Shutting down an event stream with no container listener")
         }
 
+        if let workerInstallErrorListener = self.workerInstallErrorListener {
+            GlobalEventLog.removeListener(workerInstallErrorListener)
+        } else {
+            Log.error?("Shutting down an event stream with no worker install error listener")
+        }
+
         self.workerListener = nil
         self.registrationListener = nil
+        self.containerListener = nil
+        self.workerInstallErrorListener = nil
     }
 
     func sendUpdate(identifier: String, object: ToJSON) {

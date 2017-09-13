@@ -83,6 +83,19 @@ import ServiceWorker
 
         super.init()
         try self.resetReadyRegistration()
+
+        self.workerChangeListener = GlobalEventLog.addListener { [unowned self] (worker: ServiceWorker) in
+
+            // remove controller if it has become redundant
+
+            if worker == self.controller && worker.state == .redundant {
+                self.controller = nil
+            }
+        }
+    }
+
+    deinit {
+        self.workerChangeListener = nil
     }
 
     fileprivate var defaultScope: URL {

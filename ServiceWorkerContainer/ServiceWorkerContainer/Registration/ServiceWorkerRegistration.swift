@@ -42,6 +42,10 @@ import JavaScriptCore
 
     internal func set(workerSlot: RegistrationWorkerSlot, to worker: ServiceWorker?, makeOldRedundant: Bool = true) throws {
 
+        if self._unregistered {
+            throw ErrorMessage("Cannot set worker into slot of an unregistered ServiceWorkerRegistration")
+        }
+
         if let existingWorker = self.workers[workerSlot], makeOldRedundant {
             // If we already have a worker in this slot then we mark it as redudant. Maybe
             // further shutdown stuff to be done?
@@ -95,7 +99,7 @@ import JavaScriptCore
 
             let request = try self.factory.workerFactory.getUpdateRequest(forExistingWorker: worker)
 
-            return FetchOperation.fetch(request)
+            return FetchSession.default.fetch(request)
                 .then { res in
 
                     if res.status == 304 {
@@ -128,7 +132,7 @@ import JavaScriptCore
 
             let worker = try self.factory.createNewInstallingWorker(for: workerURL, in: self)
 
-            return FetchOperation.fetch(workerURL)
+            return FetchSession.default.fetch(workerURL)
                 .then { res -> RegisterReturn in
 
                     if res.ok == false {

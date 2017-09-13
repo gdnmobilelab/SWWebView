@@ -20,7 +20,7 @@ describe("Service Worker Container", () => {
             });
     });
 
-    it.only("Should register with default scope as JS file directory", () => {
+    it("Should register with default scope as JS file directory", () => {
         return navigator.serviceWorker
             .register("/fixtures/test-register-worker.js")
             .then(reg => {

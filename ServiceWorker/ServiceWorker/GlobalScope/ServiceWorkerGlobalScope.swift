@@ -65,6 +65,12 @@ import JavaScriptCore
 
     fileprivate func attachVariablesToContext() throws {
 
+        var toApply: [String: Any] = [
+            "self": self.context.globalObject
+        ]
+
+        //        self.context.globalObject.
+
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
 

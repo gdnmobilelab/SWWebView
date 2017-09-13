@@ -133,7 +133,7 @@ public class WorkerFactory {
             // you to establish a blob with length. So instead, we are streaming the download to disk, then
             // manually streaming into the DB when we have the length available.
 
-            res.internalResponse.fileDownload(withDownload: { url, fileSize in
+            res.internalResponse.fileDownload({ url, fileSize in
 
                 // ISSUE: do we update the URL here, if the response was redirected? If we do, it'll mean
                 // future update() calls won't check the original URL, which feels wrong. But having this

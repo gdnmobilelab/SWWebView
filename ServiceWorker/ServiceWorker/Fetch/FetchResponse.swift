@@ -94,7 +94,7 @@ import JavaScriptCore
         }
     }
 
-    func fileDownload<T>(_ callback: @escaping (FileWriteStream.FileDownloadReturn) throws -> Promise<T>) -> Promise<T> {
+    public func fileDownload<T>(_ callback: @escaping (URL, Int64) throws -> Promise<T>) -> Promise<T> {
 
         return firstly {
             try self.markBodyUsed()

@@ -66,7 +66,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             let req = FetchRequest(url: requestURL)
             req.cache = .NoCache
 
-            return FetchOperation.fetch(req)
+            return FetchSession.default.fetch(req)
                 .then { res -> Promise<Data> in
 
                     var headerDict: [String: String] = [:]
