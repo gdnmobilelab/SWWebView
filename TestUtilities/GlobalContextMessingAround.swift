@@ -13,32 +13,32 @@ class GlobalContextMessingAround: XCTestCase {
     
     let blah = "BLAH"
 
-    func testCreateGlobalContext() {
-        
-        let ctx = JSContext()!
-        
-        let toApply: [String: Any] = [
-            "hurr": "durr",
-            "blah": self.blah
-        ]
-        
-        let generator = { (obj:Any) -> @convention(block) () -> Any in
-            return {
-                return obj
-            }
-        }
-        
-        toApply.forEach { (key, val) in
-            ctx.globalObject.defineProperty(key, descriptor: [
-                "get": generator(val)
-            ])
-        }
-        
-        
-        
-        ctx.evaluateScript("debugger;")
-        
-    }
+//    func testCreateGlobalContext() {
+//        
+//        let ctx = JSContext()!
+//        
+//        let toApply: [String: Any] = [
+//            "hurr": "durr",
+//            "blah": self.blah
+//        ]
+//        
+//        let generator = { (obj:Any) -> @convention(block) () -> Any in
+//            return {
+//                return obj
+//            }
+//        }
+//        
+//        toApply.forEach { (key, val) in
+//            ctx.globalObject.defineProperty(key, descriptor: [
+//                "get": generator(val)
+//            ])
+//        }
+//        
+//        
+//        
+//        ctx.evaluateScript("debugger;")
+//        
+//    }
     
 //    func testConvoluted() {
 //

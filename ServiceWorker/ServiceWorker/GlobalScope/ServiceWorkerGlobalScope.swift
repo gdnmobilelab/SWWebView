@@ -84,7 +84,9 @@ import JavaScriptCore
 
         self.context.globalObject.setValue(skipWaiting, forProperty: "skipWaiting")
         self.context.globalObject.setValue(self.clients, forProperty: "clients")
-        self.context.globalObject.setValue(self.location, forProperty: "location")
+        //        self.context.globalObject.setValue(self.location, forProperty: "location")
+
+        GlobalVariableProvider.add(variable: self.location, to: self.context, withName: "location")
 
         let importAsConvention: @convention(block) (JSValue) -> Void = { [unowned self] scripts in
             self.importScripts(scripts)

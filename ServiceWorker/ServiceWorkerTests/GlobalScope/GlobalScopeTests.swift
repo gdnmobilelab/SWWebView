@@ -12,6 +12,20 @@ import JavaScriptCore
 
 class GlobalScopeTests: XCTestCase {
 
+    func testCanAccessGlobalVariables() {
+
+        let sw = ServiceWorker.createTestWorker(id: name)
+
+        sw.evaluateScript("location.host")
+            .then { val in
+                return val!.toString()
+            }
+            .then { host in
+                XCTAssertEqual(host, "www.example.com")
+            }
+            .assertResolves()
+    }
+
     func testEventListenersWork() {
 
         let sw = ServiceWorker.createTestWorker(id: name)

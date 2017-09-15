@@ -222,7 +222,7 @@ class FetchResponseTests: XCTestCase {
 
         FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res in
-                res.internalResponse.fileDownload { local in
+                res.internalResponse.fileDownload { localFile, _ in
 
                     // test that we can use async promises here
 
@@ -234,7 +234,7 @@ class FetchResponseTests: XCTestCase {
                     }
                     .then { () -> String in
 
-                        return try String(contentsOfFile: local.filePath.path)
+                        return try String(contentsOfFile: localFile.path)
                     }
                 }
             }
@@ -253,7 +253,7 @@ class FetchResponseTests: XCTestCase {
 
         FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res in
-                res.internalResponse.fileDownload { _ in
+                res.internalResponse.fileDownload { _, _ in
 
                     throw ErrorMessage("Oh no")
                 }

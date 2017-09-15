@@ -65,6 +65,7 @@ import PromiseKit
 
     deinit {
         NSLog("Deinit execution environment: Garbage collect.")
+        GlobalVariableProvider.destroy(forContext: self.jsContext)
         self.currentException = nil
         self.timeoutManager.stopAllTimeouts = true
         self.jsContext.exceptionHandler = nil
