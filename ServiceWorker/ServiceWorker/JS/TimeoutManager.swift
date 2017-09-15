@@ -37,10 +37,10 @@ class TimeoutManager {
         let setTimeout = unsafeBitCast((self.setTimeoutFunction as @convention(block) (JSValue, JSValue) -> Int), to: AnyObject.self)
         let setInterval = unsafeBitCast((self.setIntervalFunction as @convention(block) (JSValue, JSValue) -> Int), to: AnyObject.self)
 
-        context.globalObject.setValue(clearInterval, forProperty: "clearInterval")
-        context.globalObject.setValue(clearTimeout, forProperty: "clearTimeout")
-        context.globalObject.setValue(setTimeout, forProperty: "setTimeout")
-        context.globalObject.setValue(setInterval, forProperty: "setInterval")
+        GlobalVariableProvider.add(variable: clearInterval, to: context, withName: "clearInterval")
+        GlobalVariableProvider.add(variable: clearTimeout, to: context, withName: "clearTimeout")
+        GlobalVariableProvider.add(variable: setTimeout, to: context, withName: "setTimeout")
+        GlobalVariableProvider.add(variable: setInterval, to: context, withName: "setInterval")
     }
 
     fileprivate func setIntervalFunction(_ callback: JSValue, interval: JSValue) -> Int {

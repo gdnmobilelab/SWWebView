@@ -34,7 +34,7 @@ import JavaScriptCore
 
     init(context: JSContext, _ worker: ServiceWorker) throws {
 
-        self.console = try ConsoleMirror(console: context.objectForKeyedSubscript("console"))
+        self.console = try ConsoleMirror(in: context)
         self.worker = worker
         self.context = context
         self.clients = Clients(for: worker)
@@ -65,49 +65,37 @@ import JavaScriptCore
 
     fileprivate func attachVariablesToContext() throws {
 
-        var toApply: [String: Any] = [
-            "self": self.context.globalObject
-        ]
-
-        //        self.context.globalObject.
-
         // Annoyingly, we can't change the globalObject to be a reference to this. Instead, we have to take
         // all the attributes from the global scope and manually apply them to the existing global object.
 
-        self.context.globalObject.setValue(self.context.globalObject, forProperty: "self")
-
-        self.context.globalObject.setValue(Event.self, forProperty: "Event")
+        GlobalVariableProvider.addSelf(to: self.context)
 
         let skipWaiting: @convention(block) () -> Void = { [unowned self] in
             self.skipWaitingStatus = true
         }
 
-        self.context.globalObject.setValue(skipWaiting, forProperty: "skipWaiting")
-        self.context.globalObject.setValue(self.clients, forProperty: "clients")
-        //        self.context.globalObject.setValue(self.location, forProperty: "location")
-
-        GlobalVariableProvider.add(variable: self.location, to: self.context, withName: "location")
-
         let importAsConvention: @convention(block) (JSValue) -> Void = { [unowned self] scripts in
             self.importScripts(scripts)
         }
-        self.context.globalObject.setValue(importAsConvention, forProperty: "importScripts")
 
         let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, _ in
-
             FetchSession.default.fetch(requestOrURL, fromOrigin: self.worker.url)
-
-            //            FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
         }
-        self.context.globalObject.setValue(fetchAsConvention, forProperty: "fetch")
-        self.context.globalObject.setValue(FetchRequest.self, forProperty: "Request")
+
+        GlobalVariableProvider.add(variable: Event.self, to: self.context, withName: "Event")
+        GlobalVariableProvider.add(variable: skipWaiting, to: self.context, withName: "skipWaiting")
+        GlobalVariableProvider.add(variable: self.clients, to: self.context, withName: "clients")
+        GlobalVariableProvider.add(variable: self.location, to: self.context, withName: "location")
+        GlobalVariableProvider.add(variable: importAsConvention, to: self.context, withName: "importScripts")
+        GlobalVariableProvider.add(variable: fetchAsConvention, to: self.context, withName: "fetch")
+        GlobalVariableProvider.add(variable: FetchRequest.self, to: self.context, withName: "Request")
 
         // These have weird hacks involving hash get/set, so we have specific functions
         // for adding them.
-        try JSURL.addToWorkerContext(context: self.context)
-        try WorkerLocation.addToWorkerContext(context: self.context)
+        //        try JSURL.addToWorkerContext(context: self.context)
+        //        try WorkerLocation.addToWorkerContext(context: self.context)
 
-        applyListenersTo(jsObject: self.context.globalObject)
+        EventTarget.applyJavaScriptListeners(self, to: self.context)
     }
 
     // Since these retain an open connection as long as they are alive, we need to
@@ -188,7 +176,7 @@ import JavaScriptCore
                 return
             }
 
-            self.context.globalObject.setValue(targetObj.objectForKeyedSubscript(key), forProperty: key)
+            GlobalVariableProvider.add(variable: targetObj.objectForKeyedSubscript(key), to: self.context, withName: key)
         }
     }
 

@@ -62,21 +62,23 @@ private struct EventListener {
         self.listeners.removeAll()
     }
 
-    func applyListenersTo(jsObject: JSValue) {
+    static func applyJavaScriptListeners(_ from: EventTarget, to context: JSContext) {
 
-        let addConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] name, funcToRun in
-            self.addEventListener(name, funcToRun)
+        let addConvention: @convention(block) (String, JSValue) -> Void = { name, funcToRun in
+            from.addEventListener(name, funcToRun)
         }
-        jsObject.setValue(addConvention, forProperty: "addEventListener")
+        GlobalVariableProvider.add(variable: addConvention, to: context, withName: "addEventListener")
 
-        let removeConvention: @convention(block) (String, JSValue) -> Void = { [unowned self] name, funcToRun in
-            self.removeEventListener(name, funcToRun)
+        let removeConvention: @convention(block) (String, JSValue) -> Void = { name, funcToRun in
+            from.removeEventListener(name, funcToRun)
         }
-        jsObject.setValue(removeConvention, forProperty: "removeEventListener")
 
-        let dispatchConvention: @convention(block) (Event) -> Void = { [unowned self] event in
-            self.dispatchEvent(event)
+        GlobalVariableProvider.add(variable: removeConvention, to: context, withName: "removeEventListener")
+
+        let dispatchConvention: @convention(block) (Event) -> Void = { event in
+            from.dispatchEvent(event)
         }
-        jsObject.setValue(dispatchConvention, forProperty: "dispatchEvent")
+
+        GlobalVariableProvider.add(variable: dispatchConvention, to: context, withName: "dispatchEvent")
     }
 }

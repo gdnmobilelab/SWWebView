@@ -44,14 +44,27 @@ class GlobalVariableProvider {
         if let dict = variableMaps.object(forKey: context) {
             // Not really sure if this makes a difference, but we might as well
             // delete the property callbacks we created.
-            return dict.allKeys.forEach { key in
+            dict.allKeys.forEach { key in
                 if let keyAsString = key as? String {
                     context.globalObject.deleteProperty(keyAsString)
                 }
             }
         }
+        
+        if context.globalObject.hasProperty("self") {
+            context.globalObject.deleteProperty("self")
+        }
 
         self.variableMaps.removeObject(forKey: context)
+    }
+
+    /// A special case so we don't need to hold a reference to the global object
+    static func addSelf(to context: JSContext) {
+        context.globalObject.defineProperty("self", descriptor: [
+            "get": {
+                JSContext.current().globalObject
+            } as @convention(block) () -> Any?
+        ])
     }
 
     static func add(variable: Any, to context: JSContext, withName name: String) {
