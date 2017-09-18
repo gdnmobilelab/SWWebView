@@ -43,7 +43,7 @@ class WebSQLConnectionTests: XCTestCase {
             .then { exec in
 
                 exec.withJSContext { context in
-                    GlobalVariableProvider.add(variable: exec.globalScope.openDatabaseFunction, to: context, withName: "openDatabase")
+                    GlobalVariableProvider.add(variable: exec.globalScope.openDatabaseFunction!, to: context, withName: "openDatabase")
                 }
             }
     }

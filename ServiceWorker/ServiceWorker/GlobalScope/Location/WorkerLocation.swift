@@ -24,25 +24,4 @@ import JavaScriptCore
 }
 
 @objc(WorkerLocation) public class WorkerLocation: LocationBase, WorkerLocationExports {
-
-    /// We can't use 'hash' as a property in native code because it's used by Objective C (grr)
-    /// so we have to resort to this total hack to get hash back.
-    static func addToWorkerContext(context: JSContext) throws {
-
-        context.globalObject.setValue(WorkerLocation.self, forProperty: "WorkerLocation")
-        guard let jsInstance = context.globalObject.objectForKeyedSubscript("WorkerLocation") else {
-            throw ErrorMessage("Could not get JS instance of WorkerLocation class")
-        }
-
-        // Also add it to the self object
-        context.globalObject.objectForKeyedSubscript("self")
-            .setValue(jsInstance, forProperty: "WorkerLocation")
-
-        // Now graft in our awful hacks to get and set hash
-        context.objectForKeyedSubscript("Object")
-            .objectForKeyedSubscript("defineProperty")
-            .call(withArguments: [jsInstance.objectForKeyedSubscript("prototype"), "hash", [
-                "get": unsafeBitCast(self.hashGetter, to: AnyObject.self)
-            ]])
-    }
 }

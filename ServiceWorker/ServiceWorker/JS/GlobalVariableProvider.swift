@@ -50,7 +50,7 @@ class GlobalVariableProvider {
                 }
             }
         }
-        
+
         if context.globalObject.hasProperty("self") {
             context.globalObject.deleteProperty("self")
         }

@@ -150,7 +150,7 @@ import JavaScriptCore
         }
     }
 
-    internal static func getCurrentInstance<T: LocationBase>() -> (T, JSContext)? {
+    internal static func getCurrentInstance<T: LocationBase>() -> T? {
 
         guard let currentContext = JSContext.current() else {
             Log.error?("Somehow called URL hash getter outside of a JSContext. Should never happen")
@@ -166,15 +166,38 @@ import JavaScriptCore
             return nil
         }
 
-        return (this, currentContext)
+        return this
     }
 
-    internal static let hashGetter: @convention(block) () -> JSValue? = {
-
-        guard let current: (LocationBase, JSContext) = LocationBase.getCurrentInstance() else {
+    fileprivate static let hashGetter: @convention(block) () -> String? = {
+        guard let locationInstance = getCurrentInstance() else {
             return nil
         }
 
-        return JSValue(object: current.0._hash, in: current.1)
+        return locationInstance._hash
+    }
+
+    fileprivate static let hashSetter: @convention(block) (String) -> Void = { value in
+        guard let locationInstance = getCurrentInstance() else {
+            return
+        }
+        locationInstance._hash = value
+    }
+
+    internal static func createJSValue(for context: JSContext) throws -> JSValue {
+
+        guard let jsVal = JSValue(object: self, in: context) else {
+            throw ErrorMessage("Could not create JSValue instance of class")
+        }
+
+        /// We can't use 'hash' as a property in native code because it's used by Objective C (grr)
+        /// so we have to resort to this total hack to get hash back.
+
+        jsVal.objectForKeyedSubscript("prototype").defineProperty("hash", descriptor: [
+            "get": unsafeBitCast(hashGetter, to: AnyObject.self),
+            "set": unsafeBitCast(hashSetter, to: AnyObject.self)
+        ])
+
+        return jsVal
     }
 }

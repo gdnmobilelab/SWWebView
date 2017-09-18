@@ -92,8 +92,8 @@ import JavaScriptCore
 
         // These have weird hacks involving hash get/set, so we have specific functions
         // for adding them.
-        //        try JSURL.addToWorkerContext(context: self.context)
-        //        try WorkerLocation.addToWorkerContext(context: self.context)
+        GlobalVariableProvider.add(variable: try JSURL.createJSValue(for: self.context), to: self.context, withName: "URL")
+        GlobalVariableProvider.add(variable: try WorkerLocation.createJSValue(for: self.context), to: self.context, withName: "WorkerLocation")
 
         EventTarget.applyJavaScriptListeners(self, to: self.context)
     }

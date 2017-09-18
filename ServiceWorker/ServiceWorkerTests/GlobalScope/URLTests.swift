@@ -39,7 +39,7 @@ class URLTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        sw.evaluateScript("let url =new URL('http://www.example.com/#test'); url.hash = 'test2'; url.hash")
+        sw.evaluateScript("let url = new URL('http://www.example.com/#test'); url.hash = 'test2'; url.hash")
             .then { val in
 
                 XCTAssertEqual(val!.toString(), "#test2")

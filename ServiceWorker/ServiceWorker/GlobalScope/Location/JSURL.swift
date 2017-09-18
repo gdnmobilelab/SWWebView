@@ -52,38 +52,4 @@ import JavaScriptCore
             return nil
         }
     }
-
-    fileprivate static let hashSetter: @convention(block) (JSValue) -> Void = { newValue in
-
-        if newValue.isString {
-
-            guard let current: (JSURL, JSContext) = JSURL.getCurrentInstance() else {
-                return
-            }
-
-            current.0._hash = newValue.toString()
-        }
-    }
-
-    /// We can't use 'hash' as a property in native code because it's used by Objective C (grr)
-    /// so we have to resort to this total hack to get hash back.
-    static func addToWorkerContext(context: JSContext) throws {
-
-        context.globalObject.setValue(JSURL.self, forProperty: "URL")
-        guard let jsInstance = context.globalObject.objectForKeyedSubscript("URL") else {
-            throw ErrorMessage("Could not retreive JS instance of URL class")
-        }
-
-        // Also add it to the self object
-        context.globalObject.objectForKeyedSubscript("self")
-            .setValue(jsInstance, forProperty: "URL")
-
-        // Now graft in our awful hacks to get and set hash
-        context.objectForKeyedSubscript("Object")
-            .objectForKeyedSubscript("defineProperty")
-            .call(withArguments: [jsInstance.objectForKeyedSubscript("prototype"), "hash", [
-                "get": unsafeBitCast(self.hashGetter, to: AnyObject.self),
-                "set": unsafeBitCast(self.hashSetter, to: AnyObject.self)
-            ]])
-    }
 }
