@@ -28,6 +28,7 @@
 		8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1911F4F3486001221C1 /* WindowClientVisibilityState.swift */; };
 		8A463DEC1F6C207700AA5B26 /* GlobalVariableProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A463DEB1F6C207700AA5B26 /* GlobalVariableProvider.swift */; };
 		8A463DEF1F6C282F00AA5B26 /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A463DEE1F6C282F00AA5B26 /* PerformanceTests.swift */; };
+		8A5510771F70294300B6A6A6 /* IndexedDBTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5510761F70294300B6A6A6 /* IndexedDBTests.swift */; };
 		8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */; };
 		8A5D97F91F3CB532002E521F /* GlobalEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D97F81F3CB532002E521F /* GlobalEventLog.swift */; };
 		8A5D98111F3DF8C2002E521F /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
@@ -108,6 +109,8 @@
 		8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD72F1F507E9600F444B6 /* JSURL.swift */; };
 		8ACCD7321F50828A00F444B6 /* URLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD7311F50828A00F444B6 /* URLTests.swift */; };
 		8ACCD7341F50936600F444B6 /* WorkerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACCD7331F50936600F444B6 /* WorkerLocation.swift */; };
+		8AD140FB1F70401800ED2D2C /* WebSQLResultRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD140FA1F70401800ED2D2C /* WebSQLResultRows.swift */; };
+		8AD140FD1F705A1100ED2D2C /* TimeoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD140FC1F705A1100ED2D2C /* TimeoutTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -142,6 +145,7 @@
 		8A43C1911F4F3486001221C1 /* WindowClientVisibilityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClientVisibilityState.swift; sourceTree = "<group>"; };
 		8A463DEB1F6C207700AA5B26 /* GlobalVariableProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalVariableProvider.swift; sourceTree = "<group>"; };
 		8A463DEE1F6C282F00AA5B26 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		8A5510761F70294300B6A6A6 /* IndexedDBTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedDBTests.swift; sourceTree = "<group>"; };
 		8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSArrayBuffer.swift; sourceTree = "<group>"; };
 		8A5D97F81F3CB532002E521F /* GlobalEventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalEventLog.swift; sourceTree = "<group>"; };
 		8A5D980F1F3DF89F002E521F /* PromiseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PromiseKit.framework; path = ../Carthage/Build/iOS/PromiseKit.framework; sourceTree = "<group>"; };
@@ -221,6 +225,8 @@
 		8ACCD72F1F507E9600F444B6 /* JSURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSURL.swift; sourceTree = "<group>"; };
 		8ACCD7311F50828A00F444B6 /* URLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTests.swift; sourceTree = "<group>"; };
 		8ACCD7331F50936600F444B6 /* WorkerLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerLocation.swift; sourceTree = "<group>"; };
+		8AD140FA1F70401800ED2D2C /* WebSQLResultRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLResultRows.swift; sourceTree = "<group>"; };
+		8AD140FC1F705A1100ED2D2C /* TimeoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeoutTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -286,6 +292,14 @@
 			path = Clients;
 			sourceTree = "<group>";
 		};
+		8A5510751F70292900B6A6A6 /* IndexedDB */ = {
+			isa = PBXGroup;
+			children = (
+				8A5510761F70294300B6A6A6 /* IndexedDBTests.swift */,
+			);
+			path = IndexedDB;
+			sourceTree = "<group>";
+		};
 		8A5D97F71F3CB50B002E521F /* GlobalEventLog */ = {
 			isa = PBXGroup;
 			children = (
@@ -348,6 +362,7 @@
 		8AC754751F3122FE00C6B70A /* ServiceWorkerTests */ = {
 			isa = PBXGroup;
 			children = (
+				8A5510751F70292900B6A6A6 /* IndexedDB */,
 				8A8C3A201F4F470A00EDA645 /* Clients */,
 				8A235FFA1F34DE8500969268 /* WebSQL */,
 				8A235FF31F34C62100969268 /* SQLiteTests.swift */,
@@ -504,6 +519,7 @@
 				8AC755011F312A1200C6B70A /* GlobalScopeTests.swift */,
 				8AC755021F312A1200C6B70A /* ImportScriptsTests.swift */,
 				8ACCD7311F50828A00F444B6 /* URLTests.swift */,
+				8AD140FC1F705A1100ED2D2C /* TimeoutTests.swift */,
 			);
 			path = GlobalScope;
 			sourceTree = "<group>";
@@ -572,6 +588,7 @@
 				8AC755411F325CD100C6B70A /* WebSQLDatabase.swift */,
 				8A2264AB1F33BCDA00B48902 /* WebSQLTransaction.swift */,
 				8A2264AD1F33C6C700B48902 /* WebSQLResultSet.swift */,
+				8AD140FA1F70401800ED2D2C /* WebSQLResultRows.swift */,
 			);
 			path = WebSQL;
 			sourceTree = "<group>";
@@ -829,6 +846,7 @@
 				8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */,
 				8AC754EC1F31252B00C6B70A /* ReadableStream.swift in Sources */,
 				8AC754ED1F31252B00C6B70A /* ReadableStreamController.swift in Sources */,
+				8AD140FB1F70401800ED2D2C /* WebSQLResultRows.swift in Sources */,
 				8A463DEC1F6C207700AA5B26 /* GlobalVariableProvider.swift in Sources */,
 				8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */,
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
@@ -862,12 +880,14 @@
 				8A463DEF1F6C282F00AA5B26 /* PerformanceTests.swift in Sources */,
 				8AC7551B1F312A3200C6B70A /* ConsoleMirrorTests.swift in Sources */,
 				8A653E871F6983B500115228 /* GlobalContextMessingAround.swift in Sources */,
+				8AD140FD1F705A1100ED2D2C /* TimeoutTests.swift in Sources */,
 				8AC7551C1F312A3200C6B70A /* ExecutionTests.swift in Sources */,
 				8AC7551D1F312A3200C6B70A /* GlobalScopeTests.swift in Sources */,
 				8AC7551E1F312A3200C6B70A /* ImportScriptsTests.swift in Sources */,
 				8AC755281F32404A00C6B70A /* ServiceWorkerExtensions.swift in Sources */,
 				8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */,
 				8AC7550F1F312A1200C6B70A /* Bootstrap.swift in Sources */,
+				8A5510771F70294300B6A6A6 /* IndexedDBTests.swift in Sources */,
 				8AC754771F3122FE00C6B70A /* ServiceWorkerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

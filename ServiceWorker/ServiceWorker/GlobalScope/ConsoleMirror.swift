@@ -67,35 +67,17 @@ import JavaScriptCore
         }
 
         GlobalVariableProvider.add(variable: consoleProxy, to: context, withName: "console")
-
-        // Yet to find a better way of doing this, but this runs:
-        // new Function(level, interceptor, {js})
-        // to create a function we then apply to each console level we want to mirror.
-
-        //        guard let interceptorFunc = context
-        //            .objectForKeyedSubscript("Function")
-        //            .construct(withArguments: ["level", "interceptor", interceptorJS]) else {
-        //            throw ErrorMessage("Could not construct JS console interceptor")
-        //        }
-        //
-        //        // Now replace the functions on the console object for each level
-        //
-        //        interceptorFunc.call(withArguments: ["info", self])
-        //        interceptorFunc.call(withArguments: ["log", self])
-        //        interceptorFunc.call(withArguments: ["warn", self])
-        //        interceptorFunc.call(withArguments: ["error", self])
-        //        interceptorFunc.call(withArguments: ["debug", self])
     }
 
-    //    func cleanup() {
-    //        guard let console = self.originalConsole else {
-    //            Log.error?("Cleanup with no original console. This should not happen.")
-    //            return
-    //        }
-    //
-    //        console.context.globalObject.setValue(console, forProperty: "console")
-    //        self.originalConsole = nil
-    //    }
+    func cleanup() {
+        guard let console = self.originalConsole else {
+            Log.error?("Cleanup with no original console. This should not happen.")
+            return
+        }
+
+        console.context.globalObject.setValue(console, forProperty: "console")
+        self.originalConsole = nil
+    }
 
     fileprivate func mirror(_ level: String, _ msg: JSValue) {
 

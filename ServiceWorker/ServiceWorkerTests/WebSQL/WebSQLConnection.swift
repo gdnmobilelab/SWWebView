@@ -86,6 +86,8 @@ class WebSQLConnectionTests: XCTestCase {
 
                         db.transaction(function(tx) {
                             callbackCalled = true;
+                        }, function(err) {
+                            reject(err)
                         }, function() {
                             delete db;
                             fulfill(callbackCalled)
@@ -97,9 +99,9 @@ class WebSQLConnectionTests: XCTestCase {
             .then { jsResult in
                 return JSPromise.fromJSValue(jsResult!)
             }
-            //            .then { promiseResult in
-            //                XCTAssertEqual(promiseResult?.toBool(), true)
-            //            }
+            .then { _ in
+                return sw.ensureFinished()
+            }
             .assertResolves()
     }
 
@@ -115,8 +117,8 @@ class WebSQLConnectionTests: XCTestCase {
 
                        db.transaction(function(tx) {
                             
-                            tx.executeSql("SELECT 'test' as textval", [], function(results) {
-                                fulfill(results.rows[0].textval)
+                            tx.executeSql("SELECT 'test' as textval", [], function(tx,results) {
+                                fulfill(results.rows.item(0).textval)
                             }, function() {
                                
                             })
@@ -129,8 +131,100 @@ class WebSQLConnectionTests: XCTestCase {
             .then { jsResult in
                 return JSPromise.fromJSValue(jsResult!)
             }
-            .then { promiseResult in
+            .then { promiseResult -> Promise<Void> in
                 XCTAssertEqual(promiseResult?.value.toString(), "test")
+                return sw.ensureFinished()
+            }
+            .assertResolves()
+    }
+
+    func testMultipleQueries() {
+
+        let sw = ServiceWorker.createTestWorker(id: name)
+
+        injectOpenDBIntoWorker(sw)
+            .then {
+                return sw.evaluateScript("""
+
+                    var assert = {
+                        equal: function (a,b) {
+                            if (a != b) throw new Error(a + " does not match " + b);
+                        }
+                    }
+
+                    var db = openDatabase('testdb', '1.0', 'yolo', 100000);
+                    
+                    new Promise(function (resolve, reject) {
+                      db.transaction(function (txn) {
+                        txn.executeSql('SELECT 1 + 1', [], function (txn, result) {
+                          resolve(result);
+                        }, function (txn, err) {
+                          reject(err);
+                        });
+                      });
+                    })
+                    .then(function (res) {
+                      assert.equal(res.rowsAffected, 0);
+                      assert.equal(res.rows.length, 1);
+                      assert.equal(res.rows.item(0)['1 + 1'], 2);
+
+                      return new Promise(function (resolve, reject) {
+                        db.transaction(function (txn) {
+                          txn.executeSql('SELECT 2 + 1', [], function (txn, result) {
+                            resolve(result);
+                          }, function (txn, err) {
+                            reject(err);
+                          });
+                        });
+                      });
+                    }).then(function (res) {
+                      assert.equal(res.rowsAffected, 0);
+                      assert.equal(res.rows.length, 1);
+                      assert.equal(res.rows.item(0)['2 + 1'], 3);
+                    });
+                """)
+            }
+            .then { jsVal in
+                return JSPromise.fromJSValue(jsVal!)
+            }
+            .then { _ in
+                return sw.ensureFinished()
+            }
+            .assertResolves()
+    }
+
+    func testCallsCompleteCallback() {
+
+        let sw = ServiceWorker.createTestWorker(id: name)
+
+        injectOpenDBIntoWorker(sw)
+            .then {
+                return sw.evaluateScript("""
+
+                        var assert = {
+                        equal: function (a,b) {
+                        if (a != b) throw new Error(a + " does not match " + b);
+                        }
+                        }
+                
+                
+                
+                        var db = openDatabase(':memory:', '1.0', 'yolo', 100000);
+
+                        var called = 0;
+
+                        new Promise(function (resolve, reject) {
+                            db.transaction(function () {
+                            }, reject, resolve);
+                        }).then(function () {
+                            assert.equal(called, 0);
+                        });
+                """)
+            }.then { jsVal in
+                return JSPromise.fromJSValue(jsVal!)
+            }
+            .then { _ in
+                return sw.ensureFinished()
             }
             .assertResolves()
     }

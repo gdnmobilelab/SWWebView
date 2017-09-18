@@ -66,6 +66,16 @@ import PromiseKit
         NSLog("deinit worker")
     }
 
+    /// This needs to be fleshed out more, but sometimes we want to make sure a worker
+    /// has completed operations before we shut it down. Right now it only uses WebSQL
+    /// stuff, but should probably also include setTimeout.
+    public func ensureFinished() -> Promise<Void> {
+        if let exec = self._executionEnvironment {
+            return exec.ensureFinished()
+        }
+        return Promise(value: ())
+    }
+
     @objc public init(id: String, url: URL, state: String, content: String) throws {
         self.id = id
         self.url = url

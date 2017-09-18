@@ -52,11 +52,7 @@ import JavaScriptCore
     }
 
     deinit {
-        let allWebSQL = self.activeWebSQLDatabases.allObjects
-        if allWebSQL.count > 0 {
-            Log.info?("\(allWebSQL.count) open WebSQL connections when shutting down worker")
-            allWebSQL.forEach { $0.close() }
-        }
+        self.console.cleanup()
     }
 
     //    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue? {
@@ -98,11 +94,6 @@ import JavaScriptCore
         EventTarget.applyJavaScriptListeners(self, to: self.context)
     }
 
-    // Since these retain an open connection as long as they are alive, we need to
-    // keep track of them, in order to close them off on shutdown. JS garbage collection
-    // is sometimes enough, but not always.
-    internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
-
     // Storing here primarily for tests - we don't expose openDatabase globally, but sometimes
     // we want to use it.
     internal var openDatabaseFunction: Any?
@@ -130,10 +121,9 @@ import JavaScriptCore
         let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { [unowned self] name, _, _, _, _ in
 
             do {
-                let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name)
-                // we have to track these to make sure they are all closed when the worker
-                // is destroyed
-                self.activeWebSQLDatabases.add(db)
+                guard let db = try self.delegate?.openWebSQLDatabase(name: name) else {
+                    throw ErrorMessage("Delegate does not provide WebSQL databaes")
+                }
                 return db
             } catch {
                 guard let jsc = JSContext.current() else {

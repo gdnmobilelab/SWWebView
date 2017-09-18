@@ -10,54 +10,105 @@ import Foundation
 import JavaScriptCore
 
 @objc protocol WebSQLTransactionExports: JSExport {
-    func executeSql(_: String, _: [JSValue], _: JSValue, _: JSValue)
+    func executeSql(_: String, _: JSValue, _: JSValue, _: JSValue)
 }
 
 @objc class WebSQLTransaction: NSObject, WebSQLTransactionExports {
 
-    unowned let connection: SQLiteConnection
+    unowned let db: WebSQLDatabase
 
-    init(in connection: SQLiteConnection, withCallback: JSValue, completeCallback: JSValue) {
-        self.connection = connection
+    var processingCallback: JSValue?
+    var errorCallback: JSValue?
+    var completeCallback: JSValue?
+    let isReadOnly: Bool
+
+    init(in db: WebSQLDatabase, isReadOnly: Bool, withCallback: JSValue, errorCallback: JSValue, completeCallback: JSValue) {
+        self.db = db
+        self.processingCallback = withCallback
+        self.errorCallback = errorCallback
+        self.completeCallback = completeCallback
+        self.isReadOnly = isReadOnly
         super.init()
+    }
 
-        // The WebSQL API seems kind of confusing - async seems kind of pointless because
-        // the withCallback callback doesn't have a callback itself -  it is executed
-        // synchronously. But hey, we'll implement it.
+    func run(_ cb: @escaping () -> Void) {
 
-        do {
-            try self.connection.beginTransaction()
+        // The WebSQL API is asynchronous, so we don't want to immediately execute
+        // any transaction. Instead, we push it into the execution queue and wait.
 
-            withCallback.call(withArguments: [self])
+        self.db.dispatchQueue.async {
 
-            try self.connection.commitTransaction()
-            completeCallback.call(withArguments: [])
-        } catch {
+            guard let processing = self.processingCallback, let complete = self.completeCallback, let errorCB = self.errorCallback else {
+                Log.error?("Callbacks do not exist")
+                return
+            }
+
             do {
-                try self.connection.rollbackTransaction()
-            } catch {
-                Log.error?("Couldn't rollback WebSQL transaction: \(error)")
-            }
 
-            if let jsError = JSValue(newErrorFromMessage: "\(error)", in: completeCallback.context) {
-                completeCallback.call(withArguments: [jsError])
-            } else {
-                Log.error?("Could not create error instance in WebSQLTransaction callback")
+                if self.db.connection.open == false {
+                    Log.error?("Cannot execute WebSQL operation - connection has been closed")
+                    return
+                }
+
+                if self.isReadOnly == false {
+                    try self.db.connection.beginTransaction()
+                }
+
+                processing.call(withArguments: [self])
+
+                if self.isReadOnly == false {
+                    try self.db.connection.commitTransaction()
+                }
+                if complete.isUndefined == false {
+                    complete.call(withArguments: [])
+                }
+            } catch {
+                Log.error?("WebSQL error: \(error)")
+                do {
+                    try self.db.connection.rollbackTransaction()
+                } catch {
+                    Log.error?("Couldn't rollback WebSQL transaction: \(error)")
+                }
+
+                if let jsError = JSValue(newErrorFromMessage: "\(error)", in: errorCB.context) {
+                    errorCB.call(withArguments: [jsError])
+                } else {
+                    Log.error?("Could not create error instance in WebSQLTransaction callback")
+                }
             }
+            self.processingCallback = nil
+            self.errorCallback = nil
+            self.completeCallback = nil
+            cb()
         }
     }
 
-    func executeSql(_ sqlStatement: String, _ arguments: [JSValue], _ callback: JSValue, _ errorCallback: JSValue) {
-
-        let asObjects: [Any] = arguments.map { jsVal in
-            return jsVal.toObject()
-        }
-
+    func executeSql(_ sqlStatement: String, _ arguments: JSValue, _ callback: JSValue, _ errorCallback: JSValue) {
+        NSLog("EXEC: \(sqlStatement)")
         do {
-            let webResultSet = try connection.select(sql: sqlStatement, values: asObjects, { res in
-                try WebSQLResultSet(resultSet: res, connection: self.connection)
-            })
-            callback.call(withArguments: [webResultSet])
+
+            guard let argumentArray = arguments.toArray() else {
+                throw ErrorMessage("Could not turn arguments provided into array")
+            }
+
+            let isSelectStatement = sqlStatement
+                .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                .uppercased()
+                .hasPrefix("SELECT ")
+
+            let webResultSet: WebSQLResultSet
+
+            if isSelectStatement == true {
+                webResultSet = try self.db.connection.select(sql: sqlStatement, values: argumentArray, { res in
+                    try WebSQLResultSet(resultSet: res, connection: self.db.connection)
+                })
+            } else {
+                try self.db.connection.update(sql: sqlStatement, values: argumentArray)
+                webResultSet = try WebSQLResultSet(fromUpdateIn: self.db.connection)
+            }
+
+            callback.call(withArguments: [self, webResultSet])
+
         } catch {
             Log.error?("Error when processing WebSQL statement: \(error)")
             if let err = JSValue(newErrorFromMessage: "\(error)", in: errorCallback.context) {

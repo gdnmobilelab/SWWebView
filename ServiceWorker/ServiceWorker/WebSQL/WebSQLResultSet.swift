@@ -12,25 +12,30 @@ import JavaScriptCore
 @objc protocol WebSQLResultSetProtocol: JSExport {
     var insertId: Int64 { get }
     var rowsAffected: Int { get }
-    var rows: [Any] { get }
+    var rows: WebSQLResultRows { get }
 }
 
 @objc class WebSQLResultSet: NSObject, WebSQLResultSetProtocol {
 
     let insertId: Int64
     let rowsAffected: Int
-    var rows: [Any]
+    var rows: WebSQLResultRows
 
-    init(resultSet: SQLiteResultSet, connection: SQLiteConnection) throws {
-
+    init(fromUpdateIn connection: SQLiteConnection) throws {
         guard let lastInsertedId = connection.lastInsertRowId, let lastNumberChanges = connection.lastNumberChanges else {
             throw ErrorMessage("Could not fetch last inserted ID/last number of changes from database")
         }
 
         self.insertId = lastInsertedId
         self.rowsAffected = lastNumberChanges
+        self.rows = WebSQLResultRows(rows: [])
+    }
 
-        self.rows = []
+    init(resultSet: SQLiteResultSet, connection _: SQLiteConnection) throws {
+
+        self.insertId = -1
+        self.rowsAffected = 0
+        var rows: [Any] = []
 
         while try resultSet.next() {
 
@@ -55,7 +60,9 @@ import JavaScriptCore
                 }
             }
 
-            self.rows.append(row)
+            rows.append(row)
         }
+
+        self.rows = WebSQLResultRows(rows: rows)
     }
 }

@@ -20,6 +20,11 @@ import PromiseKit
 
     fileprivate static var virtualMachine = JSVirtualMachine()
 
+    // Since these retain an open connection as long as they are alive, we need to
+    // keep track of them, in order to close them off on shutdown. JS garbage collection
+    // is sometimes enough, but not always.
+    internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
+
     #if DEBUG
         // We use this in tests to check whether all our JSContexts have been
         // garbage collected or not. We don't need it in production environments.
@@ -63,8 +68,32 @@ import PromiseKit
         globalScope.delegate = self
     }
 
+    /// Sometimes we want to make sure that our worker has finished all execution before
+    /// we shut it down.
+    func ensureFinished() -> Promise<Void> {
+        let allWebSQL = self.activeWebSQLDatabases.allObjects
+
+        if allWebSQL.count == 0 {
+            return Promise(value: ())
+        }
+        Log.info?("Waiting until \(allWebSQL.count) WebSQL connections close before we stop.")
+        let mappedClosePromises = allWebSQL.map { $0.close() }
+
+        return when(fulfilled: mappedClosePromises)
+    }
+
     deinit {
         NSLog("Deinit execution environment: Garbage collect.")
+
+        let allWebSQL = self.activeWebSQLDatabases.allObjects
+            .filter { $0.connection.open == true }
+
+        if allWebSQL.count > 0 {
+            Log.info?("\(allWebSQL.count) open WebSQL connections when shutting down worker")
+        }
+
+        allWebSQL.forEach { $0.forceClose() }
+
         GlobalVariableProvider.destroy(forContext: self.jsContext)
         self.currentException = nil
         self.timeoutManager.stopAllTimeouts = true
@@ -97,6 +126,12 @@ import PromiseKit
 
                 return returnVal
             })
+    }
+
+    func openWebSQLDatabase(name: String) throws -> WebSQLDatabase {
+        let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name, withQueue: self.dispatchQueue)
+        self.activeWebSQLDatabases.add(db)
+        return db
     }
 
     func importScripts(urls: [URL]) throws {
