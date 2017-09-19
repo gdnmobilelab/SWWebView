@@ -19,7 +19,7 @@ class MessagePortTests: XCTestCase {
         portOne.targetPort = portTwo
 
         var fired = false
-        let listener = portTwo.addEventListener("message") { (ev: MessageEvent) in
+        let listener = portTwo.addEventListener("message") { (ev: ExtendableMessageEvent) in
 
             let dict = ev.data as! [String: Any]
 

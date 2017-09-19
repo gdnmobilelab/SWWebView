@@ -115,7 +115,7 @@
 		8AD140FD1F705A1100ED2D2C /* TimeoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD140FC1F705A1100ED2D2C /* TimeoutTests.swift */; };
 		8AD141031F7168CB00ED2D2C /* MessagePort.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD141021F7168CB00ED2D2C /* MessagePort.swift */; };
 		8AD141051F71698900ED2D2C /* Transferable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD141041F71698900ED2D2C /* Transferable.swift */; };
-		8AD141071F716AEB00ED2D2C /* MessageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD141061F716AEB00ED2D2C /* MessageEvent.swift */; };
+		8AD141071F716AEB00ED2D2C /* ExtendableMessageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD141061F716AEB00ED2D2C /* ExtendableMessageEvent.swift */; };
 		8AD141091F716C3800ED2D2C /* EventListenerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD141081F716C3800ED2D2C /* EventListenerProtocol.swift */; };
 		8AD1410B1F716CA800ED2D2C /* JSEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */; };
 		8AD1410D1F716E9A00ED2D2C /* SwiftEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */; };
@@ -240,7 +240,7 @@
 		8AD140FC1F705A1100ED2D2C /* TimeoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeoutTests.swift; sourceTree = "<group>"; };
 		8AD141021F7168CB00ED2D2C /* MessagePort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePort.swift; sourceTree = "<group>"; };
 		8AD141041F71698900ED2D2C /* Transferable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transferable.swift; sourceTree = "<group>"; };
-		8AD141061F716AEB00ED2D2C /* MessageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageEvent.swift; sourceTree = "<group>"; };
+		8AD141061F716AEB00ED2D2C /* ExtendableMessageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtendableMessageEvent.swift; sourceTree = "<group>"; };
 		8AD141081F716C3800ED2D2C /* EventListenerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventListenerProtocol.swift; sourceTree = "<group>"; };
 		8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSEventListener.swift; sourceTree = "<group>"; };
 		8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEventListener.swift; sourceTree = "<group>"; };
@@ -639,7 +639,7 @@
 			children = (
 				8AD141021F7168CB00ED2D2C /* MessagePort.swift */,
 				8AD141041F71698900ED2D2C /* Transferable.swift */,
-				8AD141061F716AEB00ED2D2C /* MessageEvent.swift */,
+				8AD141061F716AEB00ED2D2C /* ExtendableMessageEvent.swift */,
 				8A181A931F717C5C005CED14 /* MessageChannel.swift */,
 			);
 			path = Messaging;
@@ -840,7 +840,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8AD141071F716AEB00ED2D2C /* MessageEvent.swift in Sources */,
+				8AD141071F716AEB00ED2D2C /* ExtendableMessageEvent.swift in Sources */,
 				8AC754CF1F31252B00C6B70A /* Event.swift in Sources */,
 				8AC754D01F31252B00C6B70A /* EventTarget.swift in Sources */,
 				8AC754D11F31252B00C6B70A /* ExtendableEvent.swift in Sources */,

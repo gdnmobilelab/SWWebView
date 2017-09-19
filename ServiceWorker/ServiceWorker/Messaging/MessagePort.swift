@@ -23,12 +23,12 @@ import JavaScriptCore
     fileprivate var started: Bool = false
     fileprivate var queuedMessages: [QueuedMessage] = []
 
-    fileprivate var onMessageListener: SwiftEventListener<MessageEvent>?
+    fileprivate var onMessageListener: SwiftEventListener<ExtendableMessageEvent>?
     fileprivate var onmessageValue: JSValue?
 
     public override init() {
         super.init()
-        self.onMessageListener = self.addEventListener("message", { [unowned self] (event: MessageEvent) in
+        self.onMessageListener = self.addEventListener("message", { [unowned self] (event: ExtendableMessageEvent) in
             // in JS we can set onmessage directly rather than use addEventListener.
             // so we should mirror that here.
             if let onmessage = self.onmessageValue {
@@ -78,7 +78,7 @@ import JavaScriptCore
             return
         }
 
-        let messageEvent = MessageEvent(data: message)
+        let messageEvent = ExtendableMessageEvent(data: message)
 
         targetPort.dispatchEvent(messageEvent)
     }

@@ -13,7 +13,7 @@ import JavaScriptCore
     var data: Any { get }
 }
 
-@objc class MessageEvent: Event, MessageEventExports {
+@objc class ExtendableMessageEvent: ExtendableEvent, MessageEventExports {
     let data: Any
 
     init(data: Any) {
