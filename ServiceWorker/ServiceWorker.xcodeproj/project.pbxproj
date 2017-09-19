@@ -338,6 +338,7 @@
 		8AC7546A1F3122FE00C6B70A /* ServiceWorker */ = {
 			isa = PBXGroup;
 			children = (
+				8AD141001F7167FD00ED2D2C /* ExecutionEnvironment */,
 				8A5D97F71F3CB50B002E521F /* GlobalEventLog */,
 				8A2360011F34F3AE00969268 /* js-dist */,
 				8AC755401F325CAC00C6B70A /* WebSQL */,
@@ -352,7 +353,6 @@
 				8AC7549B1F31235200C6B70A /* JS */,
 				8AC7546B1F3122FE00C6B70A /* ServiceWorker.h */,
 				8AC754C71F31235200C6B70A /* ServiceWorker.swift */,
-				8AC754C01F31235200C6B70A /* ServiceWorkerExecutionEnvironment.swift */,
 				8AC754961F31235200C6B70A /* ServiceWorkerInstallState.swift */,
 				8AC754C11F31235200C6B70A /* Stream */,
 			);
@@ -409,7 +409,6 @@
 			children = (
 				8AC7549C1F31235200C6B70A /* JSPromise.swift */,
 				8AC7549D1F31235200C6B70A /* PromiseToJSPromise.swift */,
-				8AC7549E1F31235200C6B70A /* TimeoutManager.swift */,
 				8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */,
 				8A463DEB1F6C207700AA5B26 /* GlobalVariableProvider.swift */,
 			);
@@ -464,7 +463,6 @@
 			children = (
 				8ACCD72E1F507E8500F444B6 /* Location */,
 				8A43C1881F4F2C60001221C1 /* Clients */,
-				8AC754C91F31235200C6B70A /* ConsoleMirror.swift */,
 				8AC754CA1F31235200C6B70A /* ServiceWorkerGlobalScope.swift */,
 				8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */,
 			);
@@ -601,6 +599,16 @@
 				8ACCD7331F50936600F444B6 /* WorkerLocation.swift */,
 			);
 			path = Location;
+			sourceTree = "<group>";
+		};
+		8AD141001F7167FD00ED2D2C /* ExecutionEnvironment */ = {
+			isa = PBXGroup;
+			children = (
+				8AC7549E1F31235200C6B70A /* TimeoutManager.swift */,
+				8AC754C01F31235200C6B70A /* ServiceWorkerExecutionEnvironment.swift */,
+				8AC754C91F31235200C6B70A /* ConsoleMirror.swift */,
+			);
+			path = ExecutionEnvironment;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
