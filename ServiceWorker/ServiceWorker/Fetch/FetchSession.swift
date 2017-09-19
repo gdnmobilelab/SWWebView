@@ -131,7 +131,6 @@ import JavaScriptCore
                     throw ErrorMessage("Access-Control-Allow-Origin does not match or does not exist")
                 }
 
-                /// TODO: Do we throw an error if this header doesn't exist?
                 if let allowedMethods = res.headers.get("Access-Control-Allow-Methods") {
                     let allowedMethodsSplit = allowedMethods
                         .split(separator: ",")
@@ -140,6 +139,8 @@ import JavaScriptCore
                     if allowedMethodsSplit.contains(request.method) == false {
                         throw ErrorMessage("Method not supported in CORS")
                     }
+                } else {
+                    throw ErrorMessage("CORS Preflight request did not return Access-Control-Allowed-Methods")
                 }
 
                 var exposedHeaders: [String] = []

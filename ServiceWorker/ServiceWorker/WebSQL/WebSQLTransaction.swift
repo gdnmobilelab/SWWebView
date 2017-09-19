@@ -31,6 +31,13 @@ import JavaScriptCore
         super.init()
     }
 
+    deinit {
+        // in theory this isn't needed, but JSContext does weird stuff.
+        self.processingCallback = nil
+        self.errorCallback = nil
+        self.completeCallback = nil
+    }
+
     func run(_ cb: @escaping () -> Void) {
 
         // The WebSQL API is asynchronous, so we don't want to immediately execute

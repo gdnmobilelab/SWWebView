@@ -73,6 +73,8 @@ class FetchOperationCORSTests: XCTestCase {
         TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerResponse()
             res.setValue("http://not-localhost", forAdditionalHeader: "Access-Control-Allow-Origin")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+
             serverExpectation.fulfill()
             return res
         }
@@ -90,6 +92,9 @@ class FetchOperationCORSTests: XCTestCase {
                 XCTAssert(response.responseType == ResponseType.CORS)
                 expect.fulfill()
             }
+            .catch { _ in
+                XCTFail()
+            }
 
         wait(for: [expect, serverExpectation], timeout: 1)
     }
@@ -101,6 +106,8 @@ class FetchOperationCORSTests: XCTestCase {
         TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerResponse()
             res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+
             serverExpectation.fulfill()
             return res
         }
@@ -117,6 +124,8 @@ class FetchOperationCORSTests: XCTestCase {
             .then { response -> Void in
                 XCTAssert(response.responseType == ResponseType.CORS)
                 expect.fulfill()
+            }.catch { _ in
+                XCTFail()
             }
 
         wait(for: [expect, serverExpectation], timeout: 1)
@@ -190,6 +199,7 @@ class FetchOperationCORSTests: XCTestCase {
         TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerResponse()
             res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
             serverExpectation.fulfill()
             return res
         }
@@ -211,6 +221,8 @@ class FetchOperationCORSTests: XCTestCase {
                 XCTAssertNil(response.headers.get("X-Additional-Header"))
                 XCTAssertNil(response.headers.get("X-Header-Two"))
                 expect.fulfill()
+            }.catch { _ in
+                XCTFail()
             }
 
         wait(for: [expect, serverExpectation], timeout: 1)
@@ -224,6 +236,8 @@ class FetchOperationCORSTests: XCTestCase {
             let res = GCDWebServerResponse()
             res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
             res.setValue("X-Additional-Header, X-Header-Two", forAdditionalHeader: "Access-Control-Expose-Headers")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+
             serverExpectation.fulfill()
             return res
         }
@@ -245,6 +259,8 @@ class FetchOperationCORSTests: XCTestCase {
                 XCTAssertEqual(response.headers.get("X-Additional-Header"), "TESTVALUE")
                 XCTAssertEqual(response.headers.get("X-Header-Two"), "TESTVALUE2")
                 expect.fulfill()
+            }.catch { _ in
+                XCTFail()
             }
 
         wait(for: [expect, serverExpectation], timeout: 1)
@@ -288,6 +304,8 @@ class FetchOperationCORSTests: XCTestCase {
                 XCTAssertEqual(response.headers.get("X-Custom-Header"), "TEST")
                 XCTAssert(response.responseType == .Basic)
                 expect.fulfill()
+            }.catch { _ in
+                XCTFail()
             }
 
         wait(for: [expect], timeout: 1)

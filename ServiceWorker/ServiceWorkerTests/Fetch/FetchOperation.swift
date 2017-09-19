@@ -141,6 +141,8 @@ class FetchOperationTests: XCTestCase {
                 XCTAssert(response.headers.get("Location") == "/test.txt", "URL should be correct")
                 XCTAssert(response.url.absoluteString == TestWeb.serverURL.appendingPathComponent("/redirect-me").absoluteString)
                 expectNotRedirect.fulfill()
+            }.catch { _ in
+                XCTFail()
             }
 
         wait(for: [expectNotRedirect], timeout: 10)
