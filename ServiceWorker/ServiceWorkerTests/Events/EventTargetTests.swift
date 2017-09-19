@@ -64,4 +64,21 @@ class EventTargetTests: XCTestCase {
 
         wait(for: [expect], timeout: 1)
     }
+
+    func testShouldFireSwiftEvents() {
+
+        let testEvents = EventTarget()
+        var fired = false
+
+        let testEvent = Event(type: "test")
+
+        testEvents.addEventListener("test") { (ev: Event) in
+            XCTAssertEqual(ev, testEvent)
+            fired = true
+        }
+
+        testEvents.dispatchEvent(testEvent)
+
+        XCTAssertTrue(fired)
+    }
 }
