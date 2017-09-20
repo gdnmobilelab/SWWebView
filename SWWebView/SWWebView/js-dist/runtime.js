@@ -244,12 +244,82 @@ function apiRequest(path, body) {
     });
 }
 
+function serializeTransferables(message, transferables) {
+    // Messages can pass transferables, but those transferables can also exist
+    // within the message. We need to replace any instances of those transferables
+    // with serializable objects.
+    if (transferables.indexOf(message) > -1) {
+        return {
+            __transferable: {
+                index: transferables.indexOf(message)
+            }
+        };
+    }
+    else if (message instanceof Array) {
+        return message.map(function (m) { return serializeTransferables(m, transferables); });
+    }
+    else if (typeof message == "number" ||
+        typeof message == "string" ||
+        typeof message == "boolean") {
+        return message;
+    }
+    else {
+        var obj_1 = {};
+        Object.keys(message).forEach(function (key) {
+            obj_1[key] = serializeTransferables(message[key], transferables);
+        });
+        return obj_1;
+    }
+}
+
+var MessagePortProxy = (function () {
+    function MessagePortProxy(port, id) {
+        this.port = port;
+        this.id = id;
+        this.port.addEventListener("message", this.receiveMessage.bind(this));
+    }
+    MessagePortProxy.prototype.receiveMessage = function (msg, transfer) {
+        apiRequest("/MessagePort/proxyMessage", {
+            id: this.id,
+            message: msg
+        }).catch(function (err) {
+            console.error("Failed to proxy MessagePort message", err);
+        });
+    };
+    return MessagePortProxy;
+}());
+var currentProxies = new Map();
+function addProxy(port, id) {
+    console.log("add proxy");
+    currentProxies.set(id, new MessagePortProxy(port, id));
+}
+eventStream.addEventListener("messageport", function (e) {
+    currentProxies.forEach(function (val, key) {
+        console.log(val, key);
+    });
+    console.log(e.data.id, Array.from(currentProxies.keys()), currentProxies.get(e.data.id));
+    var existingProxy = currentProxies.get(e.data.id);
+    if (!existingProxy) {
+        throw new Error("Tried to send " + e.data.type + " to MessagePort that does not exist");
+    }
+    if (e.data.type == "message") {
+        existingProxy.port.postMessage(e.data.data);
+    }
+    else {
+        // is close. Remove from collection, free up for garbage collection.
+        console.info("Closing existing MessagePort based on native garbage collection.");
+        currentProxies.delete(e.data.id);
+        existingProxy.port.close();
+    }
+});
+
 var existingWorkers = [];
 var ServiceWorkerImplementation = (function (_super) {
     __extends(ServiceWorkerImplementation, _super);
-    function ServiceWorkerImplementation(opts) {
+    function ServiceWorkerImplementation(opts, registration) {
         var _this = _super.call(this) || this;
         _this.updateFromAPIResponse(opts);
+        _this.registration = registration;
         _this.id = opts.id;
         _this.addEventListener("statechange", function (e) {
             if (_this.onstatechange) {
@@ -267,17 +337,31 @@ var ServiceWorkerImplementation = (function (_super) {
             this.dispatchEvent(evt);
         }
     };
-    ServiceWorkerImplementation.prototype.postMessage = function () { };
+    ServiceWorkerImplementation.prototype.postMessage = function (msg, transfer) {
+        if (transfer === void 0) { transfer = []; }
+        apiRequest("/ServiceWorker/postMessage", {
+            id: this.id,
+            registrationID: this.registration.id,
+            message: serializeTransferables(msg, transfer),
+            transferCount: transfer.length
+        }).then(function (response) {
+            // Register MessagePort proxies for all the transferables we just sent.
+            console.log("GOT RESPONSE", response);
+            response.transferred.forEach(function (id, idx) {
+                return addProxy(transfer[idx], id);
+            });
+        });
+    };
     ServiceWorkerImplementation.get = function (opts) {
         return existingWorkers.find(function (w) { return w.id === opts.id; });
     };
-    ServiceWorkerImplementation.getOrCreate = function (opts) {
+    ServiceWorkerImplementation.getOrCreate = function (opts, registration) {
         var existing = this.get(opts);
         if (existing) {
             return existing;
         }
         else {
-            var newWorker = new ServiceWorkerImplementation(opts);
+            var newWorker = new ServiceWorkerImplementation(opts, registration);
             existingWorkers.push(newWorker);
             return newWorker;
         }
@@ -328,13 +412,13 @@ var ServiceWorkerRegistrationImplementation = (function (_super) {
             return;
         }
         this.active = opts.active
-            ? ServiceWorkerImplementation.getOrCreate(opts.active)
+            ? ServiceWorkerImplementation.getOrCreate(opts.active, this)
             : null;
         this.installing = opts.installing
-            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
+            ? ServiceWorkerImplementation.getOrCreate(opts.installing, this)
             : null;
         this.waiting = opts.waiting
-            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
+            ? ServiceWorkerImplementation.getOrCreate(opts.waiting, this)
             : null;
     };
     ServiceWorkerRegistrationImplementation.prototype.getNotifications = function () {

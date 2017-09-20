@@ -8,6 +8,7 @@
 
 import Foundation
 import ServiceWorkerContainer
+import ServiceWorker
 
 @objc public protocol SWWebViewContainerDelegate {
 

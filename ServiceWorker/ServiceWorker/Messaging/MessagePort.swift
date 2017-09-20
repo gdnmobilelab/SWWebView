@@ -15,12 +15,12 @@ import JavaScriptCore
     var onmessage: JSValue? { get set }
 }
 
-@objc public class SWMessagePort: EventTarget, Transferable, MessagePortExports {
+@objc public class SWMessagePort: EventTarget, Transferable, MessagePortExports, MessagePortTarget {
 
     fileprivate typealias QueuedMessage = (message: Any, transferList: [Transferable])
 
-    public weak var targetPort: SWMessagePort?
-    fileprivate var started: Bool = false
+    public weak var targetPort: MessagePortTarget?
+    public var started: Bool = false
     fileprivate var queuedMessages: [QueuedMessage] = []
 
     fileprivate var onMessageListener: SwiftEventListener<ExtendableMessageEvent>?
@@ -35,6 +35,12 @@ import JavaScriptCore
                 onmessage.call(withArguments: [event])
             }
         })
+    }
+
+    deinit {
+        if let target = self.targetPort {
+            target.close()
+        }
     }
 
     public var onmessage: JSValue? {
@@ -59,6 +65,10 @@ import JavaScriptCore
         self.queuedMessages.removeAll()
     }
 
+    public func close() {
+        self.started = false
+    }
+
     public func postMessage(_ message: Any, _ transferList: [Transferable] = []) {
 
         if self.started == false {
@@ -80,6 +90,10 @@ import JavaScriptCore
 
         let messageEvent = ExtendableMessageEvent(data: message)
 
-        targetPort.dispatchEvent(messageEvent)
+        targetPort.receiveMessage(messageEvent)
+    }
+
+    public func receiveMessage(_ evt: ExtendableMessageEvent) {
+        self.dispatchEvent(evt)
     }
 }

@@ -1,23 +1,11 @@
 import { assert } from "chai";
 import { withIframe } from "../util/with-iframe";
 import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
+import { unregisterEverything } from "../util/unregister-everything";
 
 describe("Service Worker Container", () => {
     afterEach(() => {
-        console.groupCollapsed("Unregister calls");
-        return navigator.serviceWorker
-            .getRegistrations()
-            .then((regs: ServiceWorkerRegistration[]) => {
-                console.info(
-                    "Unregistering:" + regs.map(r => r.scope).join(", ")
-                );
-                let mapped = regs.map(r => r.unregister());
-
-                return Promise.all(mapped);
-            })
-            .then(() => {
-                console.groupEnd();
-            });
+        return unregisterEverything();
     });
 
     it("Should register with default scope as JS file directory", () => {

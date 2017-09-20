@@ -98,6 +98,18 @@ import ServiceWorker
         self.workerChangeListener = nil
     }
 
+    public func getWorker(byID workerID: String, inRegistrationID regID: String) throws -> ServiceWorker {
+        guard let reg = try self.registrationFactory.get(byId: regID) else {
+            throw ErrorMessage("Scope with this ID does not exist")
+        }
+
+        if reg.scope.host != self.origin.host {
+            throw ErrorMessage("This ServiceWorkerRegistration is for a different origin")
+        }
+
+        return try self.registrationFactory.workerFactory.get(id: workerID, withRegistration: reg)
+    }
+
     fileprivate var defaultScope: URL {
         if self.url.absoluteString.hasSuffix("/") == false {
             return self.url.deletingLastPathComponent()

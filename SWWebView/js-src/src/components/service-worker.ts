@@ -1,9 +1,14 @@
 import EventEmitter from "tiny-emitter";
+import { ServiceWorkerRegistrationImplementation } from "./service-worker-registration";
 import {
     ServiceWorkerAPIResponse,
-    WorkerInstallErrorAPIResponse
+    WorkerInstallErrorAPIResponse,
+    PostMessageResponse
 } from "../responses/api-responses";
 import { eventStream } from "../event-stream";
+import { apiRequest } from "../util/api-request";
+import { serializeTransferables } from "../handlers/transferrable-converter";
+import { addProxy } from "../handlers/messageport-manager";
 
 const existingWorkers: ServiceWorkerImplementation[] = [];
 
@@ -15,9 +20,15 @@ export class ServiceWorkerImplementation extends EventEmitter
     onstatechange: (e) => void;
     onerror: (Error) => void;
 
-    constructor(opts: ServiceWorkerAPIResponse) {
+    private registration: ServiceWorkerRegistrationImplementation;
+
+    constructor(
+        opts: ServiceWorkerAPIResponse,
+        registration: ServiceWorkerRegistrationImplementation
+    ) {
         super();
         this.updateFromAPIResponse(opts);
+        this.registration = registration;
         this.id = opts.id;
 
         this.addEventListener("statechange", e => {
@@ -38,18 +49,33 @@ export class ServiceWorkerImplementation extends EventEmitter
         }
     }
 
-    postMessage() {}
+    postMessage(msg: any, transfer: any[] = []) {
+        apiRequest<PostMessageResponse>("/ServiceWorker/postMessage", {
+            id: this.id,
+            registrationID: this.registration.id,
+            message: serializeTransferables(msg, transfer),
+            transferCount: transfer.length
+        }).then(response => {
+            // Register MessagePort proxies for all the transferables we just sent.
+            response.transferred.forEach((id, idx) =>
+                addProxy(transfer[idx], id)
+            );
+        });
+    }
 
     static get(opts: ServiceWorkerAPIResponse) {
         return existingWorkers.find(w => w.id === opts.id);
     }
 
-    static getOrCreate(opts: ServiceWorkerAPIResponse) {
+    static getOrCreate(
+        opts: ServiceWorkerAPIResponse,
+        registration: ServiceWorkerRegistrationImplementation
+    ) {
         let existing = this.get(opts);
         if (existing) {
             return existing;
         } else {
-            let newWorker = new ServiceWorkerImplementation(opts);
+            let newWorker = new ServiceWorkerImplementation(opts, registration);
             existingWorkers.push(newWorker);
             return newWorker;
         }

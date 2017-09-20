@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A181A991F718E10005CED14 /* ServiceWorkerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181A981F718E10005CED14 /* ServiceWorkerCommands.swift */; };
+		8A181A9B1F719465005CED14 /* MessagePortHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181A9A1F719465005CED14 /* MessagePortHandler.swift */; };
+		8A181AA21F72C128005CED14 /* MessagePortWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AA11F72C128005CED14 /* MessagePortWrapper.swift */; };
+		8A181AA71F72C77B005CED14 /* MessagePortAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AA61F72C77A005CED14 /* MessagePortAction.swift */; };
 		8A35AE991F58669C00E63EF5 /* SWWebViewContainerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */; };
 		8A35AE9B1F5869CB00E63EF5 /* SWWebViewCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */; };
 		8A43C1741F4C9293001221C1 /* WorkerInstallationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */; };
@@ -80,6 +84,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8A181A981F718E10005CED14 /* ServiceWorkerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerCommands.swift; sourceTree = "<group>"; };
+		8A181A9A1F719465005CED14 /* MessagePortHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortHandler.swift; sourceTree = "<group>"; };
+		8A181AA11F72C128005CED14 /* MessagePortWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortWrapper.swift; sourceTree = "<group>"; };
+		8A181AA61F72C77A005CED14 /* MessagePortAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortAction.swift; sourceTree = "<group>"; };
 		8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewContainerDelegate.swift; sourceTree = "<group>"; };
 		8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewCoordinator.swift; sourceTree = "<group>"; };
 		8A43C1731F4C9293001221C1 /* WorkerInstallationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerInstallationError.swift; sourceTree = "<group>"; };
@@ -154,6 +162,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A181AA31F72C2A8005CED14 /* Messaging */ = {
+			isa = PBXGroup;
+			children = (
+				8A181AA61F72C77A005CED14 /* MessagePortAction.swift */,
+				8A181AA11F72C128005CED14 /* MessagePortWrapper.swift */,
+			);
+			path = Messaging;
+			sourceTree = "<group>";
+		};
 		8A35AE971F58668D00E63EF5 /* Interop */ = {
 			isa = PBXGroup;
 			children = (
@@ -270,9 +287,12 @@
 		8AF85DB01F3B6848001B0A87 /* CommandBridge */ = {
 			isa = PBXGroup;
 			children = (
+				8A181AA31F72C2A8005CED14 /* Messaging */,
 				8AF85DB31F3B6900001B0A87 /* EventStream.swift */,
 				8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */,
 				8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */,
+				8A181A981F718E10005CED14 /* ServiceWorkerCommands.swift */,
+				8A181A9A1F719465005CED14 /* MessagePortHandler.swift */,
 			);
 			path = CommandBridge;
 			sourceTree = "<group>";
@@ -534,11 +554,15 @@
 				8AF85D5C1F38E4EF001B0A87 /* SWNavigationAction.swift in Sources */,
 				8A35AE991F58669C00E63EF5 /* SWWebViewContainerDelegate.swift in Sources */,
 				8AF85D591F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift in Sources */,
+				8A181AA21F72C128005CED14 /* MessagePortWrapper.swift in Sources */,
 				8AF85DB41F3B6900001B0A87 /* EventStream.swift in Sources */,
 				8AF85D621F38F5E5001B0A87 /* SWNavigationResponse.swift in Sources */,
+				8A181A991F718E10005CED14 /* ServiceWorkerCommands.swift in Sources */,
 				8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */,
+				8A181AA71F72C77B005CED14 /* MessagePortAction.swift in Sources */,
 				8A5D97FF1F3CC607002E521F /* ToJSON.swift in Sources */,
 				8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */,
+				8A181A9B1F719465005CED14 /* MessagePortHandler.swift in Sources */,
 				8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */,
 				8AF85D571F38BB70001B0A87 /* SWWebView.swift in Sources */,
 				8A35AE9B1F5869CB00E63EF5 /* SWWebViewCoordinator.swift in Sources */,

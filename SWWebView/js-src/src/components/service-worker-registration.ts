@@ -51,13 +51,13 @@ export class ServiceWorkerRegistrationImplementation extends EventEmitter
         }
 
         this.active = opts.active
-            ? ServiceWorkerImplementation.getOrCreate(opts.active)
+            ? ServiceWorkerImplementation.getOrCreate(opts.active, this)
             : null;
         this.installing = opts.installing
-            ? ServiceWorkerImplementation.getOrCreate(opts.installing)
+            ? ServiceWorkerImplementation.getOrCreate(opts.installing, this)
             : null;
         this.waiting = opts.waiting
-            ? ServiceWorkerImplementation.getOrCreate(opts.waiting)
+            ? ServiceWorkerImplementation.getOrCreate(opts.waiting, this)
             : null;
     }
 

@@ -1,4 +1,6 @@
-export function waitUntilWorkerIsActivated(worker: ServiceWorker) {
+export function waitUntilWorkerIsActivated(
+    worker: ServiceWorker
+): Promise<ServiceWorker> {
     return new Promise((fulfill, reject) => {
         let listener = function(e) {
             if (worker.state !== "activated") return;

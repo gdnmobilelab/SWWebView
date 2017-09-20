@@ -14,7 +14,7 @@ import PromiseKit
 
 class ServiceWorkerContainerCommands {
 
-    static func getRegistration(container: ServiceWorkerContainer, json: AnyObject?) throws -> Promise<Any?>? {
+    static func getRegistration(eventStream: EventStream, json: AnyObject?) throws -> Promise<Any?>? {
 
         var scope: URL?
         if let scopeString = json?["scope"] as? String {
@@ -26,26 +26,26 @@ class ServiceWorkerContainerCommands {
             scope = specifiedScope
         }
 
-        return container.getRegistration(scope)
+        return eventStream.container.getRegistration(scope)
             .then { reg in
                 reg?.toJSONSuitableObject()
             }
     }
 
-    static func getRegistrations(container: ServiceWorkerContainer, json _: AnyObject?) throws -> Promise<Any?>? {
-        return container.getRegistrations()
+    static func getRegistrations(eventStream: EventStream, json _: AnyObject?) throws -> Promise<Any?>? {
+        return eventStream.container.getRegistrations()
             .then { regs in
                 regs.map { $0.toJSONSuitableObject() }
             }
     }
 
-    static func register(container: ServiceWorkerContainer, json: AnyObject?) throws -> Promise<Any?>? {
+    static func register(eventStream: EventStream, json: AnyObject?) throws -> Promise<Any?>? {
 
         guard let workerURLString = json?["url"] as? String else {
             throw ErrorMessage("URL must be provided")
         }
 
-        guard let workerURL = URL(string: workerURLString, relativeTo: container.url) else {
+        guard let workerURL = URL(string: workerURLString, relativeTo: eventStream.container.url) else {
             throw ErrorMessage("Could not parse URL")
         }
 
@@ -53,13 +53,13 @@ class ServiceWorkerContainerCommands {
 
         if let specifiedScope = json?["scope"] as? String {
 
-            guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: container.url) else {
+            guard let specifiedScopeURL = URL(string: specifiedScope, relativeTo: eventStream.container.url) else {
                 throw ErrorMessage("Could not parse scope URL")
             }
             options = ServiceWorkerRegistrationOptions(scope: specifiedScopeURL)
         }
 
-        return container.register(workerURL: workerURL, options: options)
+        return eventStream.container.register(workerURL: workerURL, options: options)
             .then { result in
                 result.toJSONSuitableObject()
             }

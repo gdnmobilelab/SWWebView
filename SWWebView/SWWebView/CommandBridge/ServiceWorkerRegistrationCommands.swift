@@ -14,13 +14,13 @@ import PromiseKit
 
 class ServiceWorkerRegistrationCommands {
 
-    static func unregister(container: ServiceWorkerContainer, json: AnyObject?) throws -> Promise<Any?>? {
+    static func unregister(eventStream: EventStream, json: AnyObject?) throws -> Promise<Any?>? {
 
         guard let registrationID = json?["id"] as? String else {
             throw ErrorMessage("Must provide registration ID in JSON body")
         }
 
-        return container.getRegistrations()
+        return eventStream.container.getRegistrations()
             .then { registrations in
 
                 guard let registration = registrations.first(where: { $0.id == registrationID }) else {

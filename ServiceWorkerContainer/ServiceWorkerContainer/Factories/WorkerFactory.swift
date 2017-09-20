@@ -20,7 +20,7 @@ public class WorkerFactory {
     public init() {
     }
 
-    func get(id: String, withRegistration registration: ServiceWorkerRegistration) throws -> ServiceWorker {
+    public func get(id: String, withRegistration registration: ServiceWorkerRegistration) throws -> ServiceWorker {
         let workerWanted = workerStorage.allObjects.filter { $0.id == id }
 
         if let existingWorker = workerWanted.first {

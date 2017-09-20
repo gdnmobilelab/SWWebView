@@ -11,7 +11,7 @@ import WebKit
 import ServiceWorker
 import ServiceWorkerContainer
 
-class EventStream: NSObject {
+public class EventStream: NSObject {
 
     // We add a strong reference to the container here, so that we retain
     // any workers relevant to this webview. The rest of the operations rely
@@ -114,8 +114,12 @@ class EventStream: NSObject {
     }
 
     func sendUpdate(identifier: String, object: ToJSON) {
+        try self.sendCustomUpdate(identifier: identifier, object: object.toJSONSuitableObject())
+    }
+
+    func sendCustomUpdate(identifier: String, object: Any) {
         do {
-            let json = try JSONSerialization.data(withJSONObject: object.toJSONSuitableObject(), options: [])
+            let json = try JSONSerialization.data(withJSONObject: object, options: [])
 
             guard let jsonString = String(data: json, encoding: .utf8) else {
                 throw ErrorMessage("Could not convert JSON data to a string")

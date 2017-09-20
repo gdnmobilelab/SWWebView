@@ -9,15 +9,18 @@
 import Foundation
 import JavaScriptCore
 
-@objc protocol MessageEventExports: EventExports, JSExport {
+@objc public protocol MessageEventExports: EventExports, JSExport {
     var data: Any { get }
+    var ports: [SWMessagePort] { get }
 }
 
-@objc class ExtendableMessageEvent: ExtendableEvent, MessageEventExports {
-    let data: Any
+@objc public class ExtendableMessageEvent: ExtendableEvent, MessageEventExports {
+    public let data: Any
+    public let ports: [SWMessagePort]
 
-    init(data: Any) {
+    public init(data: Any, ports: [SWMessagePort] = []) {
         self.data = data
+        self.ports = ports
         super.init(type: "message")
     }
 

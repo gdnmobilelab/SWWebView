@@ -27,3 +27,13 @@ export interface WorkerInstallErrorAPIResponse {
     error: string;
     worker: ServiceWorkerAPIResponse;
 }
+
+export interface PostMessageResponse {
+    transferred: string[];
+}
+
+export interface MessagePortAction {
+    id: string;
+    type: "message" | "close";
+    data: any;
+}

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8A181A941F717C5C005CED14 /* MessageChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181A931F717C5C005CED14 /* MessageChannel.swift */; };
 		8A181A961F717D19005CED14 /* MessageChannelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181A951F717D19005CED14 /* MessageChannelTests.swift */; };
+		8A181AA01F71BA05005CED14 /* MessagePortTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181A9F1F71BA05005CED14 /* MessagePortTarget.swift */; };
 		8A1D939D1F632822003CD121 /* FetchTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1D939C1F632821003CD121 /* FetchTask.swift */; };
 		8A2264AC1F33BCDA00B48902 /* WebSQLTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2264AB1F33BCDA00B48902 /* WebSQLTransaction.swift */; };
 		8A2264AE1F33C6C700B48902 /* WebSQLResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2264AD1F33C6C700B48902 /* WebSQLResultSet.swift */; };
@@ -135,6 +136,7 @@
 /* Begin PBXFileReference section */
 		8A181A931F717C5C005CED14 /* MessageChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageChannel.swift; sourceTree = "<group>"; };
 		8A181A951F717D19005CED14 /* MessageChannelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageChannelTests.swift; sourceTree = "<group>"; };
+		8A181A9F1F71BA05005CED14 /* MessagePortTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortTarget.swift; sourceTree = "<group>"; };
 		8A1D939C1F632821003CD121 /* FetchTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchTask.swift; sourceTree = "<group>"; };
 		8A2264AB1F33BCDA00B48902 /* WebSQLTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLTransaction.swift; sourceTree = "<group>"; };
 		8A2264AD1F33C6C700B48902 /* WebSQLResultSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLResultSet.swift; sourceTree = "<group>"; };
@@ -641,6 +643,7 @@
 				8AD141041F71698900ED2D2C /* Transferable.swift */,
 				8AD141061F716AEB00ED2D2C /* ExtendableMessageEvent.swift */,
 				8A181A931F717C5C005CED14 /* MessageChannel.swift */,
+				8A181A9F1F71BA05005CED14 /* MessagePortTarget.swift */,
 			);
 			path = Messaging;
 			sourceTree = "<group>";
@@ -912,6 +915,7 @@
 				8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */,
 				8A653E811F68465600115228 /* MemoryWriteStream.swift in Sources */,
 				8A43C1901F4F346F001221C1 /* Client.swift in Sources */,
+				8A181AA01F71BA05005CED14 /* MessagePortTarget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

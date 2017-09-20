@@ -18,13 +18,15 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
     static let graftedRequestBodyHeader = "X-Grafted-Request-Body"
     static let eventStreamPath = "/events"
 
-    public typealias Command = (ServiceWorkerContainer, AnyObject?) throws -> Promise<Any?>?
+    public typealias Command = (EventStream, AnyObject?) throws -> Promise<Any?>?
 
     public static var routes: [String: Command] = [
         "/ServiceWorkerContainer/register": ServiceWorkerContainerCommands.register,
         "/ServiceWorkerContainer/getregistration": ServiceWorkerContainerCommands.getRegistration,
         "/ServiceWorkerContainer/getregistrations": ServiceWorkerContainerCommands.getRegistrations,
-        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister
+        "/ServiceWorkerRegistration/unregister": ServiceWorkerRegistrationCommands.unregister,
+        "/ServiceWorker/postMessage": ServiceWorkerCommands.postMessage,
+        "/MessagePort/proxyMessage": MessagePortHandler.proxyMessage
     ]
 
     /// Track the streams we currently have open, so that when one is stopped we know where
@@ -124,6 +126,10 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
             throw ErrorMessage("ServiceWorkerContainer should already exist before any tasks are run")
         }
 
+        guard let eventStream = self.eventStreams.first(where: { $0.container == container }) else {
+            throw ErrorMessage("Commands must have an event stream attached")
+        }
+
         guard let matchingRoute = SWWebViewBridge.routes.first(where: { $0.key == requestURL.path })?.value else {
             // We don't recognise this URL, so we just return a 404.
             try task.didReceiveHeaders(statusCode: 404)
@@ -137,7 +143,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
         }
 
         return firstly { () -> Promise<Any?> in
-            guard let promise = try matchingRoute(container, jsonBody) else {
+            guard let promise = try matchingRoute(eventStream, jsonBody) else {
                 // The task didn't return an async promise, so we can just
                 // return immediately
                 return Promise(value: nil)
