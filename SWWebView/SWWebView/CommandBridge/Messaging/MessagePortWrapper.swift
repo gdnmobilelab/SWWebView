@@ -14,7 +14,7 @@ class MessagePortWrapper: NSObject, MessagePortTarget {
     // We keep a reference to this because the MessagePort itself only
     // has a weak reference to this as its target. We keep a strong
     // reference until the port has been closed, at which point we remove it.
-    fileprivate static var activePorts = Set<MessagePortWrapper>()
+    static var activePorts = Set<MessagePortWrapper>()
 
     let id: String
     let eventStream: EventStream

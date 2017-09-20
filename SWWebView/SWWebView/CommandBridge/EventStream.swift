@@ -25,6 +25,8 @@ public class EventStream: NSObject {
     var containerListener: Listener<ServiceWorkerContainer>?
     var workerInstallErrorListener: Listener<WorkerInstallationError>?
 
+    let id: String
+
     func isScopeMatch(_ url: URL) -> Bool {
         return url.host == self.container.url.host && url.port == self.container.url.port
     }
@@ -33,6 +35,7 @@ public class EventStream: NSObject {
         self.task = task
 
         self.container = container
+        self.id = UUID().uuidString
         super.init()
         self.workerListener = GlobalEventLog.addListener { (worker: ServiceWorker) in
             if self.isScopeMatch(worker.url) {
@@ -65,7 +68,7 @@ public class EventStream: NSObject {
         // It's possible that this event stream was interrupted as a result of the page being
         // shown/hidden/who knows, so the JS objects might be out of date. To make sure we're
         // clear, we'll send down the details for every relevant object.
-
+        self.sendCustomUpdate(identifier: "eventstream", object: ["id": self.id])
         self.sendUpdate(identifier: "serviceworkercontainer", object: self.container)
 
         // Because the container doesn't contain a direct reference to its registrations,

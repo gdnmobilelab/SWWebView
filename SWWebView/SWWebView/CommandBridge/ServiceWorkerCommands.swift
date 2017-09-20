@@ -75,14 +75,15 @@ class ServiceWorkerCommands {
             // We don't chain this promise because we want to return the
             // MessagePort details to the webview before the event is
             // resolved.
-            worker.dispatchEvent(event)
-                .then {
-                    event.resolve(in: worker)
-                }
-                .catch { error in
-                    Log.error?("Dispatch of MessageEvent to worker failed: \(error)")
-                }
-
+            DispatchQueue.global().async {
+                worker.dispatchEvent(event)
+                    .then {
+                        event.resolve(in: worker)
+                    }
+                    .catch { error in
+                        Log.error?("Dispatch of MessageEvent to worker failed: \(error)")
+                    }
+            }
             return Promise(value: [
                 "transferred": wrappedPorts.map { $0.id }
             ])

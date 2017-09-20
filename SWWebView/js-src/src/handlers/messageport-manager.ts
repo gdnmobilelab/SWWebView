@@ -1,6 +1,7 @@
 import { apiRequest } from "../util/api-request";
 import { eventStream } from "../event-stream";
 import { MessagePortAction } from "../responses/api-responses";
+import { serializeTransferables } from "./transferrable-converter";
 
 class MessagePortProxy {
     port: MessagePort;
@@ -10,12 +11,14 @@ class MessagePortProxy {
         this.port = port;
         this.id = id;
         this.port.addEventListener("message", this.receiveMessage.bind(this));
+        this.port.start();
     }
 
-    receiveMessage(msg, transfer) {
+    receiveMessage(e: MessageEvent) {
+        console.log("! GOT MESSAGE", e);
         apiRequest("/MessagePort/proxyMessage", {
             id: this.id,
-            message: msg
+            message: e.data
         }).catch(err => {
             console.error("Failed to proxy MessagePort message", err);
         });

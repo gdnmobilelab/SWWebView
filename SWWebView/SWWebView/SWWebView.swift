@@ -56,6 +56,8 @@ public class SWWebView: WKWebView {
 
         configuration.userContentController.addUserScript(userScript)
 
+        configuration.userContentController.add(bridge, name: "SWWebView")
+
         configuration.setURLSchemeHandler(bridge, forURLScheme: SWWebView.ServiceWorkerScheme)
     }
 

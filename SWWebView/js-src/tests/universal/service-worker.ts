@@ -11,9 +11,20 @@ describe("Service Worker", () => {
     it.only("Should post a message", done => {
         let channel = new MessageChannel();
 
-        channel.port2.onmessage = function() {
+        let numberOfMessages = 0;
+
+        channel.port2.onmessage = function(e) {
             console.timeEnd("Round-trip message");
-            done();
+            numberOfMessages++;
+            console.log(e);
+            if (numberOfMessages == 1) {
+                channel.port2.postMessage("ARRGH");
+                console.time("Round-trip message");
+            } else if (numberOfMessages == 2) {
+                done();
+            }
+
+            // done();
         };
 
         navigator.serviceWorker

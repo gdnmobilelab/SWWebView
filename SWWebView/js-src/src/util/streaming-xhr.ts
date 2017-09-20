@@ -11,6 +11,7 @@ export class StreamingXHR extends EventEmitter {
     private seenBytes = 0;
     isOpen = false;
     private url: string;
+    id: string;
 
     // We allow subscribing before we've created the EventSource
     // itself, so we need to keep track of what we have and have
@@ -57,12 +58,21 @@ export class StreamingXHR extends EventEmitter {
             this.eventSource.addEventListener(type, this.receiveNewEvent);
         });
 
-        (this.eventSource as any).onopen = () => {
+        this.eventSource.addEventListener("eventstream", (e: MessageEvent) => {
+            console.log("GOT ID:", e.data);
+            this.id = JSON.parse(e.data).id;
             if (this.readyFulfill) {
                 this.readyFulfill();
                 this.readyFulfill = undefined;
             }
-        };
+        });
+
+        // (this.eventSource as any).onopen = () => {
+        //     if (this.readyFulfill) {
+        //         this.readyFulfill();
+        //         this.readyFulfill = undefined;
+        //     }
+        // };
 
         (this.eventSource as any).onclose = () => {
             this.isOpen = false;

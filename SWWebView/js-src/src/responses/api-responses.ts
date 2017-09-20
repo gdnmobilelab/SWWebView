@@ -37,3 +37,9 @@ export interface MessagePortAction {
     type: "message" | "close";
     data: any;
 }
+
+export interface PromiseReturn {
+    promiseIndex: number;
+    error?: string;
+    response?: any;
+}

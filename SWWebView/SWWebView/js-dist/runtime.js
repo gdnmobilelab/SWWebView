@@ -164,12 +164,20 @@ var StreamingXHR = (function (_super) {
             // Add listeners for each of the types we have already added
             _this.eventSource.addEventListener(type, _this.receiveNewEvent);
         });
-        this.eventSource.onopen = function () {
+        this.eventSource.addEventListener("eventstream", function (e) {
+            console.log("GOT ID:", e.data);
+            _this.id = JSON.parse(e.data).id;
             if (_this.readyFulfill) {
                 _this.readyFulfill();
                 _this.readyFulfill = undefined;
             }
-        };
+        });
+        // (this.eventSource as any).onopen = () => {
+        //     if (this.readyFulfill) {
+        //         this.readyFulfill();
+        //         this.readyFulfill = undefined;
+        //     }
+        // };
         this.eventSource.onclose = function () {
             _this.isOpen = false;
             _this.resetReadyPromise();
@@ -257,30 +265,57 @@ var APIError = (function (_super) {
     }
     return APIError;
 }(Error));
+var storedPromises = new Map();
 function apiRequest(path, body) {
     if (body === void 0) { body = undefined; }
-    return eventStream.ready
-        .then(function () {
-        return fetch(path, {
-            method: swwebviewSettings.API_REQUEST_METHOD,
-            body: body === undefined ? undefined : JSON.stringify(body),
-            headers: {
-                "Content-Type": "application/json"
+    return eventStream.ready.then(function () {
+        return new Promise(function (fulfill, reject) {
+            var i = 0;
+            while (storedPromises.has(i)) {
+                i++;
             }
+            storedPromises.set(i, { fulfill: fulfill, reject: reject });
+            window.webkit.messageHandlers["SWWebView"].postMessage({
+                streamID: eventStream.id,
+                promiseIndex: i,
+                path: path,
+                body: body
+            });
         });
-    })
-        .then(function (res) {
-        if (res.ok === false) {
-            if (res.status === 500) {
-                return res.json().then(function (errorJSON) {
-                    throw new Error(errorJSON.error);
-                });
-            }
-            throw new APIError("Received a non-200 response to API request", res);
-        }
-        return res.json();
+        // return fetch(path, {
+        //     method: API_REQUEST_METHOD,
+        //     body: body === undefined ? undefined : JSON.stringify(body),
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     }
+        // });
     });
+    // .then(res => {
+    //     if (res.ok === false) {
+    //         if (res.status === 500) {
+    //             return res.json().then(errorJSON => {
+    //                 throw new Error(errorJSON.error);
+    //             });
+    //         }
+    //         throw new APIError(
+    //             "Received a non-200 response to API request",
+    //             res
+    //         );
+    //     }
+    //     return res.json();
+    // });
 }
+eventStream.addEventListener("promisereturn", function (e) {
+    var promise = storedPromises.get(e.data.promiseIndex);
+    if (!promise) {
+        throw new Error("Trying to resolve a Promise that doesn't exist");
+    }
+    storedPromises.delete(e.data.promiseIndex);
+    if (e.data.error) {
+        promise.reject(new Error(e.data.error));
+    }
+    promise.fulfill(e.data.response);
+});
 
 function serializeTransferables(message, transferables) {
     // Messages can pass transferables, but those transferables can also exist
@@ -315,11 +350,13 @@ var MessagePortProxy = (function () {
         this.port = port;
         this.id = id;
         this.port.addEventListener("message", this.receiveMessage.bind(this));
+        this.port.start();
     }
-    MessagePortProxy.prototype.receiveMessage = function (msg, transfer) {
+    MessagePortProxy.prototype.receiveMessage = function (e) {
+        console.log("! GOT MESSAGE", e);
         apiRequest("/MessagePort/proxyMessage", {
             id: this.id,
-            message: msg
+            message: e.data
         }).catch(function (err) {
             console.error("Failed to proxy MessagePort message", err);
         });

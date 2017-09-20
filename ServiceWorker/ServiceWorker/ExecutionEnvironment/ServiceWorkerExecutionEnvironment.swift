@@ -205,12 +205,11 @@ import PromiseKit
             })
     }
 
-    public func dispatchEvent(_ event: Event) -> Promise<Void> {
+    public func dispatchEvent(_ event: Event) throws {
 
-        return Promise(value: ())
-            .then(on: dispatchQueue, execute: { () -> Void in
-                self.globalScope.dispatchEvent(event)
-                try self.throwExceptionIfExists()
-            })
+        try self.dispatchQueue.sync {
+            self.globalScope.dispatchEvent(event)
+            try self.throwExceptionIfExists()
+        }
     }
 }

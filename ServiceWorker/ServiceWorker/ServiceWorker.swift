@@ -153,15 +153,29 @@ import PromiseKit
             }
     }
 
-    public func dispatchEvent(_ event: Event) -> Promise<Void> {
-
+    internal func withExecutionEnvironment(_ cb: @escaping (ServiceWorkerExecutionEnvironment) throws -> Void) -> Promise<Void> {
+        if let exec = self._executionEnvironment {
+            do {
+                try cb(exec)
+                return Promise(value: ())
+            } catch {
+                return Promise(error: error)
+            }
+        }
         return getExecutionEnvironment()
             .then { exec in
-                if exec.currentException != nil {
-                    throw ErrorMessage("Cannot dispatch event: context is in error state")
-                }
-                return exec.dispatchEvent(event)
+                try cb(exec)
             }
+    }
+
+    public func dispatchEvent(_ event: Event) -> Promise<Void> {
+
+        return withExecutionEnvironment { exec in
+            if exec.currentException != nil {
+                throw ErrorMessage("Cannot dispatch event: context is in error state")
+            }
+            try exec.dispatchEvent(event)
+        }
     }
 
     public var skipWaitingStatus: Bool {
