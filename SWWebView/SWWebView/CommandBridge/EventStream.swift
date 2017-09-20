@@ -114,7 +114,7 @@ public class EventStream: NSObject {
     }
 
     func sendUpdate(identifier: String, object: ToJSON) {
-        try self.sendCustomUpdate(identifier: identifier, object: object.toJSONSuitableObject())
+        self.sendCustomUpdate(identifier: identifier, object: object.toJSONSuitableObject())
     }
 
     func sendCustomUpdate(identifier: String, object: Any) {
@@ -125,7 +125,7 @@ public class EventStream: NSObject {
                 throw ErrorMessage("Could not convert JSON data to a string")
             }
 
-            let str = "\(identifier): \(jsonString)\n"
+            let str = "event: \(identifier)\ndata: \(jsonString)\n\n"
 
             guard let stringToSend = str.data(using: String.Encoding.utf8) else {
                 throw ErrorMessage("Could not convert event payload back into data")

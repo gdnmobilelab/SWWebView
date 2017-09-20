@@ -16,7 +16,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
 
     static let serviceWorkerRequestMethod = "SW_REQUEST"
     static let graftedRequestBodyHeader = "X-Grafted-Request-Body"
-    static let eventStreamPath = "/events"
+    static let eventStreamPath = "/___events___"
 
     public typealias Command = (EventStream, AnyObject?) throws -> Promise<Any?>?
 
@@ -58,6 +58,15 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
 
             guard let requestURL = modifiedTask.request.url else {
                 throw ErrorMessage("Task must have a request URL")
+            }
+
+            if requestURL.path == SWWebViewBridge.eventStreamPath {
+
+                try self.startEventStreamTask(modifiedTask, webview: swWebView)
+
+                // Since the event stream stays alive indefinitely, we just early return
+                // a void promise
+                return Promise(value: ())
             }
 
             if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
@@ -107,15 +116,6 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler {
 
         guard let requestURL = task.request.url else {
             throw ErrorMessage("Cannot start a task with no URL")
-        }
-
-        if requestURL.path == SWWebViewBridge.eventStreamPath {
-
-            try self.startEventStreamTask(task, webview: webview)
-
-            // Since the event stream stays alive indefinitely, we just early return
-            // a void promise
-            return Promise(value: ())
         }
 
         guard let referrer = task.referrer else {

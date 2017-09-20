@@ -125,8 +125,13 @@ var StreamingXHR = (function (_super) {
         var _this = _super.call(this) || this;
         _this.seenBytes = 0;
         _this.isOpen = false;
+        // We allow subscribing before we've created the EventSource
+        // itself, so we need to keep track of what we have and have
+        // not subscribed to.
+        _this.subscribedEvents = [];
         _this.url = url;
         _this.resetReadyPromise();
+        _this.receiveNewEvent = _this.receiveNewEvent.bind(_this);
         return _this;
     }
     Object.defineProperty(StreamingXHR.prototype, "ready", {
@@ -149,64 +154,97 @@ var StreamingXHR = (function (_super) {
         });
     };
     StreamingXHR.prototype.open = function () {
+        var _this = this;
         if (this.isOpen === true) {
             throw new Error("Already open");
         }
         this.isOpen = true;
-        this.xhr = new XMLHttpRequest();
-        this.xhr.open(swwebviewSettings.API_REQUEST_METHOD, this.url);
-        this.xhr.onreadystatechange = this.receiveData.bind(this);
-        this.xhr.send();
+        this.eventSource = new EventSource(this.url);
+        this.subscribedEvents.forEach(function (type) {
+            // Add listeners for each of the types we have already added
+            _this.eventSource.addEventListener(type, _this.receiveNewEvent);
+        });
+        this.eventSource.onopen = function () {
+            if (_this.readyFulfill) {
+                _this.readyFulfill();
+                _this.readyFulfill = undefined;
+            }
+        };
+        this.eventSource.onclose = function () {
+            _this.isOpen = false;
+            _this.resetReadyPromise();
+        };
+        // this.xhr = new XMLHttpRequest();
+        // this.xhr.open(API_REQUEST_METHOD, this.url);
+        // this.xhr.onreadystatechange = this.receiveData.bind(this);
+        // this.xhr.send();
     };
     StreamingXHR.prototype.addEventListener = function (type, func) {
         _super.prototype.addEventListener.call(this, type, func);
-    };
-    StreamingXHR.prototype.receiveData = function () {
-        var _this = this;
-        if (this.xhr.readyState === 4) {
-            this.isOpen = false;
-            this.resetReadyPromise();
-            setTimeout(function () {
-                // This doesn't fire if page is unloading. So re-establish
-                // connection here?
-                console.error("Streaming task has stopped");
-            }, 1);
+        if (this.subscribedEvents.indexOf(type) === -1) {
+            if (this.eventSource) {
+                // If our event source is already open then we need to
+                // add a new event listener immediately.
+                this.eventSource.addEventListener(type, this.receiveNewEvent);
+            }
+            this.subscribedEvents.push(type);
         }
-        if (this.xhr.readyState !== 3) {
+        // this.eventSource.addEventListener(type, func);
+    };
+    StreamingXHR.prototype.receiveNewEvent = function (e) {
+        if (e.isTrusted === false) {
             return;
         }
-        if (this.readyFulfill) {
-            this.readyFulfill();
-            this.readyFulfill = undefined;
-        }
-        // This means the responseText keeps growing and growing. Perhaps
-        // we should look into cutting this off and re-establishing a new
-        // link if it gets too big.
-        var newData = this.xhr.responseText.substr(this.seenBytes);
-        this.seenBytes = this.xhr.responseText.length;
-        var events = newData.split("\n");
-        events.filter(function (s) { return s !== ""; }).forEach(function (dataSlice) {
-            var _a = /([\w\-]+):(.*)/.exec(dataSlice), _ = _a[0], event = _a[1], data = _a[2];
-            var parsedData;
-            try {
-                parsedData = JSON.parse(data);
-            }
-            catch (err) {
-                throw new Error("Could not parse: " + dataSlice + err.toString());
-            }
-            var evt = new MessageEvent(event, {
-                data: parsedData
-            });
-            _this.dispatchEvent(evt);
-        });
+        var jsonMsgEvent = new MessageEvent(e.type, Object.assign({}, e, { data: JSON.parse(e.data) }));
+        this.dispatchEvent(jsonMsgEvent);
     };
+    // receiveData() {
+    //     if (this.xhr.readyState === 4) {
+    //         this.isOpen = false;
+    //         this.resetReadyPromise();
+    //         setTimeout(() => {
+    //             // This doesn't fire if page is unloading. So re-establish
+    //             // connection here?
+    //             console.error("Streaming task has stopped");
+    //         }, 1);
+    //     }
+    //     if (this.xhr.readyState !== 3) {
+    //         return;
+    //     }
+    //     if (this.readyFulfill) {
+    //         this.readyFulfill();
+    //         this.readyFulfill = undefined;
+    //     }
+    //     // This means the responseText keeps growing and growing. Perhaps
+    //     // we should look into cutting this off and re-establishing a new
+    //     // link if it gets too big.
+    //     let newData = this.xhr.responseText.substr(this.seenBytes);
+    //     this.seenBytes = this.xhr.responseText.length;
+    //     let events = newData.split("\n");
+    //     events.filter(s => s !== "").forEach(dataSlice => {
+    //         let [_, event, data] = /([\w\-]+):(.*)/.exec(dataSlice)!;
+    //         let parsedData;
+    //         try {
+    //             parsedData = JSON.parse(data);
+    //         } catch (err) {
+    //             throw new Error(
+    //                 "Could not parse: " + dataSlice + err.toString()
+    //             );
+    //         }
+    //         let evt = new MessageEvent(event, {
+    //             data: parsedData
+    //         });
+    //         this.dispatchEvent(evt);
+    //     });
+    // }
     StreamingXHR.prototype.close = function () {
-        this.xhr.abort();
+        this.eventSource.close();
+        // this.xhr.abort();
     };
     return StreamingXHR;
 }(index));
 
-var eventsURL = new URL("/events", window.location.href);
+var eventsURL = new URL("/___events___", window.location.href);
 eventsURL.searchParams.append("path", window.location.pathname + window.location.search);
 var eventStream = new StreamingXHR(eventsURL.href);
 
@@ -290,14 +328,9 @@ var MessagePortProxy = (function () {
 }());
 var currentProxies = new Map();
 function addProxy(port, id) {
-    console.log("add proxy");
     currentProxies.set(id, new MessagePortProxy(port, id));
 }
 eventStream.addEventListener("messageport", function (e) {
-    currentProxies.forEach(function (val, key) {
-        console.log(val, key);
-    });
-    console.log(e.data.id, Array.from(currentProxies.keys()), currentProxies.get(e.data.id));
     var existingProxy = currentProxies.get(e.data.id);
     if (!existingProxy) {
         throw new Error("Tried to send " + e.data.type + " to MessagePort that does not exist");
@@ -346,7 +379,6 @@ var ServiceWorkerImplementation = (function (_super) {
             transferCount: transfer.length
         }).then(function (response) {
             // Register MessagePort proxies for all the transferables we just sent.
-            console.log("GOT RESPONSE", response);
             response.transferred.forEach(function (id, idx) {
                 return addProxy(transfer[idx], id);
             });
