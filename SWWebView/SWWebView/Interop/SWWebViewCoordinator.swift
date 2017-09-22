@@ -19,7 +19,7 @@ struct ContainerAndUsageNumber {
     var numUsing: Int
 }
 
-public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClientsDelegate {
+public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClientsDelegate, CacheStorageProviderDelegate {
 
     let workerFactory: WorkerFactory
     let registrationFactory: WorkerRegistrationFactory
@@ -108,5 +108,9 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
             client.container.claim(by: worker)
         }
         cb(nil)
+    }
+
+    public func createCacheStorage(_ worker: ServiceWorker) throws -> CacheStorage {
+        return try SQLiteCacheStorage(for: worker.url)
     }
 }

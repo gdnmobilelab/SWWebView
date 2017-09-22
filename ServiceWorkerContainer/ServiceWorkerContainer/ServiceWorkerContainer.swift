@@ -18,23 +18,12 @@ import ServiceWorker
 
     public let origin: URL
     public var readyRegistration: ServiceWorkerRegistrationProtocol?
-    //    fileprivate var _ready: Promise<ServiceWorkerRegistration>?
-    //    fileprivate var _readyFulfill: ((ServiceWorkerRegistration) -> Void)?
     fileprivate var registrationChangeListener: Listener<ServiceWorkerRegistration>?
     fileprivate var workerChangeListener: Listener<ServiceWorker>?
 
     let registrationFactory: WorkerRegistrationFactory
 
     public var controller: ServiceWorker?
-
-    //    fileprivate var _pendingReadyPromise: Promise<ServiceWorkerRegistration>? = nil
-    //    fileprivate var _pendingReadyFulfill: ((ServiceWorkerRegistration) -> Void)? = nil
-    //
-    //    public var ready: Promise<ServiceWorkerRegistration> {
-    //        get {
-    //            return self._pendingReadyPromise
-    //        }
-    //    }
 
     public func claim(by worker: ServiceWorker) {
         self.controller = worker
@@ -48,20 +37,7 @@ import ServiceWorker
         /// there will already be an active worker when the container is created, so we check
         /// for that.
         self.readyRegistration = try self.registrationFactory.getReadyRegistration(for: self.url)
-
-        if self.readyRegistration != nil {
-            self.controller = self.readyRegistration?.active
-            //            self._ready = Promise(value: self.readyRegistration!)
-        } else {
-            self.controller = nil
-            //            self._ready = Promise { fulfill, _ in
-            //                self._readyFulfill = fulfill
-            //            }
-            //            .then { reg -> ServiceWorkerRegistration in
-            //                GlobalEventLog.notifyChange(self)
-            //                return reg
-            //            }
-        }
+        self.controller = self.readyRegistration?.active
     }
 
     public init(forURL: URL, withFactory: WorkerRegistrationFactory) throws {

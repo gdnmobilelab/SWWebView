@@ -16,6 +16,7 @@ public class WorkerFactory {
     fileprivate let workerStorage = NSHashTable<ServiceWorker>.weakObjects()
     public var clientsDelegateProvider: ServiceWorkerClientsDelegate?
     public var serviceWorkerDelegateProvider: ServiceWorkerDelegate?
+    public var cacheStorageProvider: CacheStorageProviderDelegate?
 
     public init() {
     }
@@ -63,6 +64,11 @@ public class WorkerFactory {
                 worker.clientsDelegate = self.clientsDelegateProvider
                 worker.delegate = self.serviceWorkerDelegateProvider
                 worker.registration = registration
+
+                if let storageProvider = self.cacheStorageProvider {
+                    worker.cacheStorage = try storageProvider.createCacheStorage(worker)
+                }
+
                 return worker
             }
         }

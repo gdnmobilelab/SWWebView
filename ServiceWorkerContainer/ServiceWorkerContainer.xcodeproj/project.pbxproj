@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		8A181AB51F7564F8005CED14 /* SQLiteCacheStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */; };
+		8A181AB71F7568F3005CED14 /* SQLiteCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB61F7568F3005CED14 /* SQLiteCache.swift */; };
 		8A23601B1F35FDCC00969268 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A2360111F35FDCC00969268 /* ServiceWorkerContainer.framework */; };
 		8A2360201F35FDCC00969268 /* ServiceWorkerContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */; };
 		8A2360221F35FDCC00969268 /* ServiceWorkerContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 8A2360141F35FDCC00969268 /* ServiceWorkerContainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -86,6 +88,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCacheStorage.swift; sourceTree = "<group>"; };
+		8A181AB61F7568F3005CED14 /* SQLiteCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCache.swift; sourceTree = "<group>"; };
 		8A2360111F35FDCC00969268 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ServiceWorkerContainer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A2360141F35FDCC00969268 /* ServiceWorkerContainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ServiceWorkerContainer.h; sourceTree = "<group>"; };
 		8A2360151F35FDCC00969268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -136,6 +140,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A181AB21F7564E6005CED14 /* Cache */ = {
+			isa = PBXGroup;
+			children = (
+				8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */,
+				8A181AB61F7568F3005CED14 /* SQLiteCache.swift */,
+			);
+			path = Cache;
+			sourceTree = "<group>";
+		};
 		8A2360071F35FDCC00969268 = {
 			isa = PBXGroup;
 			children = (
@@ -158,6 +171,7 @@
 		8A2360131F35FDCC00969268 /* ServiceWorkerContainer */ = {
 			isa = PBXGroup;
 			children = (
+				8A181AB21F7564E6005CED14 /* Cache */,
 				8A23B46B1F55C10500FDD8D4 /* Factories */,
 				8A43C16F1F4C91DD001221C1 /* Events */,
 				8AF85D8D1F3A3134001B0A87 /* DatabaseMigrations */,
@@ -472,6 +486,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A181AB71F7568F3005CED14 /* SQLiteCache.swift in Sources */,
 				8A23603D1F35FE1B00969268 /* ServiceWorkerHooks.swift in Sources */,
 				8A23603F1F35FE1B00969268 /* ServiceWorkerRegistration.swift in Sources */,
 				8A43C1721F4C91EA001221C1 /* WorkerInstallationError.swift in Sources */,
@@ -482,6 +497,7 @@
 				8A2360431F35FE1B00969268 /* DbExtensions.swift in Sources */,
 				8A23B46D1F55C19500FDD8D4 /* WorkerRegistrationFactory.swift in Sources */,
 				8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */,
+				8A181AB51F7564F8005CED14 /* SQLiteCacheStorage.swift in Sources */,
 				8A2360451F35FE1B00969268 /* WorkerFactory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -44,10 +44,10 @@ class MessagePortWrapper: NSObject, MessagePortTarget {
     }
 
     func receiveMessage(_ evt: ExtendableMessageEvent) {
-        
+
         // A MessagePort message can, in turn, send its own ports. If that's happened
         // we need to create new wrappers for these ports too.
-        
+
         let wrappedPorts = evt.ports.map { MessagePortWrapper($0, in: self.eventStream).id }
 
         let message = MessagePortAction(type: .message, id: self.id, data: evt.data, portIds: wrappedPorts)

@@ -76,4 +76,16 @@ class GlobalVariableProvider {
             "get": createPropertyAccessor(for: name)
         ])
     }
+
+    static func add(missingPropertyWithError error: String, to context: JSContext, withName name: String) {
+
+        context.globalObject.defineProperty(name, descriptor: [
+            "get": {
+                if let ctx = JSContext.current() {
+                    let err = JSValue(newErrorFromMessage: error, in: ctx)
+                    ctx.exception = err
+                }
+            } as @convention(block) () -> Void
+        ])
+    }
 }

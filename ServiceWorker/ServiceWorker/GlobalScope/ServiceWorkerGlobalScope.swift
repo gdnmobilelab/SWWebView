@@ -49,15 +49,19 @@ import JavaScriptCore
 
         try self.attachVariablesToContext()
         try self.loadIndexedDBShim()
+
+        if let storage = worker.cacheStorage {
+            GlobalVariableProvider.add(variable: storage, to: context, withName: "caches")
+            GlobalVariableProvider.add(variable: type(of: storage), to: context, withName: "CacheStorage")
+            GlobalVariableProvider.add(variable: type(of: storage).CacheClass, to: context, withName: "Cache")
+        } else {
+            GlobalVariableProvider.add(missingPropertyWithError: "CacheStorage has not been provided for this worker", to: context, withName: "caches")
+        }
     }
 
     deinit {
         self.console.cleanup()
     }
-
-    //    func fetch(requestOrURL: JSValue, options: JSValue?) -> JSValue? {
-    //        return FetchOperation.jsFetch(context: self.context, origin: self.worker.url, requestOrURL: requestOrURL, options: options)
-    //    }
 
     fileprivate func attachVariablesToContext() throws {
 
