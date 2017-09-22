@@ -39,7 +39,14 @@ eventStream.addEventListener<MessagePortAction>("messageport", e => {
         );
     }
     if (e.data.type == "message") {
-        existingProxy.port.postMessage(e.data.data);
+        console.log("Received message", e.data);
+        let ports = e.data.portIDs.map(id => {
+            let channel = new MessageChannel();
+            addProxy(channel.port2, id);
+            return channel.port1;
+        });
+
+        existingProxy.port.postMessage(e.data.data, ports);
     } else {
         // is close. Remove from collection, free up for garbage collection.
         console.info(

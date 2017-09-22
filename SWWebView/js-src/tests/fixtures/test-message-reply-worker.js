@@ -1,6 +1,10 @@
+function sendReply(e) {
+    e.target.postMessage("response2");
+    e.target.onmessage = undefined;
+}
+
 self.addEventListener("message", e => {
-    e.ports[0].postMessage("response");
-    e.ports[0].onmessage = function() {
-        e.ports[0].postMessage("response2");
-    };
+    let newChannel = new MessageChannel();
+    newChannel.port2.onmessage = sendReply;
+    e.ports[0].postMessage("response", [newChannel.port1]);
 });

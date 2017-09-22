@@ -85,7 +85,8 @@ import JavaScriptCore
         GlobalVariableProvider.add(variable: importAsConvention, to: self.context, withName: "importScripts")
         GlobalVariableProvider.add(variable: fetchAsConvention, to: self.context, withName: "fetch")
         GlobalVariableProvider.add(variable: FetchRequest.self, to: self.context, withName: "Request")
-
+        GlobalVariableProvider.add(variable: MessageChannel.self, to: self.context, withName: "MessageChannel")
+        GlobalVariableProvider.add(variable: MessagePort.self, to: self.context, withName: "MessagePort")
         // These have weird hacks involving hash get/set, so we have specific functions
         // for adding them.
         GlobalVariableProvider.add(variable: try JSURL.createJSValue(for: self.context), to: self.context, withName: "URL")

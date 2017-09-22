@@ -18,7 +18,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
     static let graftedRequestBodyHeader = "X-Grafted-Request-Body"
     static let eventStreamPath = "/___events___"
 
-    public typealias Command = (EventStream, AnyObject?, (Error?, Any?) -> Void) -> Void
+    public typealias Command = (EventStream, AnyObject?) throws -> Promise<Any?>?
 
     public static var routes: [String: Command] = [
         "/ServiceWorkerContainer/register": ServiceWorkerContainerCommands.register,
@@ -34,10 +34,8 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
     var eventStreams = Set<EventStream>()
 
     public func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
-        
-        
-        
-        do {
+
+        firstly { () -> Promise<Any?> in
             guard let body = message.body as AnyObject? else {
                 throw ErrorMessage("Could not parse body")
             }
@@ -50,33 +48,25 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
             guard let eventStream = eventStreams.first(where: { $0.id == eventStreamID }) else {
                 throw ErrorMessage("This stream does not exist")
             }
-            
-            let callback = { (err: Error?, val:Any?) in
-                if let error = err {
+
+            guard let matchingRoute = SWWebViewBridge.routes.first(where: { $0.key == path })?.value else {
+                throw ErrorMessage("Did not recognise this path")
+            }
+
+            return (try matchingRoute(eventStream, requestBody) ?? Promise(value: ()))
+                .then { response in
                     eventStream.sendCustomUpdate(identifier: "promisereturn", object: [
                         "promiseIndex": promiseIndex,
-                        "error": "\(error)"
-                        ])
-                } else {
+                        "response": response
+                    ])
+                }.catch { error in
                     eventStream.sendCustomUpdate(identifier: "promisereturn", object: [
                         "promiseIndex": promiseIndex,
-                        "response": val
-                        ])
+                        "error": error
+                    ])
                 }
-            }
-            do {
-                guard let matchingRoute = SWWebViewBridge.routes.first(where: { $0.key == path })?.value else {
-                    throw ErrorMessage("Did not recognise this path")
-                }
-                
-                matchingRoute(eventStream, requestBody, callback)
-                
-            } catch {
-                callback(error, nil)
-            }
-            
-            
-        } catch {
+
+        }.catch { error in
             Log.error?("Failed to parse API request: \(error)")
         }
     }

@@ -77,20 +77,27 @@ import JavaScriptCore
             self.queuedMessages.append((message: message, transferList: transferList))
             return
         }
+        do {
+            guard let targetPort = self.targetPort else {
+                throw ErrorMessage("MessagePort does not have a target set")
+            }
 
-        guard let targetPort = self.targetPort else {
+            guard let ports = transferList as? [SWMessagePort] else {
+                throw ErrorMessage("All transferables must be MessagePorts for now")
+            }
+
+            let messageEvent = ExtendableMessageEvent(data: message, ports: ports)
+
+            targetPort.receiveMessage(messageEvent)
+
+        } catch {
             if let ctx = JSContext.current() {
-                let err = JSValue(newErrorFromMessage: "MessagePort does not have a target set", in: ctx)
+                let err = JSValue(newErrorFromMessage: "\(error)", in: ctx)
                 ctx.exception = err
             } else {
-                Log.error?("MessagePort does not have a target set")
+                Log.error?("\(error)")
             }
-            return
         }
-
-        let messageEvent = ExtendableMessageEvent(data: message)
-
-        targetPort.receiveMessage(messageEvent)
     }
 
     public func receiveMessage(_ evt: ExtendableMessageEvent) {

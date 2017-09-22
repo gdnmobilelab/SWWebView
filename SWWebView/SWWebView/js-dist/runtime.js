@@ -373,7 +373,13 @@ eventStream.addEventListener("messageport", function (e) {
         throw new Error("Tried to send " + e.data.type + " to MessagePort that does not exist");
     }
     if (e.data.type == "message") {
-        existingProxy.port.postMessage(e.data.data);
+        console.log("Received message", e.data);
+        var ports = e.data.portIDs.map(function (id) {
+            var channel = new MessageChannel();
+            addProxy(channel.port2, id);
+            return channel.port1;
+        });
+        existingProxy.port.postMessage(e.data.data, ports);
     }
     else {
         // is close. Remove from collection, free up for garbage collection.

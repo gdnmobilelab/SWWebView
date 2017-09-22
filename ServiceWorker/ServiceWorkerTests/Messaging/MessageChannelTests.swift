@@ -19,10 +19,10 @@ class MessageChannelTests: XCTestCase {
 
         jsc.evaluateScript("""
             var didFire = false;
-            testChannel.portTwo.onmessage = function() {
+            testChannel.port2.onmessage = function() {
                 didFire = true
             }
-            testChannel.portOne.postMessage("hi");
+            testChannel.port1.postMessage("hi");
         """)
 
         XCTAssertTrue(jsc.objectForKeyedSubscript("didFire").toBool())

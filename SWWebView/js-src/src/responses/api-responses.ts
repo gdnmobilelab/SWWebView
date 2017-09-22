@@ -36,6 +36,7 @@ export interface MessagePortAction {
     id: string;
     type: "message" | "close";
     data: any;
+    portIDs: string[];
 }
 
 export interface PromiseReturn {

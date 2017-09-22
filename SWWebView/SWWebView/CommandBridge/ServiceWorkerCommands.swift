@@ -72,10 +72,12 @@ class ServiceWorkerCommands {
 
             let event = ExtendableMessageEvent(data: deserializedMessage, ports: transferredPorts)
 
-            // We don't chain this promise because we want to return the
-            // MessagePort details to the webview before the event is
-            // resolved.
             DispatchQueue.global().async {
+
+                // We make this async because we need it to execute after the webview
+                // has received the transferred array specified below. But this is a
+                // performance hit - should find a better way to do this.
+
                 worker.dispatchEvent(event)
                     .then {
                         event.resolve(in: worker)

@@ -10,19 +10,20 @@ import Foundation
 import JavaScriptCore
 
 @objc public protocol MessageChannelExports: JSExport {
-    var portOne: SWMessagePort { get }
-    var portTwo: SWMessagePort { get }
+    var port1: SWMessagePort { get }
+    var port2: SWMessagePort { get }
+    init()
 }
 
 @objc public class MessageChannel: NSObject, MessageChannelExports {
-    public let portOne: SWMessagePort
-    public let portTwo: SWMessagePort
+    public let port1: SWMessagePort
+    public let port2: SWMessagePort
 
-    override init() {
-        self.portOne = SWMessagePort()
-        self.portTwo = SWMessagePort()
+    public required override init() {
+        self.port1 = SWMessagePort()
+        self.port2 = SWMessagePort()
         super.init()
-        self.portOne.targetPort = portTwo
-        self.portTwo.targetPort = self.portOne
+        self.port1.targetPort = port2
+        self.port2.targetPort = self.port1
     }
 }

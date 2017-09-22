@@ -17,14 +17,13 @@ describe("Service Worker", () => {
             console.timeEnd("Round-trip message");
             numberOfMessages++;
             console.log(e);
-            if (numberOfMessages == 1) {
-                channel.port2.postMessage("ARRGH");
-                console.time("Round-trip message");
-            } else if (numberOfMessages == 2) {
-                done();
-            }
 
-            // done();
+            e.ports[0].onmessage = () => {
+                console.timeEnd("Second round-trip message");
+                done();
+            };
+            console.time("Second round-trip message");
+            e.ports[0].postMessage("reply");
         };
 
         navigator.serviceWorker
