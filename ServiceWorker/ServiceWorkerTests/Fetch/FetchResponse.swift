@@ -135,20 +135,18 @@ class FetchResponseTests: XCTestCase {
         FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.txt"))
             .then { res -> Promise<Void> in
 
-                var clone: FetchResponseProtocol?
-                XCTAssertNoThrow(clone = try res.clone())
+                let clone = try res.clone()
 
-                let cloneText = clone!.text()
-                    .then { text in
-                        XCTAssertEqual(text, "THIS IS TEST CONTENT")
-                    }
+                let cloneText = clone.text()
 
                 let originalText = res.text()
-                    .then { text in
-                        XCTAssertEqual(text, "THIS IS TEST CONTENT")
-                    }
 
-                return when(fulfilled: [cloneText, originalText])
+                return when(fulfilled: [originalText, cloneText])
+                    .then { results -> Void in
+
+                        XCTAssertEqual(results.count, 2)
+                        results.forEach { XCTAssertEqual($0, "THIS IS TEST CONTENT") }
+                    }
             }
             .assertResolves()
     }

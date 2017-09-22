@@ -22,7 +22,7 @@ extension Promise {
             expect.fulfill()
         }
 
-        waiter.wait(for: [expect], timeout: 30)
+        waiter.wait(for: [expect], timeout: 3)
     }
 
     func assertRejects() {
