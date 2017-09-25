@@ -16,6 +16,7 @@ private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.sel
 public class SQLiteConnection {
 
     var db: OpaquePointer?
+    public let url: URL
     var open: Bool {
         return self.db != nil
     }
@@ -23,7 +24,7 @@ public class SQLiteConnection {
     static var temporaryStoreDirectory: URL?
 
     public init(_ dbURL: URL) throws {
-
+        self.url = dbURL
         let open = sqlite3_open_v2(dbURL.path.cString(using: String.Encoding.utf8), &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
 
         if open != SQLITE_OK || self.db == nil {
@@ -33,6 +34,16 @@ public class SQLiteConnection {
         try self.exec(sql: "PRAGMA cache_size = 0;")
         if let tempStore = SQLiteConnection.temporaryStoreDirectory {
             try self.exec(sql: "PRAGMA temp_store_directory = '\(tempStore.path)';")
+        }
+    }
+
+    deinit {
+        do {
+            if self.open {
+                try self.close()
+            }
+        } catch {
+            Log.error?("Failed to automatically close a SQLite connection on deinit: \(error)")
         }
     }
 

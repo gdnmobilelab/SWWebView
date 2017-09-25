@@ -11,6 +11,13 @@ import ServiceWorker
 import JavaScriptCore
 
 @objc public class SQLiteCache: NSObject, Cache {
+
+    let storage: SQLiteCacheStorage
+
+    init(in storage: SQLiteCacheStorage) {
+        self.storage = storage
+    }
+
     public func match(_: JSValue, _: [String: Any]) -> JSValue {
         return JSContext.current().globalObject
     }

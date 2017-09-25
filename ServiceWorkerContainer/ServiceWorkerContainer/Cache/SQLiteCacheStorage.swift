@@ -49,4 +49,33 @@ import JavaScriptCore
     public func keys() -> JSValue {
         return JSContext.current().globalObject
     }
+
+    /// We don't want to keep these SQL connections open longer than we have to for memory reasons
+    /// but we also don't want to duplicate a connection if it's already open. When a connection is
+    /// deinit-ed it automatically closes, so we can just rely on the weak references here to close
+    /// when we're done.
+    fileprivate static var currentOpenConnections = NSHashTable<SQLiteConnection>.weakObjects()
+
+    fileprivate static func getConnection(for url: URL) throws -> SQLiteConnection {
+
+        let existing = currentOpenConnections.allObjects.first(where: { $0.url.absoluteString == url.absoluteString })
+
+        if let doesExist = existing {
+            return doesExist
+        }
+        
+        let newConnection = try SQLiteConnection(url)
+        self.currentOpenConnections.add(newConnection)
+        return newConnection
+    }
+    
+    fileprivate static func getURL(for cacheName: String) -> URL {
+        
+    }
+
+    func put(cacheName _: String, request _: FetchRequest, response _: FetchResponse) {
+        
+        let connection = SQLiteCacheStorage.getConnection(for: <#T##URL#>)
+        
+    }
 }
