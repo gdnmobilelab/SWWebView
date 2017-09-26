@@ -1,11 +1,3 @@
-//
-//  WebSQLDatabase.swift
-//  ServiceWorker
-//
-//  Created by alastair.coote on 02/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import JavaScriptCore
 import PromiseKit
@@ -104,17 +96,15 @@ import PromiseKit
             throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
         }
 
-        guard let storagePath = worker.delegate?.serviceWorker?(worker, getStoragePathForDomain: host) else {
+        guard let storagePath = worker.delegate?.serviceWorker(worker, getStoragePathForDomain: host) else {
             throw ErrorMessage("ServiceWorkerDelegate does not implement getStoragePathForDomain")
         }
-
-        let storageURL = URL(fileURLWithPath: storagePath)
 
         guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {
             throw ErrorMessage("Could not escape SQLite database filename")
         }
 
-        let dbDirectory = storageURL
+        let dbDirectory = storagePath
             .appendingPathComponent("websql", isDirectory: true)
 
         let dbURL = dbDirectory

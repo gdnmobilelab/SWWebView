@@ -1,11 +1,3 @@
-//
-//  SQLiteCache.swift
-//  ServiceWorkerContainer
-//
-//  Created by alastair.coote on 22/09/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import ServiceWorker
 import JavaScriptCore

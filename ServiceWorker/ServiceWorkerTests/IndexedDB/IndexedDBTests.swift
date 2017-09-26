@@ -1,11 +1,3 @@
-//
-//  IndexedDBTests.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 18/09/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 import PromiseKit
@@ -14,7 +6,6 @@ class IndexedDBTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        ServiceWorkerTestDelegate.storageURL = URL(fileURLWithPath: NSTemporaryDirectory())
     }
 
     func testIndexedDB() {

@@ -23,6 +23,9 @@
 /* Begin PBXBuildFile section */
 		8A181AB51F7564F8005CED14 /* SQLiteCacheStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */; };
 		8A181AB71F7568F3005CED14 /* SQLiteCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB61F7568F3005CED14 /* SQLiteCache.swift */; };
+		8A181ABE1F797293005CED14 /* DBConnectionPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181ABD1F797293005CED14 /* DBConnectionPool.swift */; };
+		8A181AC11F797552005CED14 /* DatabaseType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AC01F797552005CED14 /* DatabaseType.swift */; };
+		8A181AC31F798774005CED14 /* ServiceWorkerStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AC21F798774005CED14 /* ServiceWorkerStorageProvider.swift */; };
 		8A23601B1F35FDCC00969268 /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A2360111F35FDCC00969268 /* ServiceWorkerContainer.framework */; };
 		8A2360201F35FDCC00969268 /* ServiceWorkerContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */; };
 		8A2360221F35FDCC00969268 /* ServiceWorkerContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 8A2360141F35FDCC00969268 /* ServiceWorkerContainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -90,6 +93,9 @@
 /* Begin PBXFileReference section */
 		8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCacheStorage.swift; sourceTree = "<group>"; };
 		8A181AB61F7568F3005CED14 /* SQLiteCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCache.swift; sourceTree = "<group>"; };
+		8A181ABD1F797293005CED14 /* DBConnectionPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBConnectionPool.swift; sourceTree = "<group>"; };
+		8A181AC01F797552005CED14 /* DatabaseType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseType.swift; sourceTree = "<group>"; };
+		8A181AC21F798774005CED14 /* ServiceWorkerStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerStorageProvider.swift; sourceTree = "<group>"; };
 		8A2360111F35FDCC00969268 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ServiceWorkerContainer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A2360141F35FDCC00969268 /* ServiceWorkerContainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ServiceWorkerContainer.h; sourceTree = "<group>"; };
 		8A2360151F35FDCC00969268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -202,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */,
+				8A181AC21F798774005CED14 /* ServiceWorkerStorageProvider.swift */,
 			);
 			path = Interop;
 			sourceTree = "<group>";
@@ -212,6 +219,8 @@
 				8A2360331F35FDF800969268 /* CoreDatabase.swift */,
 				8A2360341F35FDF800969268 /* DbExtensions.swift */,
 				8A2360351F35FDF800969268 /* SharedResources.swift */,
+				8A181ABD1F797293005CED14 /* DBConnectionPool.swift */,
+				8A181AC01F797552005CED14 /* DatabaseType.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -432,7 +441,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftformat >/dev/null; then\n\nswiftformat $PROJECT_DIR --commas false --self insert\nelse\necho \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi";
+			shellScript = "if which swiftformat >/dev/null; then\n\nswiftformat $PROJECT_DIR --commas false --self insert --header strip\nelse\necho \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi";
 		};
 		8A5B361D1F5F57C9009F72AC /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -493,6 +502,9 @@
 				8A23B46F1F55C38500FDD8D4 /* RegistrationWorkerSlots.swift in Sources */,
 				8A2360401F35FE1B00969268 /* ServiceWorkerRegistrationOptions.swift in Sources */,
 				8A2360411F35FE1B00969268 /* ServiceWorkerContainer.swift in Sources */,
+				8A181AC11F797552005CED14 /* DatabaseType.swift in Sources */,
+				8A181AC31F798774005CED14 /* ServiceWorkerStorageProvider.swift in Sources */,
+				8A181ABE1F797293005CED14 /* DBConnectionPool.swift in Sources */,
 				8A2360421F35FE1B00969268 /* CoreDatabase.swift in Sources */,
 				8A2360431F35FE1B00969268 /* DbExtensions.swift in Sources */,
 				8A23B46D1F55C19500FDD8D4 /* WorkerRegistrationFactory.swift in Sources */,

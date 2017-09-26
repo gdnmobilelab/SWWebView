@@ -1,11 +1,3 @@
-//
-//  GlobalScopeTests.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 01/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 import JavaScriptCore
@@ -112,7 +104,7 @@ class GlobalScopeTests: XCTestCase {
 
     func testHasLocation() {
 
-        let sw = ServiceWorker(id: name, url: URL(string: "http://www.example.com/sw.js")!, state: .activated, content: "")
+        let sw = TestWorker(id: name, state: .activated, url: URL(string: "http://www.example.com/sw.js")!, content: "")
 
         sw.evaluateScript("[self.location, location]")
             .then { val -> Void in

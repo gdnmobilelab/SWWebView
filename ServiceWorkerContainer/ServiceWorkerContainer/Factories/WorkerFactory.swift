@@ -1,11 +1,3 @@
-//
-//  WorkerInstances.swift
-//  ServiceWorkerContainer
-//
-//  Created by alastair.coote on 24/07/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import ServiceWorker
 import PromiseKit
@@ -21,7 +13,18 @@ public class WorkerFactory {
     public init() {
     }
 
+    func getCoreDBPath() throws -> URL {
+        guard let coreStorage = self.serviceWorkerDelegateProvider?.getCoreDatabaseURL() else {
+            throw ErrorMessage("Must have a ServiceWorkerDelegate specified")
+        }
+
+        return coreStorage
+    }
+
     public func get(id: String, withRegistration registration: ServiceWorkerRegistration) throws -> ServiceWorker {
+
+        let dbURL = try self.getCoreDBPath()
+
         let workerWanted = workerStorage.allObjects.filter { $0.id == id }
 
         if let existingWorker = workerWanted.first {
@@ -33,7 +36,7 @@ public class WorkerFactory {
             return existingWorker
         }
 
-        let dbWorker = try CoreDatabase.inConnection { db -> ServiceWorker in
+        let dbWorker = try DBConnectionPool.inConnection(at: dbURL, type: .core) { db -> ServiceWorker in
             return try db.select(sql: "SELECT registration_id, url, install_state FROM workers WHERE worker_id = ?", values: [id]) { (resultSet) -> ServiceWorker in
 
                 if try resultSet.next() == false {
@@ -60,7 +63,7 @@ public class WorkerFactory {
                     throw ErrorMessage("Service worker does not have a valid URL")
                 }
 
-                let worker = ServiceWorker(id: id, url: workerURL, state: state, loadContent: ServiceWorkerHooks.loadContent)
+                let worker = ServiceWorker(id: id, url: workerURL, state: state)
                 worker.clientsDelegate = self.clientsDelegateProvider
                 worker.delegate = self.serviceWorkerDelegateProvider
                 worker.registration = registration
@@ -80,9 +83,11 @@ public class WorkerFactory {
 
     func create(for url: URL, in registration: ServiceWorkerRegistration) throws -> ServiceWorker {
 
+        let dbURL = try self.getCoreDBPath()
+
         let newWorkerID = UUID().uuidString
 
-        try CoreDatabase.inConnection { db in
+        try DBConnectionPool.inConnection(at: dbURL, type: .core) { db in
             _ = try db.insert(sql: """
                 INSERT INTO workers
                     (worker_id, url, install_state, registration_id, content)
@@ -102,7 +107,7 @@ public class WorkerFactory {
     }
 
     func update(worker: ServiceWorker, toInstallState newState: ServiceWorkerInstallState) throws {
-        try CoreDatabase.inConnection { db in
+        try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db in
             try db.update(sql: "UPDATE workers SET install_state = ? WHERE worker_id = ?", values: [newState.rawValue, worker.id])
         }
         worker.state = newState
@@ -110,28 +115,30 @@ public class WorkerFactory {
 
     func update(worker: ServiceWorker, setScriptResponse res: FetchResponseProtocol) -> Promise<Void> {
 
-        return CoreDatabase.inConnection { db in
+        return firstly {
+            try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db -> Promise<Void> in
 
-            // We should only ever update the content of a worker once - any changes
-            // should be reflected in a new worker, not updating the existing one. So
-            // first, we check that we haven't already set content on this worker.
+                // We should only ever update the content of a worker once - any changes
+                // should be reflected in a new worker, not updating the existing one. So
+                // first, we check that we haven't already set content on this worker.
 
-            try db.select(sql: """
-                SELECT
-                    CASE WHEN content IS NULL THEN 0 ELSE 1 END AS num
-                FROM workers
-                WHERE worker_id = ?
-            """, values: [worker.id]) { rs in
-                if try rs.next() != true {
-                    throw ErrorMessage("Existing content DB check didn't work")
+                try db.select(sql: """
+                    SELECT
+                        CASE WHEN content IS NULL THEN 0 ELSE 1 END AS num
+                    FROM workers
+                    WHERE worker_id = ?
+                """, values: [worker.id]) { rs in
+                    if try rs.next() != true {
+                        throw ErrorMessage("Existing content DB check didn't work")
+                    }
+                    let num = try rs.int("num")
+
+                    if num != 0 {
+                        throw ErrorMessage("This worker appears to already have content in it. Content can only be set once.")
+                    }
+
+                    return Promise(value: ())
                 }
-                let num = try rs.int("num")
-
-                if num != 0 {
-                    throw ErrorMessage("This worker appears to already have content in it. Content can only be set once.")
-                }
-
-                return Promise(value: ())
             }
         }
         .then {
@@ -145,7 +152,7 @@ public class WorkerFactory {
                 // future update() calls won't check the original URL, which feels wrong. But having this
                 // URL next to content from another URL also feels wrong.
 
-                CoreDatabase.inConnection { db -> Promise<Void> in
+                try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db -> Promise<Void> in
                     try db.update(sql: """
                         UPDATE workers SET
                             headers = ?,
@@ -190,7 +197,7 @@ public class WorkerFactory {
 
     /// Special case, primarily used in deleting an installing worker where the fetch failed
     func delete(worker: ServiceWorker) throws {
-        try CoreDatabase.inConnection { db in
+        try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db in
             try db.update(sql: "DELETE FROM workers WHERE worker_id = ?", values: [worker.id])
         }
 
@@ -199,7 +206,7 @@ public class WorkerFactory {
     }
 
     func isByteIdentical(_ workerOne: ServiceWorker, _ workerTwo: ServiceWorker) throws -> Bool {
-        return try CoreDatabase.inConnection { db in
+        return try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db in
             try db.select(sql: """
 
                 SELECT CASE WHEN one.content_hash = two.content_hash THEN 1 ELSE 0 END as isSame
@@ -225,7 +232,7 @@ public class WorkerFactory {
 
     func getUpdateRequest(forExistingWorker worker: ServiceWorker) throws -> FetchRequest {
 
-        return try CoreDatabase.inConnection { db in
+        return try DBConnectionPool.inConnection(at: self.getCoreDBPath(), type: .core) { db in
 
             let request = FetchRequest(url: worker.url)
 

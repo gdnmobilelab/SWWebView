@@ -1,11 +1,3 @@
-//
-//  ServiceWorkerInstallState.swift
-//  ServiceWorker
-//
-//  Created by alastair.coote on 14/06/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 
 /// The various states a Service Worker can exist in. As outlined in: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker/state

@@ -1,11 +1,3 @@
-//
-//  GlobalEventLog.swift
-//  ServiceWorker
-//
-//  Created by alastair.coote on 10/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 
 /// Our webview representations of the API need to be able to reflect

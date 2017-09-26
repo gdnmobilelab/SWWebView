@@ -1,11 +1,3 @@
-//
-//  WebSQLConnection.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 04/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 import PromiseKit
@@ -13,19 +5,17 @@ import SQLite3
 
 class WebSQLConnectionTests: XCTestCase {
 
-    let webSQLTestPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("websql", isDirectory: true)
+    static let webSQLTestPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("websql", isDirectory: true)
 
     override func setUp() {
         super.setUp()
 
-        ServiceWorkerTestDelegate.storageURL = webSQLTestPath
-
         do {
 
-            if FileManager.default.fileExists(atPath: self.webSQLTestPath.path) {
-                try FileManager.default.removeItem(atPath: self.webSQLTestPath.path)
+            if FileManager.default.fileExists(atPath: WebSQLConnectionTests.webSQLTestPath.path) {
+                try FileManager.default.removeItem(atPath: WebSQLConnectionTests.webSQLTestPath.path)
             }
-            try FileManager.default.createDirectory(at: self.webSQLTestPath, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(at: WebSQLConnectionTests.webSQLTestPath, withIntermediateDirectories: true, attributes: nil)
 
         } catch {
             XCTFail("\(error)")
@@ -37,7 +27,29 @@ class WebSQLConnectionTests: XCTestCase {
         super.tearDown()
     }
 
+    class WebSQLTestDelegate: ServiceWorkerDelegate {
+        func serviceWorker(_: ServiceWorker, importScripts _: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
+            callback(ErrorMessage("not implemented"), nil)
+        }
+
+        func serviceWorker(_: ServiceWorker, getStoragePathForDomain domain: String) -> URL {
+            return webSQLTestPath.appendingPathComponent(domain, isDirectory: true)
+        }
+
+        func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {
+            return ""
+        }
+
+        func getCoreDatabaseURL() -> URL {
+            return webSQLTestPath.appendingPathComponent("core.db")
+        }
+
+        static let instance = WebSQLTestDelegate()
+    }
+
     func injectOpenDBIntoWorker(_ sw: ServiceWorker) -> Promise<Void> {
+
+        sw.delegate = WebSQLTestDelegate.instance
 
         return sw.getExecutionEnvironment()
             .then { exec in

@@ -8,7 +8,7 @@ describe("Service Worker", () => {
         return unregisterEverything();
     });
 
-    it.only("Should post a message", done => {
+    it("Should post a message", done => {
         let channel = new MessageChannel();
 
         let numberOfMessages = 0;

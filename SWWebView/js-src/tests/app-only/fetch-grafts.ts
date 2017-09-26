@@ -4,7 +4,7 @@ import { describeIfApp } from "../test-bootstrap";
 import { eventStream } from "../../src/event-stream";
 
 describeIfApp("Fetch grafts", () => {
-    it("Grafts fetch bodies", () => {
+    xit("Grafts fetch bodies", () => {
         return eventStream.ready
             .then(() => {
                 return fetch("/ping-with-body", {

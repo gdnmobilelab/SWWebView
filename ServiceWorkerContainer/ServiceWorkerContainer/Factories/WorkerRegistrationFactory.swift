@@ -1,11 +1,3 @@
-//
-//  WorkerRegistrationFactory.swift
-//  ServiceWorkerContainer
-//
-//  Created by alastair.coote on 29/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import ServiceWorker
 
@@ -26,7 +18,7 @@ public class WorkerRegistrationFactory {
             return active
         }
 
-        return try CoreDatabase.inConnection { connection in
+        return try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { connection in
 
             try connection.select(sql: "SELECT * FROM registrations WHERE registration_id = ?", values: [id]) { rs -> ServiceWorkerRegistration? in
 
@@ -68,6 +60,42 @@ public class WorkerRegistrationFactory {
         }
     }
 
+    public func getAll(withinOriginOf url: URL) throws -> [ServiceWorkerRegistration] {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            throw ErrorMessage("Could not create URL components from registration URL")
+        }
+        components.path = "/"
+
+        guard let rootURL = components.url else {
+            throw ErrorMessage("Could not create root URL for container")
+        }
+
+        let like = rootURL.absoluteString + "%"
+
+        return try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { db in
+            try db.select(sql: "SELECT registration_id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
+
+                var ids: [String] = []
+
+                while try resultSet.next() {
+
+                    guard let regID = try resultSet.string("registration_id") else {
+                        throw ErrorMessage("Found a registration with no ID")
+                    }
+
+                    ids.append(regID)
+                }
+
+                return try ids.map { id in
+                    guard let reg = try self.get(byId: id) else {
+                        throw ErrorMessage("Could not create registration that exists in database")
+                    }
+                    return reg
+                }
+            }
+        }
+    }
+
     public func get(byScope scope: URL) throws -> ServiceWorkerRegistration? {
         let active = self.activeRegistrations.allObjects.filter { $0.scope == scope }.first
 
@@ -75,7 +103,7 @@ public class WorkerRegistrationFactory {
             return active
         }
 
-        let id = try CoreDatabase.inConnection { connection in
+        let id = try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { connection in
 
             try connection.select(sql: "SELECT registration_id FROM registrations WHERE scope = ?", values: [scope]) { rs -> String? in
 
@@ -98,9 +126,30 @@ public class WorkerRegistrationFactory {
         }
     }
 
+    public func get(forPageURL url: URL) throws -> ServiceWorkerRegistration? {
+
+        return try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { db in
+
+            try db.select(sql: """
+                SELECT registration_id
+                FROM registrations WHERE ? LIKE (scope || '%')
+                ORDER BY length(scope) DESC
+                LIMIT 1
+            """, values: [url.absoluteString]) { resultSet in
+                if try resultSet.next() == false {
+                    return nil
+                }
+                guard let id = try resultSet.string("registration_id") else {
+                    throw ErrorMessage("Registration in database has no ID")
+                }
+                return try self.get(byId: id)
+            }
+        }
+    }
+
     public func create(scope: URL) throws -> ServiceWorkerRegistration {
 
-        return try CoreDatabase.inConnection { connection in
+        return try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { connection in
             let newRegID = UUID().uuidString
             _ = try connection.insert(sql: "INSERT INTO registrations (registration_id, scope) VALUES (?, ?)", values: [newRegID, scope])
             let reg = try ServiceWorkerRegistration(scope: scope, id: newRegID, workerIDs: [:], fromFactory: self)
@@ -131,7 +180,7 @@ public class WorkerRegistrationFactory {
     }
 
     func getReadyRegistration(for containerURL: URL) throws -> ServiceWorkerRegistration? {
-        return try CoreDatabase.inConnection { db in
+        return try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { db in
 
             // Not enough to just have an 'active' worker, it also needs to be in an 'activated'
             // state (i.e. not 'activating')
@@ -162,7 +211,7 @@ public class WorkerRegistrationFactory {
 
     func update(_ registration: ServiceWorkerRegistration, workerSlot: RegistrationWorkerSlot, to worker: ServiceWorker?) throws {
 
-        try CoreDatabase.inConnection { db in
+        try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { db in
 
             _ = try db.insert(sql: """
                 UPDATE registrations
@@ -176,7 +225,7 @@ public class WorkerRegistrationFactory {
     }
 
     func delete(_ registration: ServiceWorkerRegistration) throws {
-        try CoreDatabase.inConnection { db in
+        try DBConnectionPool.inConnection(at: self.workerFactory.getCoreDBPath(), type: .core) { db in
             try db.update(sql: "DELETE FROM registrations WHERE registration_id = ?", values: [registration.id])
         }
         self.activeRegistrations.remove(registration)

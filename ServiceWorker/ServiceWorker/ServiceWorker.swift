@@ -1,11 +1,3 @@
-//
-//  ServiceWorker.swift
-//  ServiceWorker
-//
-//  Created by alastair.coote on 14/06/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import JavaScriptCore
 import PromiseKit
@@ -20,8 +12,6 @@ import PromiseKit
     public var cacheStorage: CacheStorage?
 
     public var registration: ServiceWorkerRegistrationProtocol?
-
-    let loadContent: (ServiceWorker) -> String
 
     fileprivate var _installState: ServiceWorkerInstallState
 
@@ -44,21 +34,10 @@ import PromiseKit
         }
     }
 
-    public init(id: String, url: URL, state: ServiceWorkerInstallState, loadContent: @escaping (ServiceWorker) -> String) {
+    public init(id: String, url: URL, state: ServiceWorkerInstallState) {
 
         self.id = id
         self.url = url
-        self.loadContent = loadContent
-        _installState = state
-        super.init()
-    }
-
-    public init(id: String, url: URL, state: ServiceWorkerInstallState, content: String) {
-        self.id = id
-        self.url = url
-        loadContent = { _ in
-            content
-        }
         _installState = state
         super.init()
     }
@@ -77,12 +56,9 @@ import PromiseKit
         return Promise(value: ())
     }
 
-    @objc public init(id: String, url: URL, state: String, content: String) throws {
+    @objc public init(id: String, url: URL, state: String) throws {
         self.id = id
         self.url = url
-        loadContent = { _ in
-            content
-        }
 
         guard let installState = ServiceWorkerInstallState(rawValue: state) else {
             throw ErrorMessage("Could not parse install state string")
@@ -118,7 +94,11 @@ import PromiseKit
         return firstly {
             let env = try ServiceWorkerExecutionEnvironment(self)
 
-            let script = loadContent(self)
+            guard let delegate = self.delegate else {
+                throw ErrorMessage("This worker has no delegate to load content through")
+            }
+
+            let script = try delegate.serviceWorkerGetScriptContent(self)
             return env.evaluateScript(script, withSourceURL: self.url)
                 .then { _ -> ServiceWorkerExecutionEnvironment in
                     // return value doesn't really mean anything here

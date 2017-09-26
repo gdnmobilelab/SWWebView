@@ -1,11 +1,3 @@
-//
-//  ServiceWorkerExecutionEnvironment.swift
-//  ServiceWorker
-//
-//  Created by alastair.coote on 15/06/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import JavaScriptCore
 import PromiseKit
@@ -150,7 +142,7 @@ import PromiseKit
 
                 // Now, outside of our worker thread, we fetch the scripts
 
-                if self.worker.delegate?.serviceWorker?(self.worker, importScripts: urls, { err, importedScripts in
+                if self.worker.delegate?.serviceWorker(self.worker, importScripts: urls, { err, importedScripts in
                     error = err
                     scripts = importedScripts
 

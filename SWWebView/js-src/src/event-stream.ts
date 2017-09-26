@@ -1,6 +1,7 @@
 import { StreamingXHR } from "./util/streaming-xhr";
+import { EVENT_STREAM_PATH } from "swwebview-settings";
 
-let eventsURL = new URL("/___events___", window.location.href);
+let eventsURL = new URL(EVENT_STREAM_PATH, window.location.href);
 eventsURL.searchParams.append(
     "path",
     window.location.pathname + window.location.search

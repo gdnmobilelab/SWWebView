@@ -3,7 +3,7 @@ declare module "swwebview-settings" {
         API_REQUEST_METHOD: string;
         SW_PROTOCOL: string;
         GRAFTED_REQUEST_HEADER: string;
-        SW_API_HOST: string;
+        EVENT_STREAM_PATH: string;
     }
 
     var settings: SWWebViewSettings;

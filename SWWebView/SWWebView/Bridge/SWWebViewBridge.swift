@@ -49,11 +49,9 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
                 throw ErrorMessage("This stream does not exist")
             }
 
-            guard let matchingRoute = SWWebViewBridge.routes.first(where: { $0.key == path })?.value else {
-                throw ErrorMessage("Did not recognise this path")
-            }
+            let matchingRoute = SWWebViewBridge.routes.first(where: { $0.key == path })
 
-            return (try matchingRoute(eventStream, requestBody) ?? Promise(value: ()))
+            return (try matchingRoute?.value(eventStream, requestBody) ?? Promise(error: ErrorMessage("Route not found")))
                 .then { response in
                     eventStream.sendCustomUpdate(identifier: "promisereturn", object: [
                         "promiseIndex": promiseIndex,
@@ -62,7 +60,7 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
                 }.catch { error in
                     eventStream.sendCustomUpdate(identifier: "promisereturn", object: [
                         "promiseIndex": promiseIndex,
-                        "error": error
+                        "error": "\(error)"
                     ])
                 }
 

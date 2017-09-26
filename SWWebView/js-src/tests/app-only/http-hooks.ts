@@ -2,12 +2,12 @@ import { apiRequest, APIError } from "../../src/util/api-request";
 import { assert } from "chai";
 import { StreamingXHR } from "../../src/util/streaming-xhr";
 import { describeIfApp } from "../test-bootstrap";
-import { API_REQUEST_METHOD } from "swwebview-settings";
+import { API_REQUEST_METHOD, EVENT_STREAM_PATH } from "swwebview-settings";
 
 describeIfApp("Basic HTTP hooks for Service Worker API", () => {
-    it("Returns 404 when trying to access a URL we don't know", () => {
+    it("Returns 404 when trying to access a command we don't know", () => {
         return apiRequest("/does_not_exist").catch((error: APIError) => {
-            assert.equal(error.response.status, 404);
+            assert.equal(error.message, "Route not found");
         });
     });
 
@@ -18,7 +18,7 @@ describeIfApp("Basic HTTP hooks for Service Worker API", () => {
     });
 
     it("Can use a streaming XHR request", function(done) {
-        let stream = new StreamingXHR("/events?path=/");
+        let stream = new StreamingXHR(EVENT_STREAM_PATH + "?path=/");
         stream.open();
         stream.addEventListener(
             "serviceworkercontainer",

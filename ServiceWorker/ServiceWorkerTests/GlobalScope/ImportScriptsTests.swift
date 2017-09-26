@@ -1,29 +1,46 @@
-//
-//  ImportScriptsTests.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 24/07/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 import JavaScriptCore
 
 class ImportScriptsTests: XCTestCase {
 
-    override func tearDown() {
-        ServiceWorkerTestDelegate.reset()
+    class TestImportDelegate: ServiceWorkerDelegate {
+
+        typealias ImportFunction = ([URL], @escaping (Error?, [String]?) -> Void) -> Void
+
+        let importFunc: ImportFunction
+
+        init(_ importFunc: @escaping ImportFunction) {
+            self.importFunc = importFunc
+        }
+
+        func serviceWorker(_: ServiceWorker, importScripts: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
+            self.importFunc(importScripts, callback)
+        }
+
+        func serviceWorker(_: ServiceWorker, getStoragePathForDomain _: String) -> URL {
+            return URL(fileURLWithPath: NSTemporaryDirectory())
+        }
+
+        func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {
+            return ""
+        }
+
+        func getCoreDatabaseURL() -> URL {
+            return URL(fileURLWithPath: NSTemporaryDirectory())
+        }
     }
 
     func testImportingAScript() {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        ServiceWorkerTestDelegate.importScripts = { urls, _, cb in
+        let delegate = TestImportDelegate { urls, cb in
             XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
             cb(nil, ["testValue = 'hello';"])
         }
+
+        sw.delegate = delegate
 
         sw.evaluateScript("importScripts('test.js'); testValue;")
             .then { returnVal -> Void in
@@ -36,11 +53,13 @@ class ImportScriptsTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        ServiceWorkerTestDelegate.importScripts = { urls, _, cb in
+        let delegate = TestImportDelegate { urls, cb in
             XCTAssertEqual(urls[0].absoluteString, "http://www.example.com/test.js")
             XCTAssertEqual(urls[1].absoluteString, "http://www.example.com/test2.js")
             cb(nil, ["testValue = 'hello';", "testValue = 'hello2';"])
         }
+
+        sw.delegate = delegate
 
         sw.evaluateScript("importScripts(['test.js', 'test2.js']); testValue;")
             .then { returnVal in
@@ -53,12 +72,14 @@ class ImportScriptsTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        ServiceWorkerTestDelegate.importScripts = { _, _, cb in
+        let delegate = TestImportDelegate { _, cb in
 
             DispatchQueue.global().async {
                 cb(nil, ["testValue = 'hello';"])
             }
         }
+
+        sw.delegate = delegate
 
         sw.evaluateScript("importScripts('test.js'); testValue;")
             .then { returnVal in

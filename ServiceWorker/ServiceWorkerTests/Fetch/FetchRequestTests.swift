@@ -1,11 +1,3 @@
-//
-//  FetchRequestTests.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 25/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 
@@ -13,7 +5,7 @@ class FetchRequestTests: XCTestCase {
 
     func testShouldConstructAbsoluteURL() {
 
-        let sw = ServiceWorker(id: "TEST", url: URL(string: "http://www.example.com/sw.js")!, state: .activated, content: "")
+        let sw = TestWorker(id: "TEST", state: .activated, url: URL(string: "http://www.example.com/sw.js")!, content: "")
 
         sw.evaluateScript("new Request('./test')")
             .then { val -> Void in

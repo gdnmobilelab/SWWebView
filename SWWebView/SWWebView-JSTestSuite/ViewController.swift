@@ -26,14 +26,14 @@ class ViewController: UIViewController {
 
         Log.info = { NSLog($0) }
 
-        CoreDatabase.dbDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let storageURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("testapp-db", isDirectory: true)
 
         do {
-            if FileManager.default.fileExists(atPath: CoreDatabase.dbDirectory!.path) {
-                try FileManager.default.removeItem(at: CoreDatabase.dbDirectory!)
+            if FileManager.default.fileExists(atPath: storageURL.path) {
+                try FileManager.default.removeItem(at: storageURL)
             }
-            try FileManager.default.createDirectory(at: CoreDatabase.dbDirectory!, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(at: storageURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
             fatalError()
         }
@@ -42,7 +42,7 @@ class ViewController: UIViewController {
 
         config.userContentController.addUserScript(headerScript)
 
-        self.coordinator = SWWebViewCoordinator()
+        self.coordinator = SWWebViewCoordinator(storageURL: storageURL)
 
         let swView = SWWebView(frame: self.view.frame, configuration: config)
         swView.serviceWorkerPermittedDomains.append("localhost:4567")

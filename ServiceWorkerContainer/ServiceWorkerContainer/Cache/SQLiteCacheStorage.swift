@@ -1,11 +1,3 @@
-//
-//  SQLiteCacheStorage.swift
-//  ServiceWorkerContainer
-//
-//  Created by alastair.coote on 22/09/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import ServiceWorker
 import JavaScriptCore
@@ -63,19 +55,17 @@ import JavaScriptCore
         if let doesExist = existing {
             return doesExist
         }
-        
+
         let newConnection = try SQLiteConnection(url)
         self.currentOpenConnections.add(newConnection)
         return newConnection
     }
-    
-    fileprivate static func getURL(for cacheName: String) -> URL {
-        
-    }
+
+    //    fileprivate static func getURL(for _: String) -> URL {
+    //    }
 
     func put(cacheName _: String, request _: FetchRequest, response _: FetchResponse) {
-        
-        let connection = SQLiteCacheStorage.getConnection(for: <#T##URL#>)
-        
+
+        //        let connection = SQLiteCacheStorage.getConnection(for: <#T##URL#>)
     }
 }

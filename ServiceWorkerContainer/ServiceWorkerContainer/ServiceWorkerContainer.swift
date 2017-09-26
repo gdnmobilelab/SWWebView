@@ -1,11 +1,3 @@
-//
-//  ServiceWorkerContainer.swift
-//  ServiceWorkerContainer
-//
-//  Created by alastair.coote on 13/06/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import Foundation
 import PromiseKit
 import ServiceWorker
@@ -94,77 +86,27 @@ import ServiceWorker
         }
     }
 
-    fileprivate func getRegistrationsSync() throws -> [ServiceWorkerRegistration] {
-        return try CoreDatabase.inConnection { db in
-
-            guard var components = URLComponents(url: self.url, resolvingAgainstBaseURL: true) else {
-                throw ErrorMessage("Could not create URL components from registration URL")
-            }
-            components.path = "/"
-
-            guard let rootURL = components.url else {
-                throw ErrorMessage("Could not create root URL for container")
-            }
-
-            let like = rootURL.absoluteString + "%"
-
-            return try db.select(sql: "SELECT registration_id FROM registrations WHERE scope LIKE ?", values: [like] as [Any]) { resultSet -> [ServiceWorkerRegistration] in
-
-                var ids: [String] = []
-
-                while try resultSet.next() {
-
-                    guard let regID = try resultSet.string("registration_id") else {
-                        throw ErrorMessage("Found a registration with no ID")
-                    }
-
-                    ids.append(regID)
-                }
-
-                return try ids.map { id in
-                    guard let reg = try self.registrationFactory.get(byId: id) else {
-                        throw ErrorMessage("Could not create registration that exists in database")
-                    }
-                    return reg
-                }
-            }
-        }
-    }
-
     public func getRegistrations() -> Promise<[ServiceWorkerRegistration]> {
-        return firstly {
-            Promise(value: try self.getRegistrationsSync())
+        do {
+            return Promise(value: try self.registrationFactory.getAll(withinOriginOf: self.url))
+        } catch {
+            return Promise(error: error)
         }
     }
 
     public func getRegistration(_ scope: URL? = nil) -> Promise<ServiceWorkerRegistration?> {
 
-        let scopeToCheck = scope ?? self.url
+        do {
+            let scopeToCheck = scope ?? self.url
 
-        return CoreDatabase.inConnection { db in
-
-            try db.select(sql: """
-                SELECT registration_id
-                FROM registrations WHERE ? LIKE (scope || '%')
-                ORDER BY length(scope) DESC
-                LIMIT 1
-            """, values: [scopeToCheck.absoluteString]) { resultSet -> Promise<String?> in
-                if try resultSet.next() == false {
-                    return Promise(value: nil)
-                }
-                guard let id = try resultSet.string("registration_id") else {
-                    throw ErrorMessage("Registration in database has no ID")
-                }
-                return Promise(value: id)
-            }
-        }
-        .then { regId -> ServiceWorkerRegistration? in
-
-            guard let reg = regId else {
-                return nil
+            if scopeToCheck.host != self.url.host {
+                throw ErrorMessage("Cannot get a registration that is not from the same origin")
             }
 
-            return try self.registrationFactory.get(byId: reg)
+            return Promise(value: try self.registrationFactory.get(forPageURL: scopeToCheck))
+
+        } catch {
+            return Promise(error: error)
         }
     }
 

@@ -23,11 +23,14 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
 
     let workerFactory: WorkerFactory
     let registrationFactory: WorkerRegistrationFactory
+    let storageURL: URL
 
-    public init() {
+    public init(storageURL: URL) {
+        self.storageURL = storageURL
         self.workerFactory = WorkerFactory()
         self.registrationFactory = WorkerRegistrationFactory(withWorkerFactory: self.workerFactory)
         self.workerFactory.clientsDelegateProvider = self
+        self.workerFactory.serviceWorkerDelegateProvider = ServiceWorkerStorageProvider(storageURL: storageURL)
     }
 
     var inUseContainers: [ContainerAndUsageNumber] = []

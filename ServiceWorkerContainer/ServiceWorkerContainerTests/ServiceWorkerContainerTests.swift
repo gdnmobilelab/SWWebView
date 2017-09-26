@@ -1,11 +1,3 @@
-//
-//  ServiceWorkerContainerTests.swift
-//  ServiceWorkerContainerTests
-//
-//  Created by alastair.coote on 13/06/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorkerContainer
 import PromiseKit

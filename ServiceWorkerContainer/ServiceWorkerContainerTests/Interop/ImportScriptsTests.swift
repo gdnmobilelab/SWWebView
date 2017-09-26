@@ -1,11 +1,3 @@
-//
-//  ImportScriptsTests.swift
-//  ServiceWorkerContainerTests
-//
-//  Created by alastair.coote on 27/07/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 import GCDWebServers
 import ServiceWorker

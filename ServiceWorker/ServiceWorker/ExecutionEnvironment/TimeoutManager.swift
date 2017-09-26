@@ -1,11 +1,3 @@
-//
-//  TimeoutManager.swift
-//  hybrid
-//
-//  Created by alastair.coote on 12/07/2016.
-//  Copyright © 2016 Alastair Coote. All rights reserved.
-//
-
 import Foundation
 import JavaScriptCore
 

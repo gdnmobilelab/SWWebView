@@ -252,7 +252,7 @@ var StreamingXHR = (function (_super) {
     return StreamingXHR;
 }(index));
 
-var eventsURL = new URL("/___events___", window.location.href);
+var eventsURL = new URL(swwebviewSettings.EVENT_STREAM_PATH, window.location.href);
 eventsURL.searchParams.append("path", window.location.pathname + window.location.search);
 var eventStream = new StreamingXHR(eventsURL.href);
 

@@ -1,11 +1,3 @@
-//
-//  FetchOperation.swift
-//  ServiceWorkerTests
-//
-//  Created by alastair.coote on 14/07/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import XCTest
 @testable import ServiceWorker
 import GCDWebServers
@@ -195,7 +187,7 @@ class FetchOperationTests: XCTestCase {
             GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
         }
 
-        let sw = ServiceWorker(id: "TEST", url: TestWeb.serverURL, state: .activated, content: "")
+        let sw = TestWorker(id: "TEST", state: .activated, url: TestWeb.serverURL, content: "")
 
         sw.evaluateScript("""
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)')
