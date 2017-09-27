@@ -84,7 +84,7 @@ class FetchTask: NSObject {
             headers.append(keyString, valString)
         }
 
-        let fetchResponse = FetchResponse(request: self.request, url: url, headers: headers, status: initialResponse.statusCode, redirected: self.redirected)
+        let fetchResponse = FetchResponse(url: url, headers: headers, status: initialResponse.statusCode, redirected: self.redirected)
 
         // Establish a strong reference between the response and task
         fetchResponse.fetchTask = self

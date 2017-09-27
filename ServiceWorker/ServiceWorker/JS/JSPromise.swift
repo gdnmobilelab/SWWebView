@@ -2,13 +2,13 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-class JSPromise {
+public class JSPromise {
 
     unowned let context: JSContext
     let virtualMachine: JSVirtualMachine
-    fileprivate var fulfill: JSManagedValue?
-    fileprivate var reject: JSManagedValue?
-    fileprivate var promiseJSValue: JSManagedValue?
+    fileprivate var fulfill: JSValue?
+    fileprivate var reject: JSValue?
+    fileprivate var promiseJSValue: JSValue?
 
     fileprivate let thereWasNoPromiseConstructor: Bool
 
@@ -26,38 +26,39 @@ class JSPromise {
 
         let capture: @convention(block) (JSValue, JSValue) -> Void = { [unowned self] (fulfillVal: JSValue, rejectVal: JSValue) in
 
-            let fulfillManaged = JSManagedValue(value: fulfillVal)
-            let rejectManaged = JSManagedValue(value: rejectVal)
+            //            let fulfillManaged = JSManagedValue(value: fulfillVal)
+            //            let rejectManaged = JSManagedValue(value: rejectVal)
+            //
+            //            self.virtualMachine.addManagedReference(fulfillManaged, withOwner: self)
+            //            self.virtualMachine.addManagedReference(rejectManaged, withOwner: self)
 
-            self.virtualMachine.addManagedReference(fulfillManaged, withOwner: self)
-            self.virtualMachine.addManagedReference(rejectManaged, withOwner: self)
-
-            self.fulfill = fulfillManaged
-            self.reject = rejectManaged
+            self.fulfill = fulfillVal
+            self.reject = rejectVal
         }
 
         let val = promiseConstructor.construct(withArguments: [unsafeBitCast(capture, to: AnyObject.self)])
-        promiseJSValue = JSManagedValue(value: val)
-        virtualMachine.addManagedReference(self.promiseJSValue, withOwner: self)
+        promiseJSValue = val // JSManagedValue(value: val)
+        //        virtualMachine.addManagedReference(self.promiseJSValue, withOwner: self)
     }
 
     public var jsValue: JSValue? {
-        return self.promiseJSValue?.value
+        return self.promiseJSValue
     }
 
     deinit {
-        self.virtualMachine.removeManagedReference(self.fulfill, withOwner: self)
-        self.virtualMachine.removeManagedReference(self.reject, withOwner: self)
-        self.virtualMachine.removeManagedReference(self.promiseJSValue, withOwner: self)
+        self.fulfill = nil
+        self.reject = nil
+        self.promiseJSValue = nil
     }
 
     public func fulfill(_ value: Any?) {
 
         if let fulfill = self.fulfill {
             if let val = value {
-                fulfill.value.call(withArguments: [val])
+
+                fulfill.call(withArguments: [val])
             } else {
-                fulfill.value.call(withArguments: [NSNull()])
+                fulfill.call(withArguments: [NSNull()])
             }
         } else if self.thereWasNoPromiseConstructor == true {
             Log.warn?("Tried to resolve a promise in a JS context that has no promise constructor")
@@ -73,7 +74,7 @@ class JSPromise {
                 Log.error?("Could not create JS instance of promise rejection error")
                 return
             }
-            reject.value.call(withArguments: [err])
+            reject.call(withArguments: [err])
         } else if self.thereWasNoPromiseConstructor == true {
             Log.warn?("Tried to reject a promise in a JS context that has no promise constructor")
         } else {

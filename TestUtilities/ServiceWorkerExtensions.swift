@@ -11,16 +11,16 @@ import Foundation
 
 class StaticContentDelegate : ServiceWorkerDelegate {
     
+    func serviceWorkerGetDomainStoragePath(_ worker: ServiceWorker) throws -> URL {
+        return StaticContentDelegate.storageURL
+            .appendingPathComponent("domains", isDirectory: true)
+            .appendingPathComponent(worker.url.host!, isDirectory: true)
+    }
+    
     static let storageURL = URL(fileURLWithPath: NSTemporaryDirectory())
     
     func serviceWorker(_: ServiceWorker, importScripts: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
         callback(ErrorMessage("not implemented"), nil)
-    }
-    
-    func serviceWorker(_: ServiceWorker, getStoragePathForDomain domain: String) -> URL {
-        return StaticContentDelegate.storageURL
-            .appendingPathComponent("domains", isDirectory: true)
-            .appendingPathComponent(domain, isDirectory: true)
     }
     
     func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {

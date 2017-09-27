@@ -97,7 +97,13 @@ import ServiceWorker
     public func getRegistration(_ scope: URL? = nil) -> Promise<ServiceWorkerRegistration?> {
 
         do {
-            let scopeToCheck = scope ?? self.url
+            var scopeToCheck = self.url
+            if let specifiedScope = scope {
+                guard let specifiedURL = URL(string: specifiedScope.absoluteString, relativeTo: self.url) else {
+                    throw ErrorMessage("Could not parse given scope into a URL")
+                }
+                scopeToCheck = specifiedURL
+            }
 
             if scopeToCheck.host != self.url.host {
                 throw ErrorMessage("Cannot get a registration that is not from the same origin")

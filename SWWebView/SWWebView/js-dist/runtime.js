@@ -368,12 +368,14 @@ function addProxy(port, id) {
     currentProxies.set(id, new MessagePortProxy(port, id));
 }
 eventStream.addEventListener("messageport", function (e) {
+    // Any message we receive must be associated with an existing port proxy
     var existingProxy = currentProxies.get(e.data.id);
     if (!existingProxy) {
         throw new Error("Tried to send " + e.data.type + " to MessagePort that does not exist");
     }
     if (e.data.type == "message") {
-        console.log("Received message", e.data);
+        // A message can send along new MessagePorts of its own, so if it has,
+        // we need to map the wrapper IDs sent through with new MessagePorts.
         var ports = e.data.portIDs.map(function (id) {
             var channel = new MessageChannel();
             addProxy(channel.port2, id);

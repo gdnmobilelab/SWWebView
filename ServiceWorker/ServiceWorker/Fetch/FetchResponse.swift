@@ -10,12 +10,11 @@ import JavaScriptCore
     // collected. We also pass it along when cloning responses.
     internal var fetchTask: FetchTask?
 
-    let headers: FetchHeaders
+    public let headers: FetchHeaders
     public fileprivate(set) var status: Int
 
-    let request: FetchRequest
-    let url: URL
-    let redirected: Bool
+    public let url: URL?
+    public let redirected: Bool
 
     internal var dataStream: WritableStreamProtocol = MemoryWriteStream()
 
@@ -23,18 +22,16 @@ import JavaScriptCore
         return self.status >= 200 && self.status < 300
     }
 
-    public var statusText: String {
+    public let statusText: String
 
-        if let status = HttpStatusCodes[self.status] {
-            return status
-        }
-        return "Unassigned"
+    convenience init(url: URL?, headers: FetchHeaders, status: Int, redirected: Bool) {
+        self.init(url: url, headers: headers, status: status, statusText: HttpStatusCodes[status] ?? "Unknown", redirected: redirected)
     }
 
-    init(request: FetchRequest, url: URL, headers: FetchHeaders, status: Int, redirected: Bool) {
-        self.request = request
+    init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
         self.url = url
         self.status = status
+        self.statusText = statusText
         self.headers = headers
         self.redirected = redirected
         super.init()
@@ -46,7 +43,7 @@ import JavaScriptCore
             throw ErrorMessage("Cannot clone response after task has been completed")
         }
 
-        let clone = FetchResponse(request: request, url: url, headers: headers, status: status, redirected: redirected)
+        let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected)
         clone.fetchTask = fetchTask
         fetchTask.add(response: clone)
         return clone

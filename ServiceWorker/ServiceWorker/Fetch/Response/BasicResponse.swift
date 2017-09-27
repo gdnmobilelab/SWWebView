@@ -13,14 +13,19 @@ import JavaScriptCore
         return self.filteredHeaders
     }
 
-    override init(from response: FetchResponse) throws {
+    fileprivate static func filterHeaders(_ headers: FetchHeaders) -> FetchHeaders {
         let filteredHeaders = FetchHeaders()
 
-        filteredHeaders.values = response.headers.values.filter { header in
+        filteredHeaders.values = headers.values.filter { header in
             return header.key.lowercased() != "set-cookie" && header.key.lowercased() != "set-cookie2"
         }
 
-        self.filteredHeaders = filteredHeaders
+        return filteredHeaders
+    }
+
+    override init(from response: FetchResponse) throws {
+
+        self.filteredHeaders = BasicResponse.filterHeaders(response.headers)
 
         try super.init(from: response)
     }

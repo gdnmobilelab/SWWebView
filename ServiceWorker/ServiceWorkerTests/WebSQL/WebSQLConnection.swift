@@ -28,12 +28,12 @@ class WebSQLConnectionTests: XCTestCase {
     }
 
     class WebSQLTestDelegate: ServiceWorkerDelegate {
-        func serviceWorker(_: ServiceWorker, importScripts _: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
-            callback(ErrorMessage("not implemented"), nil)
+        func serviceWorkerGetDomainStoragePath(_ worker: ServiceWorker) throws -> URL {
+            return webSQLTestPath.appendingPathComponent(worker.url.host!, isDirectory: true)
         }
 
-        func serviceWorker(_: ServiceWorker, getStoragePathForDomain domain: String) -> URL {
-            return webSQLTestPath.appendingPathComponent(domain, isDirectory: true)
+        func serviceWorker(_: ServiceWorker, importScripts _: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
+            callback(ErrorMessage("not implemented"), nil)
         }
 
         func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {

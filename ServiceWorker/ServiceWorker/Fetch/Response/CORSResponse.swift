@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 
 private var CORSHeaders = [
     "cache-control",

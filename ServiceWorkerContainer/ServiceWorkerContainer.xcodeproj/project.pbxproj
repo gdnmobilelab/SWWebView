@@ -30,7 +30,6 @@
 		8A2360201F35FDCC00969268 /* ServiceWorkerContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */; };
 		8A2360221F35FDCC00969268 /* ServiceWorkerContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 8A2360141F35FDCC00969268 /* ServiceWorkerContainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A23603C1F35FDF800969268 /* ServiceWorkerContainer.swift in Headers */ = {isa = PBXBuildFile; fileRef = 8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */; };
-		8A23603D1F35FE1B00969268 /* ServiceWorkerHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */; };
 		8A23603F1F35FE1B00969268 /* ServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360391F35FDF800969268 /* ServiceWorkerRegistration.swift */; };
 		8A2360401F35FE1B00969268 /* ServiceWorkerRegistrationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23603A1F35FDF800969268 /* ServiceWorkerRegistrationOptions.swift */; };
 		8A2360411F35FE1B00969268 /* ServiceWorkerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */; };
@@ -102,7 +101,6 @@
 		8A23601A1F35FDCC00969268 /* ServiceWorkerContainerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ServiceWorkerContainerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerTests.swift; sourceTree = "<group>"; };
 		8A2360211F35FDCC00969268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerHooks.swift; sourceTree = "<group>"; };
 		8A2360331F35FDF800969268 /* CoreDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDatabase.swift; sourceTree = "<group>"; };
 		8A2360341F35FDF800969268 /* DbExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DbExtensions.swift; sourceTree = "<group>"; };
 		8A2360351F35FDF800969268 /* SharedResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedResources.swift; sourceTree = "<group>"; };
@@ -207,7 +205,6 @@
 		8A23602B1F35FDF800969268 /* Interop */ = {
 			isa = PBXGroup;
 			children = (
-				8A23602C1F35FDF800969268 /* ServiceWorkerHooks.swift */,
 				8A181AC21F798774005CED14 /* ServiceWorkerStorageProvider.swift */,
 			);
 			path = Interop;
@@ -496,7 +493,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A181AB71F7568F3005CED14 /* SQLiteCache.swift in Sources */,
-				8A23603D1F35FE1B00969268 /* ServiceWorkerHooks.swift in Sources */,
 				8A23603F1F35FE1B00969268 /* ServiceWorkerRegistration.swift in Sources */,
 				8A43C1721F4C91EA001221C1 /* WorkerInstallationError.swift in Sources */,
 				8A23B46F1F55C38500FDD8D4 /* RegistrationWorkerSlots.swift in Sources */,

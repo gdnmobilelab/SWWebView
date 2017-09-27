@@ -19,31 +19,31 @@ class CacheTests: XCTestCase {
             super.init()
         }
 
-        func match(_: JSValue, _: [String: Any]) -> JSValue {
+        func match(_: JSValue, _: [String: Any]) -> JSValue? {
             return stubReject()
         }
 
-        func matchAll(_: JSValue, _: [String: Any]) -> JSValue {
+        func matchAll(_: JSValue, _: [String: Any]) -> JSValue? {
             return stubReject()
         }
 
-        func add(_: JSValue) -> JSValue {
+        func add(_: JSValue) -> JSValue? {
             return stubReject()
         }
 
-        func addAll(_: JSValue) -> JSValue {
+        func addAll(_: JSValue) -> JSValue? {
             return stubReject()
         }
 
-        func put(_: FetchRequest, _: FetchResponse) -> JSValue {
+        func put(_: FetchRequest, _: FetchResponse) -> JSValue? {
             return stubReject()
         }
 
-        func delete(_: JSValue, _: [String: Any]) -> JSValue {
+        func delete(_: JSValue, _: [String: Any]) -> JSValue? {
             return stubReject()
         }
 
-        func keys(_: JSValue, _: [String: Any]) -> JSValue {
+        func keys(_: JSValue, _: [String: Any]) -> JSValue? {
             let promise = JSPromise(context: JSContext.current())
             let testKeys = ["\(self.name)-file1.js", "\(self.name)-file2.css"]
             promise.fulfill(testKeys)
@@ -60,25 +60,25 @@ class CacheTests: XCTestCase {
             self.names = names
         }
 
-        func match(_: JSValue, _: [String: Any]) -> JSValue {
+        func match(_: JSValue, _: [String: Any]) -> JSValue? {
             return stubReject()
         }
 
-        func has(_: String) -> JSValue {
+        func has(_: String) -> JSValue? {
             return stubReject()
         }
 
-        func open(_ cacheName: String) -> JSValue {
+        func open(_ cacheName: String) -> JSValue? {
             let promise = JSPromise(context: JSContext.current())
             promise.fulfill(TestCache(name: cacheName))
             return promise.jsValue!
         }
 
-        func delete(_: String) -> JSValue {
+        func delete(_: String) -> JSValue? {
             return stubReject()
         }
 
-        func keys() -> JSValue {
+        func keys() -> JSValue? {
 
             let promise = JSPromise(context: JSContext.current())
             promise.fulfill(self.names)

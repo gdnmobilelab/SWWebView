@@ -30,6 +30,7 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
         self.workerFactory = WorkerFactory()
         self.registrationFactory = WorkerRegistrationFactory(withWorkerFactory: self.workerFactory)
         self.workerFactory.clientsDelegateProvider = self
+        self.workerFactory.cacheStorageProvider = self
         self.workerFactory.serviceWorkerDelegateProvider = ServiceWorkerStorageProvider(storageURL: storageURL)
     }
 
@@ -114,6 +115,6 @@ public class SWWebViewCoordinator: SWWebViewContainerDelegate, ServiceWorkerClie
     }
 
     public func createCacheStorage(_ worker: ServiceWorker) throws -> CacheStorage {
-        return try SQLiteCacheStorage(for: worker.url)
+        return try SQLiteCacheStorage(for: worker)
     }
 }

@@ -138,9 +138,12 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
         }
     }
 
-    public func serviceWorker(_: ServiceWorker, getStoragePathForDomain domain: String) -> URL {
+    public func serviceWorkerGetDomainStoragePath(_ worker: ServiceWorker) throws -> URL {
+        guard let host = worker.url.host else {
+            throw ErrorMessage("Cannot get storage URL for worker with no host")
+        }
         return self.storageURL
             .appendingPathComponent("domains", isDirectory: true)
-            .appendingPathComponent(domain, isDirectory: true)
+            .appendingPathComponent(host, isDirectory: true)
     }
 }

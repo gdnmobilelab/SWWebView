@@ -6,6 +6,10 @@ class ImportScriptsTests: XCTestCase {
 
     class TestImportDelegate: ServiceWorkerDelegate {
 
+        func serviceWorkerGetDomainStoragePath(_: ServiceWorker) throws -> URL {
+            throw ErrorMessage("Not implemented")
+        }
+
         typealias ImportFunction = ([URL], @escaping (Error?, [String]?) -> Void) -> Void
 
         let importFunc: ImportFunction
@@ -16,10 +20,6 @@ class ImportScriptsTests: XCTestCase {
 
         func serviceWorker(_: ServiceWorker, importScripts: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
             self.importFunc(importScripts, callback)
-        }
-
-        func serviceWorker(_: ServiceWorker, getStoragePathForDomain _: String) -> URL {
-            return URL(fileURLWithPath: NSTemporaryDirectory())
         }
 
         func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {

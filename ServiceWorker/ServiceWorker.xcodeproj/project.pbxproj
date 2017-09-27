@@ -125,6 +125,8 @@
 		8AD1410B1F716CA800ED2D2C /* JSEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */; };
 		8AD1410D1F716E9A00ED2D2C /* SwiftEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */; };
 		8AD141101F71739E00ED2D2C /* MessagePortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410F1F71739E00ED2D2C /* MessagePortTests.swift */; };
+		8AF48A5E1F7C00CD0036537B /* ConstructableFetchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF48A5D1F7C00CD0036537B /* ConstructableFetchResponse.swift */; };
+		8AF48A601F7C06E90036537B /* ConstructableFetchResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF48A5F1F7C06E90036537B /* ConstructableFetchResponseTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -255,6 +257,8 @@
 		8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSEventListener.swift; sourceTree = "<group>"; };
 		8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEventListener.swift; sourceTree = "<group>"; };
 		8AD1410F1F71739E00ED2D2C /* MessagePortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortTests.swift; sourceTree = "<group>"; };
+		8AF48A5D1F7C00CD0036537B /* ConstructableFetchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstructableFetchResponse.swift; sourceTree = "<group>"; };
+		8AF48A5F1F7C06E90036537B /* ConstructableFetchResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstructableFetchResponseTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -492,6 +496,7 @@
 				8AC754B21F31235200C6B70A /* FetchResponseProxy.swift */,
 				8AC754B31F31235200C6B70A /* OpaqueResponse.swift */,
 				8AC754B41F31235200C6B70A /* ResponseType.swift */,
+				8AF48A5D1F7C00CD0036537B /* ConstructableFetchResponse.swift */,
 			);
 			path = Response;
 			sourceTree = "<group>";
@@ -550,6 +555,7 @@
 				8AC754FA1F312A1200C6B70A /* FetchOperationCORS.swift */,
 				8AC754FB1F312A1200C6B70A /* FetchResponse.swift */,
 				8ACCD72A1F50719300F444B6 /* FetchRequestTests.swift */,
+				8AF48A5F1F7C06E90036537B /* ConstructableFetchResponseTests.swift */,
 			);
 			path = Fetch;
 			sourceTree = "<group>";
@@ -928,6 +934,7 @@
 				8AC754EA1F31252B00C6B70A /* ServiceWorkerExecutionEnvironment.swift in Sources */,
 				8AC755371F3240BB00C6B70A /* SQLiteBlobWriteStream.swift in Sources */,
 				8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */,
+				8AF48A5E1F7C00CD0036537B /* ConstructableFetchResponse.swift in Sources */,
 				8AC754F61F31293C00C6B70A /* SharedLogInterface.swift in Sources */,
 				8ACCD7341F50936600F444B6 /* WorkerLocation.swift in Sources */,
 				8A43C18A1F4F2C79001221C1 /* Clients.swift in Sources */,
@@ -959,6 +966,7 @@
 				8AC755131F312A3200C6B70A /* ReadableStream.swift in Sources */,
 				8AC755141F312A3200C6B70A /* Migrate.swift in Sources */,
 				8AC755291F32404C00C6B70A /* PromiseAssert.swift in Sources */,
+				8AF48A601F7C06E90036537B /* ConstructableFetchResponseTests.swift in Sources */,
 				8AC755151F312A3200C6B70A /* EventTargetTests.swift in Sources */,
 				8AC755161F312A3200C6B70A /* ExtendableEventTests.swift in Sources */,
 				8AC755171F312A3200C6B70A /* FetchHeadersTests.swift in Sources */,

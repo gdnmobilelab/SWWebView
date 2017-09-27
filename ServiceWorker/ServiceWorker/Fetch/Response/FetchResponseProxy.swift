@@ -4,7 +4,7 @@ import PromiseKit
 
 @objc class FetchResponseProxy: NSObject, FetchResponseProtocol, FetchResponseJSExports {
 
-    var url: URL {
+    var url: URL? {
         return self._internal.url
     }
 
@@ -19,6 +19,11 @@ import PromiseKit
     let _internal: FetchResponse
 
     init(from response: FetchResponse) throws {
+        self._internal = response
+    }
+
+    init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
+        let response = FetchResponse(url: url, headers: headers, status: status, statusText: statusText, redirected: redirected)
         self._internal = response
     }
 
@@ -118,6 +123,6 @@ import PromiseKit
     }
 
     var urlString: String {
-        return self.url.absoluteString
+        return self.url?.absoluteString ?? ""
     }
 }

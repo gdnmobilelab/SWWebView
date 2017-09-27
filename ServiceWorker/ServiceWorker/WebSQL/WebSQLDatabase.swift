@@ -92,12 +92,8 @@ import PromiseKit
 
     static func openDatabase(for worker: ServiceWorker, name: String, withQueue queue: DispatchQueue) throws -> WebSQLDatabase {
 
-        guard let host = worker.url.host else {
-            throw ErrorMessage("Worker URL has no host, cannot create WebSQL function")
-        }
-
-        guard let storagePath = worker.delegate?.serviceWorker(worker, getStoragePathForDomain: host) else {
-            throw ErrorMessage("ServiceWorkerDelegate does not implement getStoragePathForDomain")
+        guard let storagePath = try worker.delegate?.serviceWorkerGetDomainStoragePath(worker) else {
+            throw ErrorMessage("ServiceWorker has no delegate")
         }
 
         guard let escapedName = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) else {

@@ -25,6 +25,10 @@ import PromiseKit
     func cloneResponseExports() -> FetchResponseJSExports?
 }
 
+@objc public protocol ConstructableFetchResponseJSExports: FetchResponseJSExports, JSExport {
+    init(body: JSValue, options: [String: Any]?)
+}
+
 public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }
@@ -32,5 +36,5 @@ public protocol FetchResponseProtocol: FetchResponseJSExports {
     func text() -> Promise<String>
     func data() -> Promise<Data>
     func json() -> Promise<Any?>
-    var url: URL { get }
+    var url: URL? { get }
 }

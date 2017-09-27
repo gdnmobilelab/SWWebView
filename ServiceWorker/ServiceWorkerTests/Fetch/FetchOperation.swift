@@ -114,7 +114,7 @@ class FetchOperationTests: XCTestCase {
             .then { response -> Void in
                 XCTAssertEqual(response.status, 201)
 
-                XCTAssertEqual(response.url.absoluteString, TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)
+                XCTAssertEqual(response.url!.absoluteString, TestWeb.serverURL.appendingPathComponent("/test.txt").absoluteString)
             }
             .assertResolves()
     }
@@ -131,7 +131,7 @@ class FetchOperationTests: XCTestCase {
             .then { response -> Void in
                 XCTAssert(response.status == 301, "Should be a 301 status")
                 XCTAssert(response.headers.get("Location") == "/test.txt", "URL should be correct")
-                XCTAssert(response.url.absoluteString == TestWeb.serverURL.appendingPathComponent("/redirect-me").absoluteString)
+                XCTAssert(response.url!.absoluteString == TestWeb.serverURL.appendingPathComponent("/redirect-me").absoluteString)
                 expectNotRedirect.fulfill()
             }.catch { _ in
                 XCTFail()

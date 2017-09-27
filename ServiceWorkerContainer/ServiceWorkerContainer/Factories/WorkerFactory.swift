@@ -66,6 +66,9 @@ public class WorkerFactory {
                 let worker = ServiceWorker(id: id, url: workerURL, state: state)
                 worker.clientsDelegate = self.clientsDelegateProvider
                 worker.delegate = self.serviceWorkerDelegateProvider
+                if let cacheStorage = self.cacheStorageProvider {
+                    worker.cacheStorage = try cacheStorage.createCacheStorage(worker)
+                }
                 worker.registration = registration
 
                 if let storageProvider = self.cacheStorageProvider {

@@ -2,7 +2,7 @@ import Foundation
 import PromiseKit
 import JavaScriptCore
 
-extension Promise {
+public extension Promise {
     func toJSPromise(in context: JSContext) -> JSValue? {
 
         let jsPromise = JSPromise(context: context)
