@@ -35,7 +35,7 @@ class CacheTests: XCTestCase {
             return stubReject()
         }
 
-        func put(_: FetchRequest, _: FetchResponse) -> JSValue? {
+        func put(_: FetchRequest, _: CacheableFetchResponse) -> JSValue? {
             return stubReject()
         }
 

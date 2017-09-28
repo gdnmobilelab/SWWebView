@@ -29,6 +29,10 @@ import PromiseKit
     init(body: JSValue, options: [String: Any]?)
 }
 
+@objc public protocol CacheableFetchResponse: FetchResponseJSExports {
+    var internalResponse: FetchResponse { get }
+}
+
 public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }

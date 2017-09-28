@@ -1,7 +1,7 @@
 import Foundation
 import PromiseKit
 
-protocol WritableStreamProtocol {
+public protocol WritableStreamProtocol {
 
     func enqueue(_ newData: Data)
 

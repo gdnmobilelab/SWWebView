@@ -6,9 +6,7 @@ class FetchTask: NSObject {
     let task: URLSessionDataTask
     let request: FetchRequest
 
-    // We don't want to keep these responses if whatever JS code is using them
-    // disposes of them
-    var responses = NSHashTable<FetchResponse>.weakObjects()
+    var responses = Set<FetchResponse>()
 
     fileprivate let hasResponsePromise = Promise<FetchResponse>.pending()
 
@@ -88,23 +86,32 @@ class FetchTask: NSObject {
 
         // Establish a strong reference between the response and task
         fetchResponse.fetchTask = self
+
+        // Abstracting this out because custom responses still need a way to use
+        // this without depending on FetchTask
+        fetchResponse.startStream = { [weak self] in
+            self?.beginDownloadIfNotAlreadyStarted()
+        }
         self.add(response: fetchResponse)
         self.hasResponsePromise.fulfill(fetchResponse)
     }
 
     func receive(data: Data) {
-        self.responses.allObjects.forEach { $0.receiveData(data) }
+        self.responses.forEach { $0.receiveData(data) }
     }
 
     func end(withError error: Error? = nil) {
-        self.responses.allObjects.forEach { response in
+        self.responses.forEach { response in
             response.streamEnded(withError: error)
             // break strong reference now that we don't need it any more
             response.fetchTask = nil
         }
+        // Allow these FetchResponses to be garbage collected if the JS context
+        // is done with them
+        self.responses.removeAll()
     }
 
     func add(response: FetchResponse) {
-        self.responses.add(response)
+        self.responses.insert(response)
     }
 }

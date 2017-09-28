@@ -36,7 +36,9 @@ import PromiseKit
 
     fileprivate func clearManagedReferences() {
         self.pendingPromises.forEach { managed in
-            managed.value.context.virtualMachine.removeManagedReference(managed, withOwner: self)
+            if let context = managed.value?.context {
+                context.virtualMachine.removeManagedReference(managed, withOwner: self)
+            }
         }
         self.pendingPromises.removeAll()
     }

@@ -87,7 +87,7 @@ public class SQLiteConnection {
         }
     }
 
-    fileprivate func throwSQLiteError(_ err: UnsafeMutablePointer<Int8>?) throws {
+    func throwSQLiteError(_ err: UnsafeMutablePointer<Int8>?) throws {
 
         guard let errExists = err else {
             throw ErrorMessage("SQLITE return value was unexpected, but no error message was returned")
@@ -294,11 +294,11 @@ public class SQLiteConnection {
 
     public func openBlobReadStream(table: String, column: String, row: Int64) throws -> SQLiteBlobReadStream {
 
-        return SQLiteBlobReadStream(try self.getDBPointer(), table: table, column: column, row: row)
+        return SQLiteBlobReadStream(self, table: table, column: column, row: row)
     }
 
     public func openBlobWriteStream(table: String, column: String, row: Int64) throws -> SQLiteBlobWriteStream {
 
-        return SQLiteBlobWriteStream(try self.getDBPointer(), table: table, column: column, row: row)
+        return SQLiteBlobWriteStream(self, table: table, column: column, row: row)
     }
 }

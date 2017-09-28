@@ -10,13 +10,15 @@ import JavaScriptCore
     // collected. We also pass it along when cloning responses.
     internal var fetchTask: FetchTask?
 
+    internal var startStream: (() -> Void)?
+
     public let headers: FetchHeaders
     public fileprivate(set) var status: Int
 
     public let url: URL?
     public let redirected: Bool
 
-    internal var dataStream: WritableStreamProtocol = MemoryWriteStream()
+    public fileprivate(set) var dataStream: WritableStreamProtocol = MemoryWriteStream()
 
     public var ok: Bool {
         return self.status >= 200 && self.status < 300
@@ -24,11 +26,11 @@ import JavaScriptCore
 
     public let statusText: String
 
-    convenience init(url: URL?, headers: FetchHeaders, status: Int, redirected: Bool) {
+    public convenience init(url: URL?, headers: FetchHeaders, status: Int, redirected: Bool) {
         self.init(url: url, headers: headers, status: status, statusText: HttpStatusCodes[status] ?? "Unknown", redirected: redirected)
     }
 
-    init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
+    public init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
         self.url = url
         self.status = status
         self.statusText = statusText
@@ -39,12 +41,13 @@ import JavaScriptCore
 
     func clone() throws -> FetchResponse {
 
-        guard let fetchTask = self.fetchTask else {
-            throw ErrorMessage("Cannot clone response after task has been completed")
+        guard let startStream = self.startStream, let fetchTask = self.fetchTask else {
+            throw ErrorMessage("Cannot clone response after stream has been started")
         }
 
         let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected)
-        clone.fetchTask = fetchTask
+        clone.startStream = startStream
+        clone.fetchTask = self.fetchTask
         fetchTask.add(response: clone)
         return clone
     }
@@ -72,7 +75,7 @@ import JavaScriptCore
         return firstly {
             try self.markBodyUsed()
 
-            self.fetchTask?.beginDownloadIfNotAlreadyStarted()
+            self.startStream?()
 
             guard let memoryStream = self.dataStream as? MemoryWriteStream else {
                 // shouldn't ever happen - markBodyUsed() would throw if this happened.
@@ -110,7 +113,13 @@ import JavaScriptCore
                     fileWriteStream.enqueue(dataSoFar)
                     self.dataStream = fileWriteStream
 
-                    self.fetchTask?.beginDownloadIfNotAlreadyStarted()
+                    if let startStream = self.startStream {
+                        startStream()
+                    } else if existingStream.isOpen == false {
+                        fileWriteStream.close()
+                    } else {
+                        throw ErrorMessage("No fetch task and the write stream is open?")
+                    }
 
                     return fileWriteStream.withDownload(callback)
                 }
@@ -194,5 +203,18 @@ import JavaScriptCore
 
     func getReader() throws -> ReadableStream {
         return ReadableStream()
+    }
+
+    public func getWrappedVersion(for type: ResponseType, corsAllowedHeaders: [String]? = nil) throws -> FetchResponseProtocol {
+
+        if type == .Basic {
+            return try BasicResponse(from: self)
+        } else if type == .Opaque {
+            return try OpaqueResponse(from: self)
+        } else if type == .CORS {
+            return try CORSResponse(from: self, allowedHeaders: corsAllowedHeaders)
+        }
+
+        throw ErrorMessage("Cannot create protocol for this response type")
     }
 }

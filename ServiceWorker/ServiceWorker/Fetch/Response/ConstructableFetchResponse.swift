@@ -3,6 +3,10 @@ import JavaScriptCore
 
 @objc(Response) class ConstructableFetchResponse: FetchResponseProxy, ConstructableFetchResponseJSExports {
 
+    override var responseType: ResponseType {
+        return .Basic
+    }
+
     required init(body: JSValue, options: [String: Any]?) {
 
         let headers = FetchHeaders()

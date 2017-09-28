@@ -10,11 +10,15 @@ CREATE TABLE "cache_entries" (
 "method" TEXT NOT NULL,
 "request_url_no_query" TEXT NOT NULL,
 "request_query" TEXT,
-"vary_by_headers" TEXT NOT NULL,
+"vary_by_headers" TEXT,
 "request_headers" TEXT NOT NULL,
 "response_headers" TEXT NOT NULL,
-"response_url" TEXT NOT NULL,
+"response_url" TEXT,
+"response_type" TEXT NOT NULL,
 "response_status" INTEGER NOT NULL,
+"response_status_text" TEXT NOT NULL,
+"response_redirected" INT NOT NULL,
+"response_cors_allowed_headers" TEXT,
 "response_body" BLOB NOT NULL,
 PRIMARY KEY("cache_name", "method", "request_url_no_query", "request_query", "vary_by_headers")
 );

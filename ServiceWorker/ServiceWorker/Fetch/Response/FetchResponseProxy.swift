@@ -2,7 +2,7 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-@objc class FetchResponseProxy: NSObject, FetchResponseProtocol, FetchResponseJSExports {
+@objc class FetchResponseProxy: NSObject, FetchResponseProtocol, FetchResponseJSExports, CacheableFetchResponse {
 
     var url: URL? {
         return self._internal.url

@@ -40,7 +40,10 @@ import PromiseKit
         return self.closedPromise.promise
     }
 
+    public var isOpen: Bool = true
+
     func close() {
+        self.isOpen = false
         self.baseStream.close()
         self.baseStream.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
         self.closedPromise.fulfill(())

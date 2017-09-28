@@ -17,10 +17,16 @@ public class SQLiteBlobStream {
     let table: String
     let column: String
     let row: Int64
-    let dbPointer: OpaquePointer
+    let db: SQLiteConnection
 
     public var isOpen: Bool {
         return self.openState != nil
+    }
+
+    deinit {
+        if self.openState != nil {
+            NSLog("deinit while open!")
+        }
     }
 
     internal var openState: State?
@@ -29,9 +35,9 @@ public class SQLiteBlobStream {
         return 0
     }
 
-    init(_ dbPointer: OpaquePointer, table: String, column: String, row: Int64) {
+    init(_ db: SQLiteConnection, table: String, column: String, row: Int64) {
 
-        self.dbPointer = dbPointer
+        self.db = db
         self.table = table
         self.column = column
         self.row = row
@@ -44,10 +50,18 @@ public class SQLiteBlobStream {
 
         var pointer: OpaquePointer?
 
-        sqlite3_blob_open(dbPointer, "main", table, column, row, isWriteStream, &pointer)
+        let openResult = sqlite3_blob_open(self.db.db, "main", table, column, row, isWriteStream, &pointer)
+
+        if openResult != SQLITE_OK {
+            guard let errMsg = sqlite3_errmsg(self.db.db) else {
+                throw ErrorMessage("SQLite failed, but can't get error")
+            }
+            let str = String(cString: errMsg)
+            throw ErrorMessage("SQLite Error: \(str)")
+        }
 
         guard let setPointer = pointer else {
-            throw ErrorMessage("Blob pointer was not stored")
+            throw ErrorMessage("SQLite Blob pointer was not created successfully")
         }
 
         self.openState = State(pointer: setPointer, blobLength: sqlite3_blob_bytes(setPointer))

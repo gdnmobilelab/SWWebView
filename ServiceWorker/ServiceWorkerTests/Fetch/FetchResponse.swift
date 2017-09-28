@@ -135,7 +135,6 @@ class FetchResponseTests: XCTestCase {
 
                 return when(fulfilled: [originalText, cloneText])
                     .then { results -> Void in
-
                         XCTAssertEqual(results.count, 2)
                         results.forEach { XCTAssertEqual($0, "THIS IS TEST CONTENT") }
                     }
