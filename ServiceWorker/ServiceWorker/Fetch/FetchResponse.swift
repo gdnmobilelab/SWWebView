@@ -4,14 +4,6 @@ import JavaScriptCore
 
 @objc public class FetchResponse: NSObject {
 
-    // We don't actually use this variable, but it ensures a strong reference
-    // to the fetch task, which we depend upon while downloading. Once download
-    // is complete, we remove this reference, allowing the task to be garbage
-    // collected. We also pass it along when cloning responses.
-    //    internal var fetchTask: FetchTask?
-    //
-    //    internal var startStream: (() -> Void)?
-
     internal var streamPipe: StreamPipe?
 
     public let headers: FetchHeaders
@@ -46,7 +38,16 @@ import JavaScriptCore
             throw ErrorMessage("Cannot clone response after stream has been removed")
         }
 
-        let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected, streamPipe: streamPipe)
+        // Because we can call the actions on this response at any point, we need to create an
+        // in-memory buffer that'll store data temporarily, if the original response
+        // starts earlier.
+
+        let (passthroughInput, passthroughOutput) = PassthroughStream.create()
+        try streamPipe.add(stream: passthroughOutput)
+
+        let newStreamPipe = StreamPipe(from: passthroughInput, bufferSize: streamPipe.bufferSize)
+
+        let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected, streamPipe: newStreamPipe)
         return clone
     }
 

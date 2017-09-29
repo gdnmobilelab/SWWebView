@@ -1,21 +1,9 @@
 import Foundation
 import SQLite3
 
-public class SQLiteBlobReadStream: InputStream {
+public class SQLiteBlobReadStream: InputStreamImplementation {
 
     let dbPointer: SQLiteBlobStreamPointer
-
-    fileprivate weak var _delegate: StreamDelegate?
-
-    // Get an error about abstract classes if we do not implement this. No idea why.
-    public override var delegate: StreamDelegate? {
-        get {
-            return self._delegate
-        }
-        set(val) {
-            self._delegate = val
-        }
-    }
 
     init(_ db: SQLiteConnection, table: String, column: String, row: Int64) {
         self.dbPointer = SQLiteBlobStreamPointer(db, table: table, column: column, row: row, isWrite: true)
@@ -23,31 +11,17 @@ public class SQLiteBlobReadStream: InputStream {
         // Don't understand why, but it forces us to call a specified initializer. So we'll do it with empty data.
         let dummyData = Data(count: 0)
         super.init(data: dummyData)
-    }
-
-    fileprivate var _streamStatus: Stream.Status = .notOpen
-
-    public override var streamStatus: Stream.Status {
-        return self._streamStatus
-    }
-
-    fileprivate var _streamError: Error?
-
-    public override var streamError: Error? {
-        return self._streamError
-    }
-
-    fileprivate func throwError(_ error: Error) {
-        self._streamStatus = .error
-        self._streamError = error
-        self.delegate?.stream?(self, handle: .errorOccurred)
+        self.streamStatus = .notOpen
     }
 
     public override func open() {
 
         do {
+            self.streamStatus = Stream.Status.opening
             try self.dbPointer.open()
-            self.delegate?.stream?(self, handle: .openCompleted)
+            self.streamStatus = Stream.Status.open
+            self.emitEvent(event: .openCompleted)
+            self.emitEvent(event: .hasBytesAvailable)
         } catch {
             self.throwError(error)
         }
@@ -64,10 +38,12 @@ public class SQLiteBlobReadStream: InputStream {
 
     public override func close() {
         self.dbPointer.close()
+        self.streamStatus = .closed
     }
 
     public override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
         do {
+            self.streamStatus = .reading
             guard let state = self.dbPointer.openState else {
                 throw ErrorMessage("Trying to read a closed stream")
             }
@@ -86,9 +62,9 @@ public class SQLiteBlobReadStream: InputStream {
             state.currentPosition += lengthToRead
 
             if state.currentPosition == state.blobLength {
-                self.delegate?.stream?(self, handle: .endEncountered)
+                self.emitEvent(event: .endEncountered)
             }
-
+            self.streamStatus = .open
             return Int(lengthToRead)
         } catch {
             self.throwError(error)

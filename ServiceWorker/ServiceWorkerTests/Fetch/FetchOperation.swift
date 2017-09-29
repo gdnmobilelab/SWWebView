@@ -32,9 +32,28 @@ class FetchOperationTests: XCTestCase {
         let request = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
 
         FetchSession.default.fetch(request)
-            .then { response -> Promise<Any?> in
+            .then { response -> Void in
                 XCTAssertEqual(response.status, 201)
                 XCTAssertEqual(response.headers.get("X-Test-Header"), "TEST-VALUE")
+            }
+            .assertResolves()
+    }
+
+    func testSimpleFetchBody() {
+
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+            let res = GCDWebServerDataResponse(jsonObject: [
+                "blah": "value"
+            ])
+            res!.statusCode = 201
+            res!.setValue("TEST-VALUE", forAdditionalHeader: "X-Test-Header")
+            return res
+        }
+
+        let request = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
+
+        FetchSession.default.fetch(request)
+            .then { response -> Promise<Any?> in
                 return response.json()
             }
             .then { obj -> Void in

@@ -8,8 +8,6 @@ public class StreamPipe: NSObject, StreamDelegate {
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
 
-    let loop = RunLoop()
-
     public fileprivate(set) var started: Bool = false
 
     init(from: InputStream, bufferSize: Int) {
@@ -58,7 +56,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         return self.completePromise.promise
     }
 
-    func pipe() -> Promise<Void> {
+    public func pipe() -> Promise<Void> {
         StreamPipe.currentlyRunning.insert(self)
         self.start()
         return self.complete
@@ -71,7 +69,7 @@ public class StreamPipe: NSObject, StreamDelegate {
     /// any other way
     fileprivate static var currentlyRunning = Set<StreamPipe>()
 
-    static func pipe(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Void> {
+    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Void> {
 
         let pipe = StreamPipe(from: from, bufferSize: bufferSize)
 
@@ -97,9 +95,19 @@ public class StreamPipe: NSObject, StreamDelegate {
 
     deinit {
         self.buffer.deallocate(capacity: self.bufferSize)
+        if self.completePromise.promise.isPending {
+
+            // This isn't strictly necessary, but PromiseKit logs a warning about
+            // an unresolved promise if we don't do this. For our purposes, it's entirely
+            // expected that a StreamPipe might not be resolved - for instance when we use
+            // a FetchResponse without also downloading the body.
+
+            self.completePromise.fulfill(())
+        }
     }
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
+
         if source == self.from && eventCode == .hasBytesAvailable {
             while self.from.hasBytesAvailable && self.to.first(where: { $0.hasSpaceAvailable == false }) == nil {
                 self.doReadWrite()
@@ -116,7 +124,7 @@ public class StreamPipe: NSObject, StreamDelegate {
 
         if source == self.from && eventCode == .endEncountered {
             self.to.forEach { $0.close() }
-
+            self.from.close()
             let doStop = {
                 self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
                 self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }

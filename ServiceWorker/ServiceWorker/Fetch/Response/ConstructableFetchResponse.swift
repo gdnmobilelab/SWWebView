@@ -7,15 +7,6 @@ import JavaScriptCore
         return .Basic
     }
 
-    class Arse: NSObject, StreamDelegate {
-        func stream(_: Stream, handle _: Stream.Event) {
-            NSLog("argh")
-        }
-
-        static let instance = Arse()
-        static var blah: Any?
-    }
-
     required init(body: JSValue, options: [String: Any]?) {
 
         let headers = FetchHeaders()
@@ -43,24 +34,14 @@ import JavaScriptCore
             headers.set("Content-Type", "text/plain")
         }
 
-        let bodyData = ConstructableFetchResponse.convert(val: body)
-        let inputStream = InputStream(data: bodyData)
+        let inputStream = ConstructableFetchResponse.convert(val: body)
 
         let streamPipe = StreamPipe(from: inputStream, bufferSize: 32768)
 
         super.init(url: nil, headers: headers, status: status, statusText: statusText, redirected: false, streamPipe: streamPipe)
     }
 
-    fileprivate class JSValueError: Error {
-
-        let jsVal: JSValueRef
-
-        init(_ js: JSValueRef) {
-            self.jsVal = js
-        }
-    }
-
-    fileprivate static func convert(val: JSValue) -> Data {
+    fileprivate static func convert(val: JSValue) -> InputStream {
         do {
             if val.isString {
 
@@ -68,49 +49,21 @@ import JavaScriptCore
                     throw ErrorMessage("Could not successfully parse string")
                 }
 
-                return data
+                return InputStream(data: data)
 
-            } else {
+            } else if let arrayBufferStream = JSArrayBufferStream(val: val) {
 
-                var maybeError: JSValueRef?
-                let arrType = JSValueGetTypedArrayType(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
-
-                if let errorHappened = maybeError {
-                    throw JSValueError(errorHappened)
-                }
-                
-                if arrType == kJSTypedArrayTypeArrayBuffer {
-                    guard let bytes = JSObjectGetArrayBufferBytesPtr(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError) else {
-                        throw ErrorMessage("Could not get bytes from ArrayBuffer")
-                    }
-                    
-                    if let errorHappened = maybeError {
-                        throw JSValueError(errorHappened)
-                    }
-
-                    let length = JSObjectGetArrayBufferByteLength(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
-
-                    if let errorHappened = maybeError {
-                        throw JSValueError(errorHappened)
-                    }
-
-                    return Data(bytesNoCopy: bytes, count: length, deallocator: Data.Deallocator.none)
-                }
-
-                throw ErrorMessage("Do not know how to enqueue the response given to constructor")
+                return arrayBufferStream
             }
+
+            throw ErrorMessage("Cannot convert input object")
         } catch {
-            let err: JSValue
 
-            if let jsError = error as? JSValueError {
-                err = JSValue(jsValueRef: jsError.jsVal, in: val.context)
-            } else {
-                err = JSValue(newErrorFromMessage: "\(error)", in: val.context)
-            }
-
+            let err = JSValue(newErrorFromMessage: "\(error)", in: val.context)
             val.context.exception = err
 
-            return Data(count: 0)
+            // Have to return something, although it'll never be used
+            return InputStream(data: Data(count: 0))
         }
     }
 }

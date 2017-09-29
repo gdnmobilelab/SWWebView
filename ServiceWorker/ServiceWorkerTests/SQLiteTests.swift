@@ -253,6 +253,35 @@ class SQLiteTests: XCTestCase {
         }())
     }
 
+    func testBlobReadStreamPipe() {
+
+        XCTAssertNoThrow(try {
+            let conn = try SQLiteConnection(self.dbPath)
+            try conn.exec(sql: """
+                CREATE TABLE "testtable" (
+                    "val" BLOB NOT NULL
+                );
+            """)
+
+            let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["abcdefghijk".data(using: String.Encoding.utf8) as Any])
+
+            let stream = try conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
+
+            let output = OutputStream.toMemory()
+
+            StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
+                .then { () -> Void in
+
+                    let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
+                    let str = String(data: result, encoding: .utf8)
+
+                    XCTAssertEqual(str, "abcdefghijk")
+                }
+                .assertResolves()
+
+        }())
+    }
+
     func testBlobWriteStream() {
 
         XCTAssertNoThrow(try {
@@ -288,6 +317,68 @@ class SQLiteTests: XCTestCase {
                 XCTAssert(asStr! == "abcdefghijk")
             }
             try conn.close()
+        }())
+    }
+
+    func testBlobWritePipe() {
+        XCTAssertNoThrow(try {
+            let conn = try SQLiteConnection(self.dbPath)
+            try conn.exec(sql: """
+                CREATE TABLE "testtable" (
+                    "val" BLOB NOT NULL
+                );
+            """)
+
+            let emptyRowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (zeroblob(10))", values: [])
+
+            let toInsert = "abcdefghij".data(using: String.Encoding.utf8)!
+            let insertStream = InputStream(data: toInsert)
+            let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
+
+            StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1)
+                .then { () -> Void in
+
+                    NSLog("hi")
+                }
+                .assertResolves()
+
+        }())
+    }
+
+    func testBlobReadWritePipe() {
+        XCTAssertNoThrow(try {
+            let conn = try SQLiteConnection(self.dbPath)
+            try conn.exec(sql: """
+                CREATE TABLE "testtable" (
+                    "val" BLOB NOT NULL
+                );
+            """)
+
+            let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["abcdefghijk".data(using: String.Encoding.utf8) as Any])
+
+            let emptyRowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (zeroblob(11))", values: [])
+
+            let readstream = try conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
+
+            let output = OutputStream.toMemory()
+
+            StreamPipe.pipe(from: readstream, to: output, bufferSize: 1)
+                .then {
+
+                    let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
+                    let newInput = InputStream(data: result)
+                    let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
+
+                    return StreamPipe.pipe(from: newInput, to: writestream, bufferSize: 1)
+                    //                    let str = String(data: result, encoding: .utf8)
+                    //
+                    //                    XCTAssertEqual(str, "abcdefghijk")
+                }
+                .then { () -> Void in
+                    NSLog("yay?")
+                }
+                .assertResolves()
+
         }())
     }
 
