@@ -1,6 +1,7 @@
 import Foundation
 import SQLite3
-public class SQLiteBlobStream {
+
+class SQLiteBlobStreamPointer {
 
     class State {
         let pointer: OpaquePointer
@@ -14,43 +15,30 @@ public class SQLiteBlobStream {
         }
     }
 
+    let db: SQLiteConnection
     let table: String
     let column: String
     let row: Int64
-    let db: SQLiteConnection
+    let isWriteStream: Bool
+    var openState: State?
 
-    public var isOpen: Bool {
-        return self.openState != nil
-    }
-
-    deinit {
-        if self.openState != nil {
-            NSLog("deinit while open!")
-        }
-    }
-
-    internal var openState: State?
-
-    var isWriteStream: Int32 {
-        return 0
-    }
-
-    init(_ db: SQLiteConnection, table: String, column: String, row: Int64) {
-
+    init(_ db: SQLiteConnection, table: String, column: String, row: Int64, isWrite: Bool) {
         self.db = db
         self.table = table
         self.column = column
         self.row = row
+        self.isWriteStream = isWrite
     }
 
-    public func open() throws {
+    func open() throws {
         if self.openState != nil {
-            throw ErrorMessage("Blob stream is already open")
+            Log.warn?("Tried to open a SQLiteBlobPointer that was already open")
+            return
         }
 
         var pointer: OpaquePointer?
 
-        let openResult = sqlite3_blob_open(self.db.db, "main", table, column, row, isWriteStream, &pointer)
+        let openResult = sqlite3_blob_open(self.db.db, "main", table, column, row, isWriteStream ? 1 : 0, &pointer)
 
         if openResult != SQLITE_OK {
             guard let errMsg = sqlite3_errmsg(self.db.db) else {
@@ -67,12 +55,11 @@ public class SQLiteBlobStream {
         self.openState = State(pointer: setPointer, blobLength: sqlite3_blob_bytes(setPointer))
     }
 
-    public func close() throws {
-
+    func close() {
         guard let openState = self.openState else {
-            throw ErrorMessage("Blob stream is not open")
+            Log.warn?("Tried to close a SQLiteBlobPointer that was already closed")
+            return
         }
-
         sqlite3_blob_close(openState.pointer)
         self.openState = nil
     }

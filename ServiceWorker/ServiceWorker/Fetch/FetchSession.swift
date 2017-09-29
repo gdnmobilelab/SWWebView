@@ -2,19 +2,13 @@ import Foundation
 import PromiseKit
 import JavaScriptCore
 
-@objc public class FetchSession: NSObject, URLSessionDelegate, URLSessionDataDelegate {
-
-    // We store all our pending responses here so that we can send the
-    // appropriate delegate methods on. But we don't store strong references
-    // because the JS could dispose of a fetch task at any point - if it does
-    // we'll stop downloading
-    fileprivate var pendingTasks = NSHashTable<FetchTask>.weakObjects()
+@objc public class FetchSession: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionStreamDelegate {
 
     public static let `default` = FetchSession()
 
     fileprivate var session: URLSession!
 
-    fileprivate var tasksWithoutResponsesYet = Set<FetchTask>()
+    fileprivate var runningTasks = Set<FetchTask>()
 
     override init() {
         super.init()
@@ -39,13 +33,11 @@ import JavaScriptCore
                 // then more than one will be attached.
                 let fetchTask = FetchTask(for: task, with: request)
 
-                self.pendingTasks.add(fetchTask)
+                self.runningTasks.insert(fetchTask)
 
                 // This could do with being revisited, but the reference to the fetchTask is lost
                 // while the promise is evaluating (because there is no FetchResponse for it yet)
                 // which we don't want. So we temporarily keep a strong reference
-
-                self.tasksWithoutResponsesYet.insert(fetchTask)
 
                 task.resume()
                 return fetchTask.hasResponse
@@ -58,9 +50,6 @@ import JavaScriptCore
                         } else {
                             return try BasicResponse(from: response)
                         }
-                    }
-                    .always {
-                        self.tasksWithoutResponsesYet.remove(fetchTask)
                     }
             }
     }
@@ -147,13 +136,9 @@ import JavaScriptCore
             }
     }
 
-    fileprivate func findFetchTask(for task: URLSessionTask) -> FetchTask? {
-        return self.pendingTasks.allObjects.first(where: { $0.task == task })
-    }
-
     public func urlSession(_: URLSession, task: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse, newRequest: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
 
-        guard let taskWrapper = self.findFetchTask(for: task) else {
+        guard let taskWrapper = self.runningTasks.first(where: { $0.dataTask == task }) else {
             Log.error?("Could not find a wrapper for an active fetch task")
             return completionHandler(nil)
         }
@@ -172,37 +157,43 @@ import JavaScriptCore
             return completionHandler(.cancel)
         }
 
-        guard let taskWrapper = self.findFetchTask(for: dataTask) else {
+        guard let taskWrapper = self.runningTasks.first(where: { $0.dataTask == dataTask }) else {
             Log.error?("Could not find a wrapper for an active fetch task")
             return completionHandler(.cancel)
         }
 
-        do {
-            try taskWrapper.receive(initialResponse: httpResponse, withCompletionHandler: completionHandler)
-        } catch {
-            Log.error?("\(error)")
-        }
+        taskWrapper.initialResponse = httpResponse
+        completionHandler(.becomeStream)
     }
 
-    public func urlSession(_: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+    public func urlSession(_: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
 
-        guard let taskWrapper = self.findFetchTask(for: dataTask) else {
+        guard let taskWrapper = self.runningTasks.first(where: { $0.dataTask == dataTask }) else {
             Log.error?("Could not find a wrapper for an active fetch task")
             return dataTask.cancel()
         }
 
-        taskWrapper.receive(data: data)
+        // We don't want to interact with the stream directly, we just want to turn it into an
+        // InputStream.
+        taskWrapper.streamTask = streamTask
+        streamTask.captureStreams()
     }
 
-    public func urlSession(_: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    public func urlSession(_: URLSession, streamTask: URLSessionStreamTask, didBecome inputStream: InputStream, outputStream _: OutputStream) {
 
-        guard let taskWrapper = self.findFetchTask(for: task) else {
+        guard let taskWrapper = self.runningTasks.first(where: { $0.streamTask == streamTask }) else {
             Log.error?("Could not find a wrapper for an active fetch task")
-            return task.cancel()
+            return
         }
 
-        self.pendingTasks.remove(taskWrapper)
-
-        taskWrapper.end(withError: error)
+        do {
+            try taskWrapper.receiveStream(stream: inputStream)
+            // Although the task is still running, we base everything on the input stream from here on
+            // so we can safely remove this strong reference
+            self.runningTasks.remove(taskWrapper)
+        } catch {
+            Log.error?("Failed to set URL task up with stream")
+            streamTask.cancel()
+        }
     }
 }

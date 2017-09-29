@@ -8,9 +8,11 @@ import JavaScriptCore
     // to the fetch task, which we depend upon while downloading. Once download
     // is complete, we remove this reference, allowing the task to be garbage
     // collected. We also pass it along when cloning responses.
-    internal var fetchTask: FetchTask?
+    //    internal var fetchTask: FetchTask?
+    //
+    //    internal var startStream: (() -> Void)?
 
-    internal var startStream: (() -> Void)?
+    internal var streamPipe: StreamPipe?
 
     public let headers: FetchHeaders
     public fileprivate(set) var status: Int
@@ -18,45 +20,41 @@ import JavaScriptCore
     public let url: URL?
     public let redirected: Bool
 
-    public fileprivate(set) var dataStream: WritableStreamProtocol = MemoryWriteStream()
-
     public var ok: Bool {
         return self.status >= 200 && self.status < 300
     }
 
     public let statusText: String
 
-    public convenience init(url: URL?, headers: FetchHeaders, status: Int, redirected: Bool) {
-        self.init(url: url, headers: headers, status: status, statusText: HttpStatusCodes[status] ?? "Unknown", redirected: redirected)
+    public convenience init(url: URL?, headers: FetchHeaders, status: Int, redirected: Bool, streamPipe: StreamPipe) {
+        self.init(url: url, headers: headers, status: status, statusText: HttpStatusCodes[status] ?? "Unknown", redirected: redirected, streamPipe: streamPipe)
     }
 
-    public init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
+    public init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool, streamPipe: StreamPipe) {
         self.url = url
         self.status = status
         self.statusText = statusText
         self.headers = headers
         self.redirected = redirected
+        self.streamPipe = streamPipe
         super.init()
     }
 
     func clone() throws -> FetchResponse {
 
-        guard let startStream = self.startStream, let fetchTask = self.fetchTask else {
-            throw ErrorMessage("Cannot clone response after stream has been started")
+        guard let streamPipe = self.streamPipe else {
+            throw ErrorMessage("Cannot clone response after stream has been removed")
         }
 
-        let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected)
-        clone.startStream = startStream
-        clone.fetchTask = self.fetchTask
-        fetchTask.add(response: clone)
+        let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected, streamPipe: streamPipe)
         return clone
     }
 
     var downloadCompletionHandler: ((URLSession.ResponseDisposition) -> Void)?
 
-    func receiveData(_ data: Data) {
-        self.dataStream.enqueue(data)
-    }
+    //    func receiveData(_ data: Data) {
+    //        self.dataStream.enqueue(data)
+    //    }
 
     public fileprivate(set) var bodyUsed: Bool = false
 
@@ -67,22 +65,31 @@ import JavaScriptCore
         self.bodyUsed = true
     }
 
-    func streamEnded(withError _: Error? = nil) {
-        self.dataStream.close()
-    }
+    //    func streamEnded(withError _: Error? = nil) {
+    //        self.dataStream.close()
+    //    }
 
     func data() -> Promise<Data> {
         return firstly {
             try self.markBodyUsed()
 
-            self.startStream?()
+            let memoryStream = OutputStream.toMemory()
 
-            guard let memoryStream = self.dataStream as? MemoryWriteStream else {
-                // shouldn't ever happen - markBodyUsed() would throw if this happened.
-                throw ErrorMessage("The stream in this response has already been altered from a memory stream")
+            guard let streamPipe = self.streamPipe else {
+                throw ErrorMessage("Reference to stream pipe has been removed, can't act on data")
             }
 
-            return memoryStream.allData
+            try streamPipe.add(stream: memoryStream)
+
+            return streamPipe.pipe()
+                .then { () -> Data in
+
+                    guard let data = memoryStream.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as? Data else {
+                        throw ErrorMessage("Could not fetch in-memory data from stream")
+                    }
+
+                    return data
+                }
         }
     }
 
@@ -95,33 +102,24 @@ import JavaScriptCore
                 .appendingPathExtension("download")
             // add temporary file name
 
-            // We now need to replace our stream with one that writes to disk, but also
-            // grab any existing content in the memory stream, which can happen if the
-            // response has been cloned.
-
-            guard let existingStream = self.dataStream as? MemoryWriteStream else {
-                throw ErrorMessage("Response stream has already been transformed")
+            guard let streamPipe = self.streamPipe else {
+                throw ErrorMessage("Reference to StreamPipe has been removed, cannot turn into download")
             }
 
-            guard let fileWriteStream = FileWriteStream(downloadPath) else {
-                throw ErrorMessage("Could not create local file download stream")
+            guard let fileStream = OutputStream(url: downloadPath, append: false) else {
+                throw ErrorMessage("Could not create local file stream")
             }
 
-            self.dataStream.close()
-            return existingStream.allData
-                .then { dataSoFar -> Promise<T> in
-                    fileWriteStream.enqueue(dataSoFar)
-                    self.dataStream = fileWriteStream
+            try streamPipe.add(stream: fileStream)
 
-                    if let startStream = self.startStream {
-                        startStream()
-                    } else if existingStream.isOpen == false {
-                        fileWriteStream.close()
-                    } else {
-                        throw ErrorMessage("No fetch task and the write stream is open?")
+            return streamPipe.pipe()
+                .then { () -> Promise<T> in
+                    let fileAttributes = try FileManager.default.attributesOfItem(atPath: downloadPath.path)
+                    guard let size = fileAttributes[.size] as? Int64 else {
+                        throw ErrorMessage("Could not get size of downloaded file")
                     }
 
-                    return fileWriteStream.withDownload(callback)
+                    return try callback(downloadPath, size)
                 }
                 .then { result -> T in
                     try FileManager.default.removeItem(at: downloadPath)

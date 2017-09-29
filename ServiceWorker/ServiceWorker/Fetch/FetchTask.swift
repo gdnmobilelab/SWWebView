@@ -3,29 +3,30 @@ import PromiseKit
 
 class FetchTask: NSObject {
 
-    let task: URLSessionDataTask
+    let dataTask: URLSessionDataTask
+    var streamTask: URLSessionStreamTask?
     let request: FetchRequest
 
     var responses = Set<FetchResponse>()
+    var initialResponse: HTTPURLResponse?
+    var streamPipe: StreamPipe?
 
     fileprivate let hasResponsePromise = Promise<FetchResponse>.pending()
-
-    fileprivate var completionHandler: ((URLSession.ResponseDisposition) -> Void)?
 
     var hasResponse: Promise<FetchResponse> {
         return self.hasResponsePromise.promise
     }
 
     init(for task: URLSessionDataTask, with request: FetchRequest) {
-        self.task = task
+        self.dataTask = task
         self.request = request
         super.init()
     }
 
     deinit {
-        if self.task.state == .running {
+        if self.dataTask.state == .running {
             Log.info?("Cancelling running fetch task because nothing is listening to it")
-            self.task.cancel()
+            self.dataTask.cancel()
         }
     }
 
@@ -44,20 +45,16 @@ class FetchTask: NSObject {
         return false
     }
 
-    func beginDownloadIfNotAlreadyStarted() {
-        if let handler = self.completionHandler {
-            handler(.allow)
-            self.completionHandler = nil
-        }
-    }
+    func receiveStream(stream: InputStream) throws {
+        let streamPipe = StreamPipe(from: stream, bufferSize: 32768) // 32KB? No idea what's right
 
-    func receive(initialResponse: HTTPURLResponse, withCompletionHandler handler: @escaping (URLSession.ResponseDisposition) -> Void) throws {
+        guard let initialResponse = self.initialResponse else {
+            throw ErrorMessage("Received stream but no HTTP response")
+        }
 
         guard let url = initialResponse.url else {
             throw ErrorMessage("HTTPURLResponse has no URL")
         }
-
-        self.completionHandler = handler
 
         let headers = FetchHeaders()
 
@@ -75,43 +72,15 @@ class FetchTask: NSObject {
                 // Because of this same GZIP issue, the content length will be incorrect. It's actually
                 // also normally incorrect, but because we're stripping out all encoding we should
                 // update the content-length header to be accurate.
-                headers.set("Content-Length", String(self.task.countOfBytesExpectedToReceive))
+                headers.set("Content-Length", String(self.dataTask.countOfBytesExpectedToReceive))
                 return
             }
 
             headers.append(keyString, valString)
         }
 
-        let fetchResponse = FetchResponse(url: url, headers: headers, status: initialResponse.statusCode, redirected: self.redirected)
+        let fetchResponse = FetchResponse(url: url, headers: headers, status: initialResponse.statusCode, redirected: self.redirected, streamPipe: streamPipe)
 
-        // Establish a strong reference between the response and task
-        fetchResponse.fetchTask = self
-
-        // Abstracting this out because custom responses still need a way to use
-        // this without depending on FetchTask
-        fetchResponse.startStream = { [weak self] in
-            self?.beginDownloadIfNotAlreadyStarted()
-        }
-        self.add(response: fetchResponse)
         self.hasResponsePromise.fulfill(fetchResponse)
-    }
-
-    func receive(data: Data) {
-        self.responses.forEach { $0.receiveData(data) }
-    }
-
-    func end(withError error: Error? = nil) {
-        self.responses.forEach { response in
-            response.streamEnded(withError: error)
-            // break strong reference now that we don't need it any more
-            response.fetchTask = nil
-        }
-        // Allow these FetchResponses to be garbage collected if the JS context
-        // is done with them
-        self.responses.removeAll()
-    }
-
-    func add(response: FetchResponse) {
-        self.responses.insert(response)
     }
 }

@@ -1,15 +1,28 @@
 import XCTest
 @testable import ServiceWorker
 import PromiseKit
+import JavaScriptCore
 
 class ConstructableFetchResponseTests: XCTestCase {
 
-    func testManualTextResponseCreation() {
+    func testManualTestResponseCreation() {
+
+        let jsc = JSContext()!
+        jsc.globalObject.setValue(ConstructableFetchResponse.self, forProperty: "Response")
+        let resp = JSPromise.fromJSValue(jsc.evaluateScript("new Response(\"hello\").text()")!)
+        resp
+            .then { response -> Void in
+                XCTAssertEqual(response!.value.toString(), "hello")
+            }
+            .assertResolves()
+    }
+
+    func testManualTextResponseCreationInWorker() {
 
         let sw = ServiceWorker.createTestWorker(id: self.name)
 
         sw.evaluateScript("""
-            let response = new Response("hello")
+            var response = new Response("hello");
             response.text()
             .then((text) => {
                 return [text, response.status, response.url, response.headers.get('content-type')]
@@ -41,12 +54,16 @@ class ConstructableFetchResponseTests: XCTestCase {
                 }
             })
         """)
-            .then { jsVal -> Void in
+            .then { jsVal in
                 let response = jsVal!.toObjectOf(FetchResponseProxy.self) as! FetchResponseProxy
                 XCTAssertEqual(response.status, 201)
                 XCTAssertEqual(response.statusText, "CUSTOM TEXT")
                 XCTAssertEqual(response.headers.get("X-Custom-Header"), "blah")
                 XCTAssertEqual(response.headers.get("Content-Type"), "text/custom-content")
+                return response.text()
+            }
+            .then { text -> Void in
+                XCTAssertEqual(text, "hello")
             }
             .assertResolves()
     }

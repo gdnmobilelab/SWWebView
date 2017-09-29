@@ -22,8 +22,8 @@ import PromiseKit
         self._internal = response
     }
 
-    init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool) {
-        let response = FetchResponse(url: url, headers: headers, status: status, statusText: statusText, redirected: redirected)
+    init(url: URL?, headers: FetchHeaders, status: Int, statusText: String, redirected: Bool, streamPipe: StreamPipe) {
+        let response = FetchResponse(url: url, headers: headers, status: status, statusText: statusText, redirected: redirected, streamPipe: streamPipe)
         self._internal = response
     }
 

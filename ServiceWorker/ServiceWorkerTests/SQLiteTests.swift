@@ -219,18 +219,18 @@ class SQLiteTests: XCTestCase {
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["abcdefghijk".data(using: String.Encoding.utf8) as Any])
 
             let stream = try conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
-            try stream.open()
+            stream.open()
 
             var testData = Data(count: 3)
 
-            _ = try testData.withUnsafeMutableBytes { body in
-                try stream.read(body, maxLength: 3)
+            _ = testData.withUnsafeMutableBytes { body in
+                stream.read(body, maxLength: 3)
             }
 
             XCTAssert(String(data: testData, encoding: String.Encoding.utf8) == "abc")
 
-            _ = try testData.withUnsafeMutableBytes { body in
-                try stream.read(body, maxLength: 3)
+            _ = testData.withUnsafeMutableBytes { body in
+                stream.read(body, maxLength: 3)
             }
 
             XCTAssertEqual(String(data: testData, encoding: String.Encoding.utf8), "def")
@@ -239,16 +239,16 @@ class SQLiteTests: XCTestCase {
 
             var restData = Data(count: 5)
             var amtRead = 0
-            _ = try restData.withUnsafeMutableBytes { body in
+            _ = restData.withUnsafeMutableBytes { body in
                 // Should only read as much data is there, no matter what maxLength is specified
-                amtRead = try stream.read(body, maxLength: 11)
+                amtRead = stream.read(body, maxLength: 11)
             }
 
             XCTAssert(amtRead == 5)
             XCTAssert(String(data: restData, encoding: String.Encoding.utf8) == "ghijk")
             XCTAssert(stream.hasBytesAvailable == false)
 
-            try stream.close()
+            stream.close()
             try conn.close()
         }())
     }
@@ -266,20 +266,20 @@ class SQLiteTests: XCTestCase {
             let rowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES ('aaaaaaaaaaa')", values: [])
 
             let stream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: rowId)
-            try stream.open()
-            _ = try "abc".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                XCTAssert(try stream.write(body, maxLength: 3) == 3)
+            stream.open()
+            _ = "abc".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                XCTAssert(stream.write(body, maxLength: 3) == 3)
             }
 
-            _ = try "def".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                try stream.write(body, maxLength: 3)
+            _ = "def".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                stream.write(body, maxLength: 3)
             }
 
-            _ = try "ghijk".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
-                try stream.write(body, maxLength: 5)
+            _ = "ghijk".data(using: String.Encoding.utf8)!.withUnsafeBytes { body in
+                stream.write(body, maxLength: 5)
             }
 
-            try stream.close()
+            stream.close()
 
             try conn.select(sql: "SELECT val FROM testtable", values: []) { rs in
                 XCTAssert(try rs.next() == true)

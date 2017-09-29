@@ -106,7 +106,6 @@
 		8AC755291F32404C00C6B70A /* PromiseAssert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755241F32403100C6B70A /* PromiseAssert.swift */; };
 		8AC755341F3240B500C6B70A /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7552B1F3240B200C6B70A /* Migration.swift */; };
 		8AC755351F3240BA00C6B70A /* SQLiteBlobReadStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7552D1F3240B200C6B70A /* SQLiteBlobReadStream.swift */; };
-		8AC755361F3240BB00C6B70A /* SQLiteBlobStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7552E1F3240B200C6B70A /* SQLiteBlobStream.swift */; };
 		8AC755371F3240BB00C6B70A /* SQLiteBlobWriteStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */; };
 		8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755301F3240B200C6B70A /* SQLiteConnection.swift */; };
 		8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */; };
@@ -125,6 +124,9 @@
 		8AD1410B1F716CA800ED2D2C /* JSEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */; };
 		8AD1410D1F716E9A00ED2D2C /* SwiftEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */; };
 		8AD141101F71739E00ED2D2C /* MessagePortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD1410F1F71739E00ED2D2C /* MessagePortTests.swift */; };
+		8AEBD3081F7D480C00AF1A21 /* StreamPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBD3071F7D480C00AF1A21 /* StreamPipe.swift */; };
+		8AEBD30A1F7D50E500AF1A21 /* SQLiteBlobStreamPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBD3091F7D50E500AF1A21 /* SQLiteBlobStreamPointer.swift */; };
+		8AEBD30E1F7D624600AF1A21 /* StreamPipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBD30D1F7D624600AF1A21 /* StreamPipeTests.swift */; };
 		8AF48A5E1F7C00CD0036537B /* ConstructableFetchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF48A5D1F7C00CD0036537B /* ConstructableFetchResponse.swift */; };
 		8AF48A601F7C06E90036537B /* ConstructableFetchResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF48A5F1F7C06E90036537B /* ConstructableFetchResponseTests.swift */; };
 /* End PBXBuildFile section */
@@ -238,7 +240,6 @@
 		8AC755261F32403100C6B70A /* TestWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWeb.swift; sourceTree = "<group>"; };
 		8AC7552B1F3240B200C6B70A /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		8AC7552D1F3240B200C6B70A /* SQLiteBlobReadStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteBlobReadStream.swift; sourceTree = "<group>"; };
-		8AC7552E1F3240B200C6B70A /* SQLiteBlobStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteBlobStream.swift; sourceTree = "<group>"; };
 		8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteBlobWriteStream.swift; sourceTree = "<group>"; };
 		8AC755301F3240B200C6B70A /* SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteConnection.swift; sourceTree = "<group>"; };
 		8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteResultSet.swift; sourceTree = "<group>"; };
@@ -257,6 +258,9 @@
 		8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSEventListener.swift; sourceTree = "<group>"; };
 		8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftEventListener.swift; sourceTree = "<group>"; };
 		8AD1410F1F71739E00ED2D2C /* MessagePortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePortTests.swift; sourceTree = "<group>"; };
+		8AEBD3071F7D480C00AF1A21 /* StreamPipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPipe.swift; sourceTree = "<group>"; };
+		8AEBD3091F7D50E500AF1A21 /* SQLiteBlobStreamPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteBlobStreamPointer.swift; sourceTree = "<group>"; };
+		8AEBD30D1F7D624600AF1A21 /* StreamPipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPipeTests.swift; sourceTree = "<group>"; };
 		8AF48A5D1F7C00CD0036537B /* ConstructableFetchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstructableFetchResponse.swift; sourceTree = "<group>"; };
 		8AF48A5F1F7C06E90036537B /* ConstructableFetchResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstructableFetchResponseTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -390,6 +394,7 @@
 		8AC7546A1F3122FE00C6B70A /* ServiceWorker */ = {
 			isa = PBXGroup;
 			children = (
+				8AEBD3041F7D41F100AF1A21 /* PromiseStream */,
 				8AD141011F7168B700ED2D2C /* Messaging */,
 				8AD141001F7167FD00ED2D2C /* ExecutionEnvironment */,
 				8A5D97F71F3CB50B002E521F /* GlobalEventLog */,
@@ -593,6 +598,7 @@
 			isa = PBXGroup;
 			children = (
 				8AC755091F312A1200C6B70A /* ReadableStream.swift */,
+				8AEBD30D1F7D624600AF1A21 /* StreamPipeTests.swift */,
 			);
 			path = Stream;
 			sourceTree = "<group>";
@@ -630,11 +636,11 @@
 			isa = PBXGroup;
 			children = (
 				8AC7552D1F3240B200C6B70A /* SQLiteBlobReadStream.swift */,
-				8AC7552E1F3240B200C6B70A /* SQLiteBlobStream.swift */,
 				8AC7552F1F3240B200C6B70A /* SQLiteBlobWriteStream.swift */,
 				8AC755301F3240B200C6B70A /* SQLiteConnection.swift */,
 				8AC755311F3240B200C6B70A /* SQLiteResultSet.swift */,
 				8A235FF81F34D0D300969268 /* SQLiteDataType.swift */,
+				8AEBD3091F7D50E500AF1A21 /* SQLiteBlobStreamPointer.swift */,
 			);
 			path = SQLite;
 			sourceTree = "<group>";
@@ -689,6 +695,14 @@
 				8A181A951F717D19005CED14 /* MessageChannelTests.swift */,
 			);
 			path = Messaging;
+			sourceTree = "<group>";
+		};
+		8AEBD3041F7D41F100AF1A21 /* PromiseStream */ = {
+			isa = PBXGroup;
+			children = (
+				8AEBD3071F7D480C00AF1A21 /* StreamPipe.swift */,
+			);
+			path = PromiseStream;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -883,6 +897,7 @@
 				8AC754D11F31252B00C6B70A /* ExtendableEvent.swift in Sources */,
 				8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */,
 				8A9831C31F60C9D300ED23F0 /* FetchResponse.swift in Sources */,
+				8AEBD30A1F7D50E500AF1A21 /* SQLiteBlobStreamPointer.swift in Sources */,
 				8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */,
 				8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */,
 				8AD1410D1F716E9A00ED2D2C /* SwiftEventListener.swift in Sources */,
@@ -909,6 +924,7 @@
 				8AC754DE1F31252B00C6B70A /* ConsoleMirror.swift in Sources */,
 				8ACCD72D1F50755B00F444B6 /* LocationBase.swift in Sources */,
 				8A43C1921F4F3486001221C1 /* WindowClientVisibilityState.swift in Sources */,
+				8AEBD3081F7D480C00AF1A21 /* StreamPipe.swift in Sources */,
 				8AC754DF1F31252B00C6B70A /* ServiceWorkerGlobalScope.swift in Sources */,
 				8AB834631F6223EC00733F42 /* FetchCORSRestrictions.swift in Sources */,
 				8A181AAD1F755D2E005CED14 /* CacheMatchOptions.swift in Sources */,
@@ -926,7 +942,6 @@
 				8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */,
 				8A1D939D1F632822003CD121 /* FetchTask.swift in Sources */,
 				8AC754E61F31252B00C6B70A /* TimeoutManager.swift in Sources */,
-				8AC755361F3240BB00C6B70A /* SQLiteBlobStream.swift in Sources */,
 				8A2264AE1F33C6C700B48902 /* WebSQLResultSet.swift in Sources */,
 				8AD141091F716C3800ED2D2C /* EventListenerProtocol.swift in Sources */,
 				8A235FF91F34D0D300969268 /* SQLiteDataType.swift in Sources */,
@@ -989,6 +1004,7 @@
 				8AC7551D1F312A3200C6B70A /* GlobalScopeTests.swift in Sources */,
 				8AC7551E1F312A3200C6B70A /* ImportScriptsTests.swift in Sources */,
 				8AC755281F32404A00C6B70A /* ServiceWorkerExtensions.swift in Sources */,
+				8AEBD30E1F7D624600AF1A21 /* StreamPipeTests.swift in Sources */,
 				8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */,
 				8AC7550F1F312A1200C6B70A /* Bootstrap.swift in Sources */,
 				8A5510771F70294300B6A6A6 /* IndexedDBTests.swift in Sources */,
