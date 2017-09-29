@@ -200,9 +200,9 @@ import JavaScriptCore
             .toJSPromise(in: currentContext)
     }
 
-    func getReader() throws -> ReadableStream {
-        return ReadableStream()
-    }
+    //    func getReader() throws -> ReadableStream {
+    //        return ReadableStream()
+    //    }
 
     public func getWrappedVersion(for type: ResponseType, corsAllowedHeaders: [String]? = nil) throws -> FetchResponseProtocol {
 

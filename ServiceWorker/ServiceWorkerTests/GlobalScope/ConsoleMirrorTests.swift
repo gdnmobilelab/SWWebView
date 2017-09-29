@@ -27,21 +27,25 @@ class ConsoleMirrorTests: XCTestCase {
                 Log.info = { msg in
                     XCTAssertEqual(msg, "info-test")
                     functionsRun.insert("info")
+                    Log.info = nil
                 }
 
                 Log.debug = { msg in
                     XCTAssertEqual(msg, "debug-test")
                     functionsRun.insert("debug")
+                    Log.debug = nil
                 }
 
                 Log.warn = { msg in
                     XCTAssertEqual(msg, "warn-test")
                     functionsRun.insert("warn")
+                    Log.warn = nil
                 }
 
                 Log.error = { msg in
                     XCTAssertEqual(msg, "error-test")
                     functionsRun.insert("error")
+                    Log.error = nil
                 }
 
                 return testWorker.evaluateScript("""

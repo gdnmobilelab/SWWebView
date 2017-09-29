@@ -12,9 +12,9 @@ import PromiseKit
         return .Internal
     }
 
-    func getReader() throws -> ReadableStream {
-        return try self._internal.getReader()
-    }
+    //    func getReader() throws -> ReadableStream {
+    //        return try self._internal.getReader()
+    //    }
 
     let _internal: FetchResponse
 

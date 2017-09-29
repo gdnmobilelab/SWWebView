@@ -5,6 +5,10 @@ import PromiseKit
 @objc public class ServiceWorkerExecutionEnvironment: NSObject, ServiceWorkerGlobalScopeDelegate {
 
     unowned let worker: ServiceWorker
+
+    // We use this in deinit, by which point the worker is gone
+    let workerId: String
+
     fileprivate let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
     let dispatchQueue = DispatchQueue.global(qos: .background)
@@ -34,7 +38,7 @@ import PromiseKit
 
     @objc public init(_ worker: ServiceWorker) throws {
         self.worker = worker
-
+        self.workerId = worker.id
         guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
             throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
         }
@@ -75,7 +79,7 @@ import PromiseKit
     }
 
     deinit {
-        NSLog("Deinit execution environment: Garbage collect.")
+        Log.info?("Closing execution environment for: \(self.workerId)")
 
         let allWebSQL = self.activeWebSQLDatabases.allObjects
             .filter { $0.connection.open == true }

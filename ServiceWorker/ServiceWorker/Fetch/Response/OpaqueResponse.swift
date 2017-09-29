@@ -9,15 +9,15 @@ import PromiseKit
     }
 
     let emptyHeaders = FetchHeaders()
-    let emptyStream: ReadableStream
+    //    let emptyStream: ReadableStream
 
     override var headers: FetchHeaders {
         return self.emptyHeaders
     }
 
-    override func getReader() throws -> ReadableStream {
-        return self.emptyStream
-    }
+    //    override func getReader() throws -> ReadableStream {
+    //        return self.emptyStream
+    //    }
 
     override func text() -> Promise<String> {
         return Promise(value: "")
@@ -43,9 +43,9 @@ import PromiseKit
 
     override init(from response: FetchResponse) throws {
 
-        self.emptyStream = ReadableStream()
+        //        self.emptyStream = ReadableStream()
 
-        try self.emptyStream.controller.close()
+        //        try self.emptyStream.controller.close()
 
         try super.init(from: response)
     }

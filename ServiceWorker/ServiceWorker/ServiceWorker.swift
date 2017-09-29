@@ -42,10 +42,6 @@ import PromiseKit
         super.init()
     }
 
-    deinit {
-        NSLog("deinit worker")
-    }
-
     /// This needs to be fleshed out more, but sometimes we want to make sure a worker
     /// has completed operations before we shut it down. Right now it only uses WebSQL
     /// stuff, but should probably also include setTimeout.

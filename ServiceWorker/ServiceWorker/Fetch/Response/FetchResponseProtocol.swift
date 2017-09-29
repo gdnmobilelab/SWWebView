@@ -16,7 +16,7 @@ import PromiseKit
     @objc(url)
     var urlString: String { get }
 
-    func getReader() throws -> ReadableStream
+    //    func getReader() throws -> ReadableStream
     func json() -> JSValue?
     func text() -> JSValue?
     func arrayBuffer() -> JSValue?

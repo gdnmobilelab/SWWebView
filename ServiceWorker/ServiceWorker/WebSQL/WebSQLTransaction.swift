@@ -83,7 +83,6 @@ import JavaScriptCore
     }
 
     func executeSql(_ sqlStatement: String, _ arguments: JSValue, _ callback: JSValue, _ errorCallback: JSValue) {
-        NSLog("EXEC: \(sqlStatement)")
         do {
 
             guard let argumentArray = arguments.toArray() else {

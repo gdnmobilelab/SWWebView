@@ -79,14 +79,10 @@
 		8AC754E91F31252B00C6B70A /* ServiceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C71F31235200C6B70A /* ServiceWorker.swift */; };
 		8AC754EA1F31252B00C6B70A /* ServiceWorkerExecutionEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C01F31235200C6B70A /* ServiceWorkerExecutionEnvironment.swift */; };
 		8AC754EB1F31252B00C6B70A /* ServiceWorkerInstallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754961F31235200C6B70A /* ServiceWorkerInstallState.swift */; };
-		8AC754EC1F31252B00C6B70A /* ReadableStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C21F31235200C6B70A /* ReadableStream.swift */; };
-		8AC754ED1F31252B00C6B70A /* ReadableStreamController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C31F31235200C6B70A /* ReadableStreamController.swift */; };
-		8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754C41F31235200C6B70A /* StreamReadResult.swift */; };
 		8AC754F41F31292800C6B70A /* ErrorMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754F31F31292800C6B70A /* ErrorMessage.swift */; };
 		8AC754F61F31293C00C6B70A /* SharedLogInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754F51F31293C00C6B70A /* SharedLogInterface.swift */; };
 		8AC7550F1F312A1200C6B70A /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755031F312A1200C6B70A /* Bootstrap.swift */; };
 		8AC755111F312A3200C6B70A /* JSPromise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754FD1F312A1200C6B70A /* JSPromise.swift */; };
-		8AC755131F312A3200C6B70A /* ReadableStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755091F312A1200C6B70A /* ReadableStream.swift */; };
 		8AC755141F312A3200C6B70A /* Migrate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC755051F312A1200C6B70A /* Migrate.swift */; };
 		8AC755151F312A3200C6B70A /* EventTargetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7550D1F312A1200C6B70A /* EventTargetTests.swift */; };
 		8AC755161F312A3200C6B70A /* ExtendableEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7550E1F312A1200C6B70A /* ExtendableEventTests.swift */; };
@@ -210,9 +206,6 @@
 		8AC754B31F31235200C6B70A /* OpaqueResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpaqueResponse.swift; sourceTree = "<group>"; };
 		8AC754B41F31235200C6B70A /* ResponseType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseType.swift; sourceTree = "<group>"; };
 		8AC754C01F31235200C6B70A /* ServiceWorkerExecutionEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerExecutionEnvironment.swift; sourceTree = "<group>"; };
-		8AC754C21F31235200C6B70A /* ReadableStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableStream.swift; sourceTree = "<group>"; };
-		8AC754C31F31235200C6B70A /* ReadableStreamController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableStreamController.swift; sourceTree = "<group>"; };
-		8AC754C41F31235200C6B70A /* StreamReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamReadResult.swift; sourceTree = "<group>"; };
 		8AC754C71F31235200C6B70A /* ServiceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorker.swift; sourceTree = "<group>"; };
 		8AC754C91F31235200C6B70A /* ConsoleMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleMirror.swift; sourceTree = "<group>"; };
 		8AC754CA1F31235200C6B70A /* ServiceWorkerGlobalScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerGlobalScope.swift; sourceTree = "<group>"; };
@@ -229,7 +222,6 @@
 		8AC755021F312A1200C6B70A /* ImportScriptsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportScriptsTests.swift; sourceTree = "<group>"; };
 		8AC755031F312A1200C6B70A /* Bootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bootstrap.swift; sourceTree = "<group>"; };
 		8AC755051F312A1200C6B70A /* Migrate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migrate.swift; sourceTree = "<group>"; };
-		8AC755091F312A1200C6B70A /* ReadableStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableStream.swift; sourceTree = "<group>"; };
 		8AC7550D1F312A1200C6B70A /* EventTargetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTargetTests.swift; sourceTree = "<group>"; };
 		8AC7550E1F312A1200C6B70A /* ExtendableEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtendableEventTests.swift; sourceTree = "<group>"; };
 		8AC755241F32403100C6B70A /* PromiseAssert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromiseAssert.swift; sourceTree = "<group>"; };
@@ -510,9 +502,6 @@
 			isa = PBXGroup;
 			children = (
 				8AEBD3071F7D480C00AF1A21 /* StreamPipe.swift */,
-				8AC754C21F31235200C6B70A /* ReadableStream.swift */,
-				8AC754C31F31235200C6B70A /* ReadableStreamController.swift */,
-				8AC754C41F31235200C6B70A /* StreamReadResult.swift */,
 				8AEBD3111F7EA1E700AF1A21 /* InputStreamImplementation.swift */,
 				8AEBD3131F7EA8C800AF1A21 /* OutputStreamImplementation.swift */,
 				8A177BDA1F7EC2730097CA3D /* PassthroughStream.swift */,
@@ -596,7 +585,6 @@
 		8AC755081F312A1200C6B70A /* Stream */ = {
 			isa = PBXGroup;
 			children = (
-				8AC755091F312A1200C6B70A /* ReadableStream.swift */,
 				8AEBD30D1F7D624600AF1A21 /* StreamPipeTests.swift */,
 				8A177BDC1F7EC8D00097CA3D /* PassthroughStream.swift */,
 			);
@@ -947,8 +935,6 @@
 				8AC754EB1F31252B00C6B70A /* ServiceWorkerInstallState.swift in Sources */,
 				8AD141031F7168CB00ED2D2C /* MessagePort.swift in Sources */,
 				8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */,
-				8AC754EC1F31252B00C6B70A /* ReadableStream.swift in Sources */,
-				8AC754ED1F31252B00C6B70A /* ReadableStreamController.swift in Sources */,
 				8A177BDB1F7EC2730097CA3D /* PassthroughStream.swift in Sources */,
 				8AD140FB1F70401800ED2D2C /* WebSQLResultRows.swift in Sources */,
 				8A463DEC1F6C207700AA5B26 /* GlobalVariableProvider.swift in Sources */,
@@ -957,7 +943,6 @@
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
 				8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */,
 				8AD141051F71698900ED2D2C /* Transferable.swift in Sources */,
-				8AC754EE1F31252B00C6B70A /* StreamReadResult.swift in Sources */,
 				8A43C1901F4F346F001221C1 /* Client.swift in Sources */,
 				8A181AA01F71BA05005CED14 /* MessagePortTarget.swift in Sources */,
 			);
@@ -969,7 +954,6 @@
 			files = (
 				8AC755271F32404800C6B70A /* TestWeb.swift in Sources */,
 				8AC755111F312A3200C6B70A /* JSPromise.swift in Sources */,
-				8AC755131F312A3200C6B70A /* ReadableStream.swift in Sources */,
 				8AC755141F312A3200C6B70A /* Migrate.swift in Sources */,
 				8AC755291F32404C00C6B70A /* PromiseAssert.swift in Sources */,
 				8AF48A601F7C06E90036537B /* ConstructableFetchResponseTests.swift in Sources */,
