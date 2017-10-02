@@ -32,7 +32,6 @@ class FetchResponseTests: XCTestCase {
             }
             .then { str -> Void in
                 XCTAssertEqual(str, "THIS IS TEST CONTENT")
-                NSLog("End fetch")
             }
             .assertResolves()
     }

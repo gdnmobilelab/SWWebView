@@ -112,7 +112,6 @@ import JavaScriptCore
             }
 
             try streamPipe.add(stream: fileStream)
-
             return streamPipe.pipe()
                 .then { () -> Promise<T> in
                     let fileAttributes = try FileManager.default.attributesOfItem(atPath: downloadPath.path)

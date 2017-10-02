@@ -196,4 +196,12 @@ import JavaScriptCore
             streamTask.cancel()
         }
     }
+
+    public func urlSession(_: URLSession, didBecomeInvalidWithError _: Error?) {
+        NSLog("invalid error?")
+    }
+
+    public func urlSession(_: URLSession, task _: URLSessionTask, didCompleteWithError _: Error?) {
+        NSLog("complete with error?")
+    }
 }

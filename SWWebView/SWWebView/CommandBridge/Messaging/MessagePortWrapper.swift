@@ -30,7 +30,6 @@ class MessagePortWrapper: NSObject, MessagePortTarget {
         MessagePortWrapper.activePorts.remove(self)
         let close = MessagePortAction(type: .close, id: self.id, data: nil)
         self.eventStream.sendUpdate(identifier: "messageport", object: close)
-        NSLog("close?")
     }
 
     init(_ port: SWMessagePort, in eventStream: EventStream) {

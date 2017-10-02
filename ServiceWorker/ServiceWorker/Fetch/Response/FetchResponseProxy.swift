@@ -4,6 +4,10 @@ import PromiseKit
 
 @objc class FetchResponseProxy: NSObject, FetchResponseProtocol, FetchResponseJSExports, CacheableFetchResponse {
 
+    func toCacheable() -> CacheableFetchResponse {
+        return self as CacheableFetchResponse
+    }
+
     var url: URL? {
         return self._internal.url
     }

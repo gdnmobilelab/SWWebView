@@ -18,7 +18,7 @@ import PromiseKit
         super.init()
     }
 
-    fileprivate func getRequest(fromJSValue value: JSValue) throws -> FetchRequest {
+    func getRequest(fromJSValue value: JSValue) throws -> FetchRequest {
         let request: FetchRequest
         if value.isString {
 
@@ -48,17 +48,17 @@ import PromiseKit
         return request
     }
 
-    fileprivate func createMatchWhere(fromRequest request: FetchRequest, andOptions options: [String: Any]) throws -> (where: String, values: [Any?]) {
+    func createMatchWhere(fromRequest request: FetchRequest, andOptions options: [String: Any]?) throws -> (where: String, values: [Any?]) {
 
-        let (urlNoQuery, query) = try self.separateQueryFrom(url: request.url)
+        let (urlNoQuery, query) = try self.separateQueryAndMakeSW(fromURL: request.url)
 
         var wheres: [String] = ["request_url_no_query = ?"]
         var values: [Any?] = [urlNoQuery]
 
-        let ignoreMethod = options["ignoreMethod"] as? Bool ?? false
-        let ignoreSearch = options["ignoreSearch"] as? Bool ?? false
+        let ignoreMethod = options?["ignoreMethod"] as? Bool ?? false
+        let ignoreSearch = options?["ignoreSearch"] as? Bool ?? false
 
-        if let cacheName = options["cacheName"] as? String {
+        if let cacheName = options?["cacheName"] as? String {
             wheres.append("cache_name = ?")
             values.append(cacheName)
         }
@@ -80,21 +80,33 @@ import PromiseKit
         return (wheres.joined(separator: " AND "), values)
     }
 
-    public func match(_ stringOrRequest: JSValue, _ options: [String: Any]) -> JSValue? {
-
+    public func match(_ stringOrRequest: JSValue, _ options: [String: Any]?) -> JSValue? {
         let jsp = JSPromise(context: JSContext.current())
+
+        self.matchAll(stringOrRequest, options, stopAfterFirst: true)
+            .then { responses in
+                jsp.fulfill(responses.first)
+            }
+            .catch { error in
+                jsp.reject(error)
+            }
+
+        return jsp.jsValue
+    }
+
+    func matchAll(_ stringOrRequest: JSValue, _ options: [String: Any]?, stopAfterFirst: Bool = false) -> Promise<[FetchResponseProtocol]> {
 
         do {
             let request = try self.getRequest(fromJSValue: stringOrRequest)
 
             let (whereString, values) = try self.createMatchWhere(fromRequest: request, andOptions: options)
 
-            let ignoreVary = options["ignoreVary"] as? Bool ?? false
+            let ignoreVary = options?["ignoreVary"] as? Bool ?? false
 
-            let response = try DBConnectionPool.inConnection(at: self.getDBURL(), type: .cache) { db in
+            let responses = try DBConnectionPool.inConnection(at: self.getDBURL(), type: .cache) { db in
                 return try db.select(sql: """
                     SELECT
-                        ROW_ID,
+                        rowid,
                         vary_by_headers,
                         response_headers,
                         response_url,
@@ -104,7 +116,10 @@ import PromiseKit
                         response_redirected
                     FROM cache_entries
                     WHERE \(whereString)
-                """, values: values) { rs -> FetchResponseProtocol? in
+                """, values: values) { rs -> [FetchResponseProtocol] in
+
+                    var responses: [FetchResponseProtocol] = []
+
                     while try rs.next() {
 
                         if let varyHeadersJSON = try rs.string("vary_by_headers"), ignoreVary == false {
@@ -117,19 +132,21 @@ import PromiseKit
                             }
                         }
 
-                        return try self.makeResponse(fromResultSet: rs, in: db)
+                        responses.append(try self.makeResponse(fromResultSet: rs, in: db))
+                        if stopAfterFirst {
+                            // match() only ever needs one response, so we can shortcut the loop
+                            return responses
+                        }
                     }
-                    NSLog("Returning nil")
-                    return nil
+
+                    return responses
                 }
             }
-            NSLog("Returning match")
-            jsp.fulfill(response)
-        } catch {
-            jsp.reject(error)
-        }
 
-        return jsp.jsValue
+            return Promise(value: responses)
+        } catch {
+            return Promise(error: error)
+        }
     }
 
     fileprivate func makeResponse(fromResultSet rs: SQLiteResultSet, in db: SQLiteConnection) throws -> FetchResponseProtocol {
@@ -145,7 +162,7 @@ import PromiseKit
 
         let url = try rs.url("response_url")
 
-        guard let rowID = try rs.int64("ROW_ID") else {
+        guard let rowID = try rs.int64("rowid") else {
             throw ErrorMessage("Could not fetch row ID for this cache entry")
         }
 
@@ -204,6 +221,7 @@ import PromiseKit
             if alreadyExists {
                 try DBConnectionPool.inConnection(at: self.getDBURL(), type: .cache) { db in
                     try db.update(sql: "DELETE FROM caches WHERE cache_name = ?", values: [name])
+                    try db.update(sql: "DELETE FROM cache_entries WHERE cache_name = ?", values: [name])
                 }
             }
 
@@ -251,7 +269,7 @@ import PromiseKit
         return newConnection
     }
 
-    fileprivate func getDBURL() throws -> URL {
+    func getDBURL() throws -> URL {
 
         guard let worker = self.worker else {
             throw ErrorMessage("SQLiteCacheStorage no longer has a reference to the worker")
@@ -299,10 +317,12 @@ import PromiseKit
         return specifiedVaryHeaders
     }
 
-    fileprivate func separateQueryFrom(url: URL) throws -> (noQuery: URL, query: String?) {
+    fileprivate func separateQueryAndMakeSW(fromURL url: URL) throws -> (noQuery: URL, query: String?) {
         guard var requestURLComponents = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             throw ErrorMessage("Cannot parse request URL into components")
         }
+
+        requestURLComponents.scheme = "sw"
 
         let search = requestURLComponents.query
 
@@ -315,6 +335,28 @@ import PromiseKit
         return (requestURLNoQuery, search)
     }
 
+    func delete(cacheName _: String, request: FetchRequest, options: [String: Any]?) throws {
+
+        let (fields, values) = try self.createMatchWhere(fromRequest: request, andOptions: options)
+
+        try DBConnectionPool.inConnection(at: try self.getDBURL(), type: .cache) { db in
+            try db.update(sql: "DELETE FROM cache_entries WHERE \(fields)", values: values)
+        }
+    }
+
+    //    func keys(cacheName:String, matchRequest) -> [String] {
+    //
+    //        return try DBConnectionPool.inConnection(at: try self.getDBURL(), type: .cache) { db in
+    //            return try db.select(sql: """
+    //                SELECT DISTINCT
+    //                method, request_url_no_query, request_query, request_headers
+    //                WHERE cache_name = ?
+    //            """, values: [cacheName]) { rs in
+    //            }
+    //        }
+    //
+    //    }
+
     func put(cacheName: String, request: FetchRequest, response: CacheableFetchResponse) -> Promise<Void> {
 
         if request.method == "POST" {
@@ -324,10 +366,8 @@ import PromiseKit
         // SQLite requires us to specify the size of a blob when we insert a row, and
         // not all responses have a Content-Length header, so we download to disk first,
         // then transfer that file into SQLite.
-
         return response.internalResponse.fileDownload { fileURL, fileSize -> Promise<Void> in
-
-            let (urlNoQuery, query) = try self.separateQueryFrom(url: request.url)
+            let (urlNoQuery, query) = try self.separateQueryAndMakeSW(fromURL: request.url)
 
             let varyHeaders = self.getVaryHeaders(varyHeader: response.headers.get("Vary"), requestHeaders: request.headers)
 
@@ -357,16 +397,25 @@ import PromiseKit
 
             return try DBConnectionPool.inConnection(at: self.getDBURL(), type: .cache) { db in
 
+                // put() overwrites any existing entry. But because this is a SQL database with uniques, etc., we need
+                // to actually delete first.
+
+                let (deleteFields, deleteValues) = try self.createMatchWhere(fromRequest: request, andOptions: [:])
+                try db.update(sql: "DELETE FROM cache_entries WHERE \(deleteFields)", values: deleteValues)
+                if let changes = db.lastNumberChanges {
+                    if changes > 0 {
+                        Log.info?("Removed an existing entry before adding this new cache item")
+                    }
+                }
+
                 let columns = params.keys.joined(separator: ",")
                 let values = valuePlaceholders.joined(separator: ",")
-
                 let rowID = try db.insert(sql: "INSERT INTO cache_entries(\(columns)) VALUES (\(values))", values: [Any?](params.values))
 
                 let writeStream = try db.openBlobWriteStream(table: "cache_entries", column: "response_body", row: rowID)
                 guard let fileStream = InputStream(url: fileURL) else {
                     throw ErrorMessage("Could not open stream to local file")
                 }
-
                 return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024)
             }
         }

@@ -8,6 +8,7 @@ public class StreamPipe: NSObject, StreamDelegate {
     fileprivate var to = Set<OutputStream>()
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
+    //    let test = DispatchQueue(label: "test")
 
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 
@@ -47,10 +48,15 @@ public class StreamPipe: NSObject, StreamDelegate {
         if Thread.isMainThread == false {
             // There's something weird with the ServiceWorker DispatchQueue here - if we
             // don't don't schedule in the main queue, the stream never dispatches.
-            DispatchQueue.main.sync(execute: doStart)
+            DispatchQueue.main.async(execute: doStart)
         } else {
             doStart()
         }
+        //
+        //        self.test.sync(execute: doStart)
+        //        self.test.async {
+        //            RunLoop.current.run()
+        //        }
     }
 
     fileprivate let completePromise = Promise<Void>.pending()
@@ -105,9 +111,7 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     func doReadWrite() {
-
         let readLength = self.from.read(self.buffer, maxLength: self.bufferSize)
-
         if readLength == 0 {
             // end of file
             self.finish()
@@ -142,14 +146,15 @@ public class StreamPipe: NSObject, StreamDelegate {
 
     fileprivate func finish() {
         self.to.forEach { $0.close() }
-        self.from.close()
+
         let doStop = {
+            self.from.close()
             self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
             self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
         }
 
         if Thread.isMainThread == false {
-            DispatchQueue.main.sync(execute: doStop)
+            DispatchQueue.main.async(execute: doStop)
         } else {
             doStop()
         }
@@ -160,7 +165,6 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
-
         if source == self.from && eventCode == .hasBytesAvailable {
             while self.from.hasBytesAvailable {
                 self.doReadWrite()

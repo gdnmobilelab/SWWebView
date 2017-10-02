@@ -30,6 +30,7 @@
 		8A5D983C1F3E167A002E521F /* js-tests in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D98391F3E0F82002E521F /* js-tests */; };
 		8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */; };
 		8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */; };
+		8A748E861F82D98F00EAAC01 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */; };
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -108,6 +109,7 @@
 		8A5D98391F3E0F82002E521F /* js-tests */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-tests"; sourceTree = "<group>"; };
 		8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLSchemeTask.swift; sourceTree = "<group>"; };
 		8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationCommands.swift; sourceTree = "<group>"; };
+		8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -216,6 +218,7 @@
 		8AA76F441F38B81600EFB4E1 = {
 			isa = PBXGroup;
 			children = (
+				8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */,
 				8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */,
 				8AABC4261F60839600429EF3 /* ServiceWorker.framework */,
 				8AA76F501F38B81600EFB4E1 /* SWWebView */,
@@ -420,6 +423,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A5D98311F3E0D77002E521F /* LaunchScreen.storyboard in Resources */,
+				8A748E861F82D98F00EAAC01 /* Default-568h@2x.png in Resources */,
 				8A5D983C1F3E167A002E521F /* js-tests in Resources */,
 				8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */,
 			);

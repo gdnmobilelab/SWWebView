@@ -48,7 +48,7 @@ public class SQLiteResultSet {
     fileprivate func idxForColumnName(_ name: String) throws -> Int32 {
 
         guard let idx = columnNames.index(of: name) else {
-            throw ErrorMessage("Column does not exist in result set")
+            throw ErrorMessage("Column '\(name)' does not exist in result set")
         }
 
         return Int32(idx)

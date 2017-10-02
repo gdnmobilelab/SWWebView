@@ -29,6 +29,8 @@ import PromiseKit
     init(body: JSValue, options: [String: Any]?)
 }
 
+/// This is now a giant swirling mess of protocols, but FetchResponseProtocol isn't
+/// Objective-C compatible, so we have to make a special case.
 @objc public protocol CacheableFetchResponse: FetchResponseJSExports {
     var internalResponse: FetchResponse { get }
 }
@@ -37,6 +39,7 @@ public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }
     var responseType: ResponseType { get }
+    func toCacheable() -> CacheableFetchResponse
     func text() -> Promise<String>
     func data() -> Promise<Data>
     func json() -> Promise<Any?>

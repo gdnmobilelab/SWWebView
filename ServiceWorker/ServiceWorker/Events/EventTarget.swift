@@ -79,6 +79,11 @@ import JavaScriptCore
             .forEach { $0.dispatch(event) }
     }
 
+    deinit {
+        // Make sure that we remove any existing JSValue references when we deinit()
+        self.clearAllListeners()
+    }
+
     func clearAllListeners() {
         self.listeners.removeAll()
     }
