@@ -332,7 +332,10 @@ class SQLiteTests: XCTestCase {
             let emptyRowId = try conn.insert(sql: "INSERT INTO testtable (val) VALUES (zeroblob(10))", values: [])
 
             let toInsert = "abcdefghij".data(using: String.Encoding.utf8)!
-            let insertStream = InputStream(data: toInsert)
+            let tempFile = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("file.temp")
+            try toInsert.write(to: tempFile)
+
+            let insertStream = InputStream(url: tempFile)!
             let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
             StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1)

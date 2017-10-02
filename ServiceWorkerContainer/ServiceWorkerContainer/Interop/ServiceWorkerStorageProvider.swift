@@ -92,9 +92,12 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
                         """, values: [id, url, try res.headers.toJSON(), fileSize])
 
                         let stream = try db.openBlobWriteStream(table: "worker_imported_scripts", column: "content", row: rowID)
-                        let readableStream = try ReadableStream.fromLocalURL(url, bufferSize: 8192)
 
-                        return stream.pipeReadableStream(stream: readableStream)
+                        guard let fileStream = InputStream(url: url) else {
+                            throw ErrorMessage("Could not create input stream for local file")
+                        }
+
+                        return StreamPipe.pipeSHA256(from: fileStream, to: stream, bufferSize: 1024)
                             .then { hash -> String in
 
                                 // Now we update the hash for the script

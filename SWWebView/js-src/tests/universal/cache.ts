@@ -4,7 +4,7 @@ import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
 import { assert } from "chai";
 import { unregisterEverything } from "../util/unregister-everything";
 
-describe.only("CacheStorage", () => {
+xdescribe("CacheStorage", () => {
     afterEach(() => {
         return navigator.serviceWorker
             .getRegistration("/fixtures/")
@@ -88,7 +88,7 @@ describe.only("CacheStorage", () => {
             });
     });
 
-    it.only("should put() requests and responses", () => {
+    it("should put() requests and responses", () => {
         return navigator.serviceWorker
             .register("/fixtures/exec-worker.js")
             .then(reg => {

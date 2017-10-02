@@ -181,15 +181,14 @@ public class WorkerFactory {
                         return rowid
                     }
 
-                    //                    guard let inputStream = InputStream(url: url) else {
-                    //                        throw ErrorMessage("Could not create InputStream for locally downloaded file")
-                    //                    }
-
                     let writeStream = try db.openBlobWriteStream(table: "workers", column: "content", row: rowID)
 
-                    return try writeStream.pipeReadableStream(stream: ReadableStream.fromLocalURL(url, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
-                        .then { hash -> Void in
+                    guard let fileStream = InputStream(fileAtPath: url.path) else {
+                        throw ErrorMessage("Could not open stream to temporary file")
+                    }
 
+                    return StreamPipe.pipeSHA256(from: fileStream, to: writeStream, bufferSize: 32768)
+                        .then { hash in
                             try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, worker.id])
                         }
                 }

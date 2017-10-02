@@ -6,20 +6,6 @@
 	objectVersion = 48;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		8AB72E1F1F35FFC80049117E /* CommonCryptoModuleMap */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 8AB72E241F35FFC80049117E /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */;
-			buildPhases = (
-				8AB72E251F35FFDD0049117E /* ShellScript */,
-			);
-			dependencies = (
-			);
-			name = CommonCryptoModuleMap;
-			productName = CommonCryptoModuleMap;
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		8A181AB51F7564F8005CED14 /* SQLiteCacheStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB41F7564F8005CED14 /* SQLiteCacheStorage.swift */; };
 		8A181AB71F7568F3005CED14 /* SQLiteCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A181AB61F7568F3005CED14 /* SQLiteCache.swift */; };
@@ -34,7 +20,6 @@
 		8A2360401F35FE1B00969268 /* ServiceWorkerRegistrationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23603A1F35FDF800969268 /* ServiceWorkerRegistrationOptions.swift */; };
 		8A2360411F35FE1B00969268 /* ServiceWorkerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23603B1F35FDF800969268 /* ServiceWorkerContainer.swift */; };
 		8A2360421F35FE1B00969268 /* CoreDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360331F35FDF800969268 /* CoreDatabase.swift */; };
-		8A2360431F35FE1B00969268 /* DbExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360341F35FDF800969268 /* DbExtensions.swift */; };
 		8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360351F35FDF800969268 /* SharedResources.swift */; };
 		8A2360451F35FE1B00969268 /* WorkerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2360361F35FDF800969268 /* WorkerFactory.swift */; };
 		8A23B46D1F55C19500FDD8D4 /* WorkerRegistrationFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A23B46C1F55C19500FDD8D4 /* WorkerRegistrationFactory.swift */; };
@@ -73,13 +58,6 @@
 			remoteGlobalIDString = 8AC754711F3122FE00C6B70A;
 			remoteInfo = ServiceWorkerTests;
 		};
-		8AB72E261F36000C0049117E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8A2360081F35FDCC00969268 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8AB72E1F1F35FFC80049117E;
-			remoteInfo = CommonCryptoModuleMap;
-		};
 		8AB72E281F3600190049117E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8A2360471F35FE4A00969268 /* ServiceWorker.xcodeproj */;
@@ -102,7 +80,6 @@
 		8A23601F1F35FDCC00969268 /* ServiceWorkerContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainerTests.swift; sourceTree = "<group>"; };
 		8A2360211F35FDCC00969268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8A2360331F35FDF800969268 /* CoreDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDatabase.swift; sourceTree = "<group>"; };
-		8A2360341F35FDF800969268 /* DbExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DbExtensions.swift; sourceTree = "<group>"; };
 		8A2360351F35FDF800969268 /* SharedResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedResources.swift; sourceTree = "<group>"; };
 		8A2360361F35FDF800969268 /* WorkerFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerFactory.swift; sourceTree = "<group>"; };
 		8A2360391F35FDF800969268 /* ServiceWorkerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistration.swift; sourceTree = "<group>"; };
@@ -214,7 +191,6 @@
 			isa = PBXGroup;
 			children = (
 				8A2360331F35FDF800969268 /* CoreDatabase.swift */,
-				8A2360341F35FDF800969268 /* DbExtensions.swift */,
 				8A2360351F35FDF800969268 /* SharedResources.swift */,
 				8A181ABD1F797293005CED14 /* DBConnectionPool.swift */,
 				8A181AC01F797552005CED14 /* DatabaseType.swift */,
@@ -317,7 +293,6 @@
 			);
 			dependencies = (
 				8AB72E291F3600190049117E /* PBXTargetDependency */,
-				8AB72E271F36000C0049117E /* PBXTargetDependency */,
 			);
 			name = ServiceWorkerContainer;
 			productName = ServiceWorkerContainer;
@@ -360,9 +335,6 @@
 					8A2360191F35FDCC00969268 = {
 						CreatedOnToolsVersion = 9.0;
 					};
-					8AB72E1F1F35FFC80049117E = {
-						CreatedOnToolsVersion = 9.0;
-					};
 				};
 			};
 			buildConfigurationList = 8A23600B1F35FDCC00969268 /* Build configuration list for PBXProject "ServiceWorkerContainer" */;
@@ -385,7 +357,6 @@
 			targets = (
 				8A2360101F35FDCC00969268 /* ServiceWorkerContainer */,
 				8A2360191F35FDCC00969268 /* ServiceWorkerContainerTests */,
-				8AB72E1F1F35FFC80049117E /* CommonCryptoModuleMap */,
 			);
 		};
 /* End PBXProject section */
@@ -454,19 +425,6 @@
 			shellPath = /bin/sh;
 			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
 		};
-		8AB72E251F35FFDD0049117E /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\"\ncat <<EOF > \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap/module.modulemap\"\nmodule CommonCrypto [system] {\n    header \"${SDKROOT}/usr/include/CommonCrypto/CommonCrypto.h\"\n    export *\n}\nEOF";
-		};
 		8AF85D891F3A2BE9001B0A87 /* Carthage Framework Copy */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -502,7 +460,6 @@
 				8A181AC31F798774005CED14 /* ServiceWorkerStorageProvider.swift in Sources */,
 				8A181ABE1F797293005CED14 /* DBConnectionPool.swift in Sources */,
 				8A2360421F35FE1B00969268 /* CoreDatabase.swift in Sources */,
-				8A2360431F35FE1B00969268 /* DbExtensions.swift in Sources */,
 				8A23B46D1F55C19500FDD8D4 /* WorkerRegistrationFactory.swift in Sources */,
 				8A2360441F35FE1B00969268 /* SharedResources.swift in Sources */,
 				8A181AB51F7564F8005CED14 /* SQLiteCacheStorage.swift in Sources */,
@@ -531,11 +488,6 @@
 			isa = PBXTargetDependency;
 			target = 8A2360101F35FDCC00969268 /* ServiceWorkerContainer */;
 			targetProxy = 8A23601C1F35FDCC00969268 /* PBXContainerItemProxy */;
-		};
-		8AB72E271F36000C0049117E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8AB72E1F1F35FFC80049117E /* CommonCryptoModuleMap */;
-			targetProxy = 8AB72E261F36000C0049117E /* PBXContainerItemProxy */;
 		};
 		8AB72E291F3600190049117E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -747,22 +699,6 @@
 			};
 			name = Release;
 		};
-		8AB72E201F35FFC80049117E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DEVELOPMENT_TEAM = 998P9U5NGJ;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		8AB72E211F35FFC80049117E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DEVELOPMENT_TEAM = 998P9U5NGJ;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -789,15 +725,6 @@
 			buildConfigurations = (
 				8A2360291F35FDCC00969268 /* Debug */,
 				8A23602A1F35FDCC00969268 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		8AB72E241F35FFC80049117E /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8AB72E201F35FFC80049117E /* Debug */,
-				8AB72E211F35FFC80049117E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

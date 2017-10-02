@@ -118,7 +118,6 @@ import PromiseKit
                         }
 
                         return try self.makeResponse(fromResultSet: rs, in: db)
-
                     }
                     NSLog("Returning nil")
                     return nil
@@ -129,47 +128,38 @@ import PromiseKit
         } catch {
             jsp.reject(error)
         }
-        
+
         return jsp.jsValue
     }
-    
-    fileprivate func makeResponse(fromResultSet rs: SQLiteResultSet, in db:SQLiteConnection ) throws -> FetchResponseProtocol {
+
+    fileprivate func makeResponse(fromResultSet rs: SQLiteResultSet, in db: SQLiteConnection) throws -> FetchResponseProtocol {
         guard let responseHeadersJSON = try rs.string("response_headers"), let responseStatus = try rs.int("response_status"),
             let responseStatusText = try rs.string("response_status_text"), let responseRedirected = try rs.int("response_redirected"),
             let responseTypeString = try rs.string("response_type") else {
-                throw ErrorMessage("Could not fetch required fields from cache_entries table")
+            throw ErrorMessage("Could not fetch required fields from cache_entries table")
         }
-        
+
         guard let responseType = ResponseType(rawValue: responseTypeString) else {
             throw ErrorMessage("Did not understand response type stored in database")
         }
-        
+
         let url = try rs.url("response_url")
-        
-        let responseHeaders = try FetchHeaders.fromJSON(responseHeadersJSON)
-        
-        let response = FetchResponse(url: url, headers: responseHeaders, status: responseStatus, statusText: responseStatusText, redirected: responseRedirected == 1)
-        
-        var corsHeaders: [String]? = nil
-        
-        if responseType == .CORS {
-            corsHeaders = try rs.string("response_cors_allowed_headers")?.components(separatedBy: ",")
-        }
-        
+
         guard let rowID = try rs.int64("ROW_ID") else {
             throw ErrorMessage("Could not fetch row ID for this cache entry")
         }
-        
+
         let readStream = try db.openBlobReadStream(table: "cache_entries", column: "response_body", row: rowID)
-        
-        var buffer = Data(count: 32768)
-        try buffer.withUnsafeMutableBytes { (bytes:UnsafeMutablePointer<Int8>) in
-            while readStream.hasBytesAvailable {
-                let length = try readStream.read(bytes, maxLength: 32768)
-                
-            }
+        let streamPipe = StreamPipe(from: readStream, bufferSize: 1024)
+        let responseHeaders = try FetchHeaders.fromJSON(responseHeadersJSON)
+        let response = FetchResponse(url: url, headers: responseHeaders, status: responseStatus, statusText: responseStatusText, redirected: responseRedirected == 1, streamPipe: streamPipe)
+
+        var corsHeaders: [String]?
+
+        if responseType == .CORS {
+            corsHeaders = try rs.string("response_cors_allowed_headers")?.components(separatedBy: ",")
         }
-        
+
         return try response.getWrappedVersion(for: responseType, corsAllowedHeaders: corsHeaders)
     }
 
@@ -335,7 +325,7 @@ import PromiseKit
         // not all responses have a Content-Length header, so we download to disk first,
         // then transfer that file into SQLite.
 
-        return response.internalResponse.fileDownload { fileURL, fileSize -> Promise<Data> in
+        return response.internalResponse.fileDownload { fileURL, fileSize -> Promise<Void> in
 
             let (urlNoQuery, query) = try self.separateQueryFrom(url: request.url)
 
@@ -356,30 +346,29 @@ import PromiseKit
                 "response_type": response.responseTypeString,
                 "response_body": fileSize
             ]
-            
+
             if ResponseType(rawValue: response.responseTypeString) == .CORS {
                 // This is kind of gross, but we need to store the allowed headers in a CORS response
                 // somewhere.
                 params["response_cors_allowed_headers"] = response.headers.keys().joined(separator: ",")
             }
-            
-            let valuePlaceholders = params.keys.map { $0 == "response_body" ? "zeroblob(?)" : "?"}
-            
+
+            let valuePlaceholders = params.keys.map { $0 == "response_body" ? "zeroblob(?)" : "?" }
+
             return try DBConnectionPool.inConnection(at: self.getDBURL(), type: .cache) { db in
 
-                let rowID = try db.insert(sql: """
-                    INSERT INTO cache_entries(\(params.keys.joined(separator: ",")))
-                    VALUES (\(valuePlaceholders.joined(separator: ",")))
-                """, values: [Any?](params.values))
+                let columns = params.keys.joined(separator: ",")
+                let values = valuePlaceholders.joined(separator: ",")
+
+                let rowID = try db.insert(sql: "INSERT INTO cache_entries(\(columns)) VALUES (\(values))", values: [Any?](params.values))
 
                 let writeStream = try db.openBlobWriteStream(table: "cache_entries", column: "response_body", row: rowID)
+                guard let fileStream = InputStream(url: fileURL) else {
+                    throw ErrorMessage("Could not open stream to local file")
+                }
 
-                return try writeStream.pipeReadableStream(stream: ReadableStream.fromLocalURL(fileURL, bufferSize: 32768)) // chunks of 32KB. No idea what is best.
+                return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024)
             }
-        }
-        .then { _ -> Void in
-            NSLog("Put operation is complete")
-            return ()
         }
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import PromiseKit
+import CommonCrypto
 
 public class StreamPipe: NSObject, StreamDelegate {
 
@@ -8,9 +9,11 @@ public class StreamPipe: NSObject, StreamDelegate {
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
 
+    var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
+
     public fileprivate(set) var started: Bool = false
 
-    init(from: InputStream, bufferSize: Int) {
+    public init(from: InputStream, bufferSize: Int) {
         self.from = from
         self.bufferSize = bufferSize
         self.buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
@@ -80,9 +83,40 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
     }
 
+    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Data> {
+
+        var hashToUse = CC_SHA256_CTX()
+        CC_SHA256_Init(&hashToUse)
+
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
+
+        pipe.hashListener = { bytes, count in
+            CC_SHA256_Update(&hashToUse, bytes, CC_LONG(count))
+        }
+
+        return firstly {
+            try pipe.add(stream: to)
+            return pipe.pipe()
+        }.then { () -> Data in
+            var hashData: [UInt8] = Array(repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+            CC_SHA256_Final(&hashData, &hashToUse)
+            return Data(bytes: hashData)
+        }
+    }
+
     func doReadWrite() {
 
         let readLength = self.from.read(self.buffer, maxLength: self.bufferSize)
+
+        if readLength == 0 {
+            // end of file
+            self.finish()
+            return
+        }
+
+        if let hashListener = self.hashListener {
+            hashListener(self.buffer, readLength)
+        }
 
         self.to.forEach { toStream in
             let lengthWritten = toStream.write(self.buffer, maxLength: readLength)
@@ -106,11 +140,33 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
     }
 
+    fileprivate func finish() {
+        self.to.forEach { $0.close() }
+        self.from.close()
+        let doStop = {
+            self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+            self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
+        }
+
+        if Thread.isMainThread == false {
+            DispatchQueue.main.sync(execute: doStop)
+        } else {
+            doStop()
+        }
+
+        if self.completePromise.promise.isPending {
+            self.completePromise.fulfill(())
+        }
+    }
+
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
 
         if source == self.from && eventCode == .hasBytesAvailable {
-            while self.from.hasBytesAvailable && self.to.first(where: { $0.hasSpaceAvailable == false }) == nil {
+            while self.from.hasBytesAvailable {
                 self.doReadWrite()
+            }
+            if self.from.hasBytesAvailable {
+                NSLog("Stopped while still have bytes to write?")
             }
         }
 
@@ -123,22 +179,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
 
         if source == self.from && eventCode == .endEncountered {
-            self.to.forEach { $0.close() }
-            self.from.close()
-            let doStop = {
-                self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-                self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
-            }
-
-            if Thread.isMainThread == false {
-                DispatchQueue.main.sync(execute: doStop)
-            } else {
-                doStop()
-            }
-
-            if self.completePromise.promise.isPending {
-                self.completePromise.fulfill(())
-            }
+            self.finish()
         }
     }
 }

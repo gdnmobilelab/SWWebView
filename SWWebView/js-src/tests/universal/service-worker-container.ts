@@ -25,6 +25,7 @@ describe("Service Worker Container", () => {
     it("Should fire ready promise", function() {
         // have to use iframe as none of the fixture JS files are in this
         // page's scope
+        this.timeout(10000);
         return withIframe("/fixtures/blank.html", ({ navigator }) => {
             navigator.serviceWorker.register("./test-register-worker.js");
             return navigator.serviceWorker.ready.then(reg => {
