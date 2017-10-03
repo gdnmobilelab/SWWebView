@@ -8,8 +8,9 @@ public class StreamPipe: NSObject, StreamDelegate {
     fileprivate var to = Set<OutputStream>()
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
-    //    let test = DispatchQueue(label: "test")
-
+    var finished: Bool = false
+    let dispatchQueue = DispatchQueue(label: "StreamPipe", qos: DispatchQoS.background, attributes: [], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
+    let runLoop = RunLoop()
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 
     public fileprivate(set) var started: Bool = false
@@ -31,31 +32,33 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     func start() {
+
         if self.started == true {
             return
         }
         self.started = true
 
-        let doStart = {
+        self.dispatchQueue.async {
+
             self.from.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
             self.from.open()
-            self.to.forEach { toStream in
-                toStream.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-                toStream.open()
+            self.to.forEach { to in
+                to.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+                to.open()
+            }
+
+            while self.finished == false {
+                let date = Date()
+                //                                self.runLoop.acceptInput(forMode: RunLoopMode.commonModes, before: Date())
+                RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: date)
             }
         }
 
-        if Thread.isMainThread == false {
-            // There's something weird with the ServiceWorker DispatchQueue here - if we
-            // don't don't schedule in the main queue, the stream never dispatches.
-            DispatchQueue.main.async(execute: doStart)
-        } else {
-            doStart()
-        }
-        //
-        //        self.test.sync(execute: doStart)
-        //        self.test.async {
-        //            RunLoop.current.run()
+        //        CFReadStreamSetDispatchQueue(self.from, self.dispatchQueue)
+        //        self.from.open()
+        //        self.to.forEach { to in
+        //            CFWriteStreamSetDispatchQueue(to, self.dispatchQueue)
+        //            to.open()
         //        }
     }
 
@@ -145,19 +148,41 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     fileprivate func finish() {
-        self.to.forEach { $0.close() }
+        if self.finished {
+            return
+        }
 
-        let doStop = {
+        self.finished = true
+
+        self.dispatchQueue.async {
+            self.to.forEach { $0.close() }
             self.from.close()
             self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
             self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
         }
 
-        if Thread.isMainThread == false {
-            DispatchQueue.main.async(execute: doStop)
-        } else {
-            doStop()
-        }
+        //        CFReadStreamSetDispatchQueue(self.from, nil)
+        //        self.from.close()
+        //
+        //        self.to.forEach { to in
+        //            CFWriteStreamSetDispatchQueue(to, nil)
+        //            to.close()
+        //        }
+
+        //        let doStop = {
+        //            self.to.forEach { $0.close() }
+        //            self.from.close()
+        //            self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+        //            self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
+        //        }
+        //
+        //        if Thread.isMainThread == false {
+        //            DispatchQueue.main.async(execute: doStop)
+        //        } else {
+        //            doStop()
+        //        }
+
+        //        doStop()
 
         if self.completePromise.promise.isPending {
             self.completePromise.fulfill(())

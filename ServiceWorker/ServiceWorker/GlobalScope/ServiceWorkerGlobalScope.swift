@@ -66,8 +66,8 @@ import JavaScriptCore
             self.skipWaitingStatus = true
         }
 
-        let importAsConvention: @convention(block) (JSValue) -> Void = { [unowned self] scripts in
-            self.importScripts(scripts)
+        let importAsConvention: @convention(block) () -> Void = { [unowned self] in
+            self.importScripts()
         }
 
         let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, _ in
@@ -177,29 +177,23 @@ import JavaScriptCore
         context.exception = err
     }
 
-    internal func importScripts(_ scripts: JSValue) {
+    internal func importScripts() {
         do {
 
             guard let delegate = self.delegate else {
                 throw ErrorMessage("No global scope delegate set, cannot import scripts")
             }
 
-            var scriptURLStrings: [String]
+            guard let args = JSContext.currentArguments() as? [JSValue] else {
+                throw ErrorMessage("Could not get current context arguments")
+            }
 
-            // importScripts supports both single files and arrays
+            let scriptURLStrings = try args.map { jsVal -> String in
 
-            if scripts.isArray {
-                guard let scriptsArray = scripts.toArray() as? [String] else {
-                    throw ErrorMessage("Could not parse array sent in to importScripts()")
+                guard let stringVal = jsVal.toString() else {
+                    throw ErrorMessage("Could not convert argument to a string")
                 }
-                scriptURLStrings = scriptsArray
-            } else if scripts.isString {
-                guard let singleScript = scripts.toString() else {
-                    throw ErrorMessage("Could not parse string sent in to importScripts()")
-                }
-                scriptURLStrings = [singleScript]
-            } else {
-                throw ErrorMessage("Could not parse arguments passed to importScripts()")
+                return stringVal
             }
 
             let scriptURLs = try scriptURLStrings.map { urlString -> URL in

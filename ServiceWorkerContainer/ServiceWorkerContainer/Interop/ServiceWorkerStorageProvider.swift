@@ -83,7 +83,7 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
                 // We have to download to a local file first, because we can't rely on a
                 // Content-Length header always existing.
 
-                res.internalResponse.fileDownload({ _, fileSize in
+                res.internalResponse.fileDownload({ fileURL, fileSize in
 
                     DBConnectionPool.inConnection(at: self.getCoreDatabaseURL(), type: .core) { db in
                         let rowID = try db.insert(sql: """
@@ -93,7 +93,7 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
 
                         let stream = try db.openBlobWriteStream(table: "worker_imported_scripts", column: "content", row: rowID)
 
-                        guard let fileStream = InputStream(url: url) else {
+                        guard let fileStream = InputStream(url: fileURL) else {
                             throw ErrorMessage("Could not create input stream for local file")
                         }
 
@@ -101,10 +101,10 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
                             .then { hash -> String in
 
                                 // Now we update the hash for the script
-                                try db.update(sql: "UPDATE worker_imported_scripts SET content_hash = ? WHERE worker_id = ?", values: [hash, id])
+                                try db.update(sql: "UPDATE worker_imported_scripts SET content_hash = ? WHERE worker_id = ? AND url = ?", values: [hash, id, url])
 
                                 // Having done all this, we now pull the text directly back out
-                                return try db.select(sql: "SELECT content FROM worker_imported_scripts WHERE worker_id = ?", values: [id]) { resultSet in
+                                return try db.select(sql: "SELECT content FROM worker_imported_scripts WHERE worker_id = ? AND url = ?", values: [id, url]) { resultSet in
 
                                     if try resultSet.next() == false {
                                         throw ErrorMessage("Somehow cannot retreive the script we just inserted")

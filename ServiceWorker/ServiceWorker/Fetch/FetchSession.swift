@@ -192,9 +192,6 @@ import JavaScriptCore
 
         do {
             try taskWrapper.receiveStream(stream: inputStream)
-            // Although the task is still running, we base everything on the input stream from here on
-            // so we can safely remove this strong reference
-            self.runningTasks.remove(taskWrapper)
         } catch {
             Log.error?("Failed to set URL task up with stream")
             streamTask.cancel()

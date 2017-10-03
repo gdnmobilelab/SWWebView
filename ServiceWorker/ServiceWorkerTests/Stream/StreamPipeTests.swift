@@ -1,5 +1,6 @@
 import XCTest
 @testable import ServiceWorker
+import PromiseKit
 
 class StreamPipeTests: XCTestCase {
 
@@ -20,6 +21,34 @@ class StreamPipeTests: XCTestCase {
                 XCTAssertEqual(str, "THIS IS TEST DATA")
             }
             .assertResolves()
+    }
+
+    func testPipingAStreamOffMainThread() {
+
+        let testData = "THIS IS TEST DATA".data(using: String.Encoding.utf8)!
+
+        let inputStream = InputStream(data: testData)
+        let outputStream = OutputStream.toMemory()
+
+        let (promise, fulfill, reject) = Promise<Void>.pending()
+
+        DispatchQueue.global().async {
+            StreamPipe.pipe(from: inputStream, to: outputStream, bufferSize: 1)
+                .then { _ -> Void in
+
+                    let transferredData = outputStream.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
+
+                    let str = String(data: transferredData, encoding: String.Encoding.utf8)
+
+                    XCTAssertEqual(str, "THIS IS TEST DATA")
+                    fulfill(())
+                }
+                .catch { error in
+                    reject(error)
+                }
+        }
+
+        promise.assertResolves()
     }
 
     func testPipingToMultipleStreams() {

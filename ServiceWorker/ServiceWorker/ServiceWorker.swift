@@ -147,11 +147,13 @@ import PromiseKit
 
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
-        return withExecutionEnvironment { exec in
-            if exec.currentException != nil {
-                throw ErrorMessage("Cannot dispatch event: context is in error state")
-            }
-            try exec.dispatchEvent(event)
+        if let exec = self._executionEnvironment {
+            return exec.dispatchEvent(event)
+        } else {
+            return self.getExecutionEnvironment()
+                .then { exec in
+                    exec.dispatchEvent(event)
+                }
         }
     }
 

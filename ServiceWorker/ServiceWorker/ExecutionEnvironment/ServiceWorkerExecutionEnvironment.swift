@@ -11,7 +11,7 @@ import PromiseKit
 
     fileprivate let jsContext: JSContext
     internal let globalScope: ServiceWorkerGlobalScope
-    let dispatchQueue = DispatchQueue.global(qos: .background)
+    let dispatchQueue: DispatchQueue
     let timeoutManager: TimeoutManager
 
     fileprivate static var virtualMachine = JSVirtualMachine()
@@ -42,6 +42,8 @@ import PromiseKit
         guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
             throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
         }
+
+        self.dispatchQueue = DispatchQueue(label: worker.id, qos: DispatchQoS.default, attributes: [DispatchQueue.Attributes.concurrent], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
 
         jsContext = JSContext(virtualMachine: virtualMachine)
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
@@ -201,11 +203,20 @@ import PromiseKit
             })
     }
 
-    public func dispatchEvent(_ event: Event) throws {
+    public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
-        try self.dispatchQueue.sync {
-            self.globalScope.dispatchEvent(event)
-            try self.throwExceptionIfExists()
+        let (promise, fulfill, reject) = Promise<Void>.pending()
+
+        self.dispatchQueue.async {
+            do {
+                self.globalScope.dispatchEvent(event)
+                try self.throwExceptionIfExists()
+                fulfill(())
+            } catch {
+                reject(error)
+            }
         }
+
+        return promise
     }
 }

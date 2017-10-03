@@ -282,6 +282,32 @@ class SQLiteTests: XCTestCase {
         }())
     }
 
+    func testBlobReadStreamPipeOffThread() {
+
+        let conn = try! SQLiteConnection(self.dbPath)
+        try! conn.exec(sql: """
+            CREATE TABLE "testtable" (
+                "val" BLOB NOT NULL
+            );
+        """)
+
+        let rowId = try! conn.insert(sql: "INSERT INTO testtable (val) VALUES (?)", values: ["abcdefghijk".data(using: String.Encoding.utf8) as Any])
+
+        let stream = try! conn.openBlobReadStream(table: "testtable", column: "val", row: rowId)
+
+        let output = OutputStream.toMemory()
+
+        StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
+            .then { () -> Void in
+
+                let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
+                let str = String(data: result, encoding: .utf8)
+
+                XCTAssertEqual(str, "abcdefghijk")
+            }
+            .assertResolves()
+    }
+
     func testBlobWriteStream() {
 
         XCTAssertNoThrow(try {

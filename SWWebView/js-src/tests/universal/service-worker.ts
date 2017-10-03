@@ -4,7 +4,7 @@ import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
 import { unregisterEverything } from "../util/unregister-everything";
 import { execInWorker } from "../util/exec-in-worker";
 
-describe("Service Worker", () => {
+describe.only("Service Worker", () => {
     afterEach(() => {
         return unregisterEverything();
     });
@@ -40,7 +40,7 @@ describe("Service Worker", () => {
             });
     });
 
-    it("Should import scripts successfully", () => {
+    it.only("Should import scripts successfully", () => {
         return navigator.serviceWorker
             .register("/fixtures/exec-worker.js")
             .then(reg => {
@@ -61,7 +61,7 @@ describe("Service Worker", () => {
             });
     });
 
-    it.only("Should import multiple scripts successfully", () => {
+    it("Should import multiple scripts successfully", () => {
         return navigator.serviceWorker
             .register("/fixtures/exec-worker.js")
             .then(reg => {

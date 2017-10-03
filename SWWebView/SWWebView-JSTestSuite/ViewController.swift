@@ -49,7 +49,7 @@ class ViewController: UIViewController {
         swView.containerDelegate = self.coordinator!
         self.view.addSubview(swView)
 
-        var url = URLComponents(string: "sw://alastairtest.ngrok.io/tests.html")!
+        var url = URLComponents(string: "sw://localhost:4567/tests.html")!
         URLCache.shared.removeAllCachedResponses()
         NSLog("Loading \(url.url!.absoluteString)")
         swView.load(URLRequest(url: url.url!))
