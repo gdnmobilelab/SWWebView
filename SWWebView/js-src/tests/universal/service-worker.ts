@@ -2,6 +2,7 @@ import { assert } from "chai";
 import { withIframe } from "../util/with-iframe";
 import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
 import { unregisterEverything } from "../util/unregister-everything";
+import { execInWorker } from "../util/exec-in-worker";
 
 describe("Service Worker", () => {
     afterEach(() => {
@@ -36,6 +37,48 @@ describe("Service Worker", () => {
                 worker.postMessage({ hello: "there", port: channel.port1 }, [
                     channel.port1
                 ]);
+            });
+    });
+
+    it("Should import scripts successfully", () => {
+        return navigator.serviceWorker
+            .register("/fixtures/exec-worker.js")
+            .then(reg => {
+                return waitUntilWorkerIsActivated(reg.installing!);
+            })
+            .then(worker => {
+                return execInWorker(
+                    worker,
+                    `
+                self.testValue = "unset";
+                importScripts("./script-to-import.js");
+                return self.testValue;
+                `
+                );
+            })
+            .then(returnValue => {
+                assert.equal(returnValue, "set");
+            });
+    });
+
+    it.only("Should import multiple scripts successfully", () => {
+        return navigator.serviceWorker
+            .register("/fixtures/exec-worker.js")
+            .then(reg => {
+                return waitUntilWorkerIsActivated(reg.installing!);
+            })
+            .then(worker => {
+                return execInWorker(
+                    worker,
+                    `
+                self.testValue = "unset";
+                importScripts("./script-to-import.js","./script-to-import2.js");
+                return self.testValue;
+                `
+                );
+            })
+            .then(returnValue => {
+                assert.equal(returnValue, "set again");
             });
     });
 });

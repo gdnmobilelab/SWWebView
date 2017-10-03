@@ -41,6 +41,10 @@ import JavaScriptCore
 
                 task.resume()
                 return fetchTask.hasResponse
+                    .always {
+                        // just make sure we don't hold references unnecessarily
+                        self.runningTasks.remove(fetchTask)
+                    }
                     .then { response -> FetchResponseProtocol in
 
                         if request.mode == .NoCORS && corsRestrictions.isCrossDomain == true {
