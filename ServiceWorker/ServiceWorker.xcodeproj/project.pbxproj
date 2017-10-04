@@ -61,6 +61,9 @@
 		8A5D98161F3DF8C2002E521F /* FMDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98131F3DF8C2002E521F /* FMDB.framework */; };
 		8A5D98171F3DF8C2002E521F /* Gzip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D98141F3DF8C2002E521F /* Gzip.framework */; };
 		8A653E871F6983B500115228 /* GlobalContextMessingAround.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A653E861F6983B500115228 /* GlobalContextMessingAround.swift */; };
+		8A755C0B1F8569B1003720B8 /* EventPromiseExtender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0A1F8569B1003720B8 /* EventPromiseExtender.swift */; };
+		8A755C0D1F856B73003720B8 /* FetchEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0C1F856B73003720B8 /* FetchEvent.swift */; };
+		8A755C0F1F856BD0003720B8 /* FetchEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0E1F856BD0003720B8 /* FetchEventTests.swift */; };
 		8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */; };
 		8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */; };
 		8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9831C01F60C5D100ED23F0 /* FetchSession.swift */; };
@@ -200,6 +203,9 @@
 		8A5D98131F3DF8C2002E521F /* FMDB.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FMDB.framework; path = ../Carthage/Build/iOS/FMDB.framework; sourceTree = "<group>"; };
 		8A5D98141F3DF8C2002E521F /* Gzip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Gzip.framework; path = ../Carthage/Build/iOS/Gzip.framework; sourceTree = "<group>"; };
 		8A653E861F6983B500115228 /* GlobalContextMessingAround.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalContextMessingAround.swift; sourceTree = "<group>"; };
+		8A755C0A1F8569B1003720B8 /* EventPromiseExtender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPromiseExtender.swift; sourceTree = "<group>"; };
+		8A755C0C1F856B73003720B8 /* FetchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchEvent.swift; sourceTree = "<group>"; };
+		8A755C0E1F856BD0003720B8 /* FetchEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchEventTests.swift; sourceTree = "<group>"; };
 		8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClient.swift; sourceTree = "<group>"; };
 		8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsTests.swift; sourceTree = "<group>"; };
 		8A9831C01F60C5D100ED23F0 /* FetchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchSession.swift; sourceTree = "<group>"; };
@@ -476,6 +482,8 @@
 				8AD141081F716C3800ED2D2C /* EventListenerProtocol.swift */,
 				8AD1410A1F716CA800ED2D2C /* JSEventListener.swift */,
 				8AD1410C1F716E9A00ED2D2C /* SwiftEventListener.swift */,
+				8A755C0A1F8569B1003720B8 /* EventPromiseExtender.swift */,
+				8A755C0C1F856B73003720B8 /* FetchEvent.swift */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -620,6 +628,7 @@
 			children = (
 				8AC7550D1F312A1200C6B70A /* EventTargetTests.swift */,
 				8AC7550E1F312A1200C6B70A /* ExtendableEventTests.swift */,
+				8A755C0E1F856BD0003720B8 /* FetchEventTests.swift */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -953,6 +962,7 @@
 				8AC755341F3240B500C6B70A /* Migration.swift in Sources */,
 				8A181A941F717C5C005CED14 /* MessageChannel.swift in Sources */,
 				8AC754E31F31252B00C6B70A /* ServiceWorkerRegistrationProtocol.swift in Sources */,
+				8A755C0D1F856B73003720B8 /* FetchEvent.swift in Sources */,
 				8AC755351F3240BA00C6B70A /* SQLiteBlobReadStream.swift in Sources */,
 				8A43C1871F4F29A2001221C1 /* ClientMatchAllOptions.swift in Sources */,
 				8AC754E41F31252B00C6B70A /* JSPromise.swift in Sources */,
@@ -978,6 +988,7 @@
 				8AC754EB1F31252B00C6B70A /* ServiceWorkerInstallState.swift in Sources */,
 				8AD141031F7168CB00ED2D2C /* MessagePort.swift in Sources */,
 				8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */,
+				8A755C0B1F8569B1003720B8 /* EventPromiseExtender.swift in Sources */,
 				8A177BDB1F7EC2730097CA3D /* PassthroughStream.swift in Sources */,
 				8AD140FB1F70401800ED2D2C /* WebSQLResultRows.swift in Sources */,
 				8A463DEC1F6C207700AA5B26 /* GlobalVariableProvider.swift in Sources */,
@@ -1024,6 +1035,7 @@
 				8AC7551E1F312A3200C6B70A /* ImportScriptsTests.swift in Sources */,
 				8AC755281F32404A00C6B70A /* ServiceWorkerExtensions.swift in Sources */,
 				8AEBD30E1F7D624600AF1A21 /* StreamPipeTests.swift in Sources */,
+				8A755C0F1F856BD0003720B8 /* FetchEventTests.swift in Sources */,
 				8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */,
 				8AC7550F1F312A1200C6B70A /* Bootstrap.swift in Sources */,
 				8A177BEC1F7EF37E0097CA3D /* FetchPerformance.swift in Sources */,

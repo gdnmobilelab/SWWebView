@@ -108,7 +108,20 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
             //            if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
             //                return try self.startServiceWorkerTask(modifiedTask, webview: swWebView)
             //            }
-
+            
+            guard let referrer = task.referrer else {
+                throw ErrorMessage("All non-event stream SW API tasks must send a referer header")
+            }
+    
+            guard let container = webview.containerDelegate?.container(webview, getContainerFor: referrer) else {
+                throw ErrorMessage("ServiceWorkerContainer should already exist before any tasks are run")
+            }
+            
+            
+            
+            
+            
+            
             // Need to flesh this out, but for now we're using this for tests
             let req = FetchRequest(url: requestURL)
             req.cache = .NoCache

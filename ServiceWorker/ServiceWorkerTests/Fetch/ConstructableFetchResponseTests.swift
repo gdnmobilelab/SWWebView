@@ -5,18 +5,6 @@ import JavaScriptCore
 
 class ConstructableFetchResponseTests: XCTestCase {
 
-    func testManualTestResponseCreation() {
-
-        let jsc = JSContext()!
-        jsc.globalObject.setValue(ConstructableFetchResponse.self, forProperty: "Response")
-        let resp = JSPromise.fromJSValue(jsc.evaluateScript("new Response(\"hello\").text()")!)
-        resp
-            .then { response -> Void in
-                XCTAssertEqual(response!.value.toString(), "hello")
-            }
-            .assertResolves()
-    }
-
     func testManualTextResponseCreationInWorker() {
 
         let sw = ServiceWorker.createTestWorker(id: self.name)

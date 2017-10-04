@@ -269,7 +269,7 @@ class SQLiteTests: XCTestCase {
 
             let output = OutputStream.toMemory()
 
-            StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
+            StreamPipe.pipe(from: stream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
                 .then { () -> Void in
 
                     let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
@@ -297,7 +297,7 @@ class SQLiteTests: XCTestCase {
 
         let output = OutputStream.toMemory()
 
-        StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
+        StreamPipe.pipe(from: stream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
             .then { () -> Void in
 
                 let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
@@ -364,7 +364,7 @@ class SQLiteTests: XCTestCase {
             let insertStream = InputStream(url: tempFile)!
             let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
-            StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1)
+            StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1, dispatchQueue: DispatchQueue.default)
                 .then { () -> Void in
 
                     NSLog("hi")
@@ -391,14 +391,14 @@ class SQLiteTests: XCTestCase {
 
             let output = OutputStream.toMemory()
 
-            StreamPipe.pipe(from: readstream, to: output, bufferSize: 1)
+            StreamPipe.pipe(from: readstream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
                 .then {
 
                     let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
                     let newInput = InputStream(data: result)
                     let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
-                    return StreamPipe.pipe(from: newInput, to: writestream, bufferSize: 1)
+                    return StreamPipe.pipe(from: newInput, to: writestream, bufferSize: 1, dispatchQueue: DispatchQueue.default)
                     //                    let str = String(data: result, encoding: .utf8)
                     //
                     //                    XCTAssertEqual(str, "abcdefghijk")
@@ -480,4 +480,23 @@ class SQLiteTests: XCTestCase {
 
         }())
     }
+
+    //    func testDatabaseLocking() {
+    //        let conn = try! SQLiteConnection(self.dbPath)
+    //        try! conn.exec(sql: """
+    //            CREATE TABLE "testtable" (
+    //                "val" TEXT NOT NULL
+    //            );
+    //            INSERT INTO testtable(val) values('hello');
+    //        """)
+    //
+    //        try! conn.select(sql: "SELECT * FROM testtable") { rs in
+    //            _ = try! rs.next()
+    //            DispatchQueue.global().asyncAfter(deadline: .now() + 0.2, execute: {
+    //                try! conn.exec(sql: "DROP TABLE testtable")
+    //            })
+    //
+    //            usleep(300_000)
+    //        }
+    //    }
 }

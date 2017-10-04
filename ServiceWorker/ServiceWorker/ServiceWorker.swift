@@ -34,6 +34,10 @@ import PromiseKit
         }
     }
 
+    public var dispatchQueue: DispatchQueue? {
+        return self._executionEnvironment?.dispatchQueue
+    }
+
     public init(id: String, url: URL, state: ServiceWorkerInstallState) {
 
         self.id = id

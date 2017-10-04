@@ -9,16 +9,17 @@ public class StreamPipe: NSObject, StreamDelegate {
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
     var finished: Bool = false
-    let dispatchQueue = DispatchQueue(label: "StreamPipe", qos: DispatchQoS.background, attributes: [], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
+    let dispatchQueue: DispatchQueue
     let runLoop = RunLoop()
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 
     public fileprivate(set) var started: Bool = false
 
-    public init(from: InputStream, bufferSize: Int) {
+    public init(from: InputStream, bufferSize: Int, dispatchQueue: DispatchQueue) {
         self.from = from
         self.bufferSize = bufferSize
         self.buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        self.dispatchQueue = dispatchQueue
         super.init()
         from.delegate = self
     }
@@ -72,18 +73,18 @@ public class StreamPipe: NSObject, StreamDelegate {
         StreamPipe.currentlyRunning.insert(self)
         self.start()
         return self.complete
-            .always {
+            .always(on: self.dispatchQueue, execute: {
                 StreamPipe.currentlyRunning.remove(self)
-            }
+            })
     }
 
     /// This is really dumb, but it loses the reference to the StreamPipe if I do this
     /// any other way
     fileprivate static var currentlyRunning = Set<StreamPipe>()
 
-    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Void> {
+    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue: DispatchQueue) -> Promise<Void> {
 
-        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize, dispatchQueue: dispatchQueue)
 
         return firstly {
             try pipe.add(stream: to)
@@ -92,12 +93,12 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
     }
 
-    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Data> {
+    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue: DispatchQueue) -> Promise<Data> {
 
         var hashToUse = CC_SHA256_CTX()
         CC_SHA256_Init(&hashToUse)
 
-        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize, dispatchQueue: dispatchQueue)
 
         pipe.hashListener = { bytes, count in
             CC_SHA256_Update(&hashToUse, bytes, CC_LONG(count))
@@ -106,10 +107,11 @@ public class StreamPipe: NSObject, StreamDelegate {
         return firstly {
             try pipe.add(stream: to)
             return pipe.pipe()
-        }.then { () -> Data in
-            var hashData: [UInt8] = Array(repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-            CC_SHA256_Final(&hashData, &hashToUse)
-            return Data(bytes: hashData)
+                .then(on: pipe.dispatchQueue, execute: { () -> Data in
+                    var hashData: [UInt8] = Array(repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+                    CC_SHA256_Final(&hashData, &hashToUse)
+                    return Data(bytes: hashData)
+                })
         }
     }
 

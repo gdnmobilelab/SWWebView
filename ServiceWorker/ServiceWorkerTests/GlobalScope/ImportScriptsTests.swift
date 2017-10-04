@@ -32,7 +32,7 @@ class ImportScriptsTests: XCTestCase {
             self.content = ""
         }
 
-        func serviceWorker(_: ServiceWorker, importScript: URL, _ callback: @escaping (Error?, String?) -> Void) {
+        func serviceWorker(_: ServiceWorker, importScript: URL, onQueue _: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
             self.importFunc(importScript, callback)
         }
 

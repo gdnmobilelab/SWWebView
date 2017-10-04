@@ -26,7 +26,7 @@ import PromiseKit
 }
 
 @objc public protocol ConstructableFetchResponseJSExports: FetchResponseJSExports, JSExport {
-    init(body: JSValue, options: [String: Any]?)
+    init?(body: JSValue, options: [String: Any]?)
 }
 
 /// This is now a giant swirling mess of protocols, but FetchResponseProtocol isn't

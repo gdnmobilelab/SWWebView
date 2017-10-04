@@ -33,9 +33,19 @@ public class PassthroughStream {
             let lengthToRead = min(maxLength, self.data.count)
 
             self.data.copyBytes(to: buffer, count: lengthToRead)
-            self.data = self.data.advanced(by: lengthToRead)
+            if lengthToRead == self.data.count {
+                self.data = Data(count: 0)
+            } else {
+                self.data = self.data.advanced(by: lengthToRead)
+            }
 
             return lengthToRead
+        }
+
+        func close() {
+            if let delegate = self.inputDelegate {
+                delegate.close()
+            }
         }
     }
 
@@ -50,14 +60,20 @@ public class PassthroughStream {
 
         override func open() {
             self.streamStatus = .open
+            self.emitEvent(event: .openCompleted)
         }
 
         override func close() {
             self.streamStatus = .closed
+            self.emitEvent(event: .endEncountered)
         }
 
         override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
             return self.data.read(buffer: buffer, maxLength: len)
+        }
+
+        override var hasBytesAvailable: Bool {
+            return self.data.data.count > 0
         }
     }
 
@@ -76,6 +92,12 @@ public class PassthroughStream {
 
         override func close() {
             self.streamStatus = .closed
+            self.data.close()
+        }
+
+        override var hasSpaceAvailable: Bool {
+            // This is never not true
+            return true
         }
 
         override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {

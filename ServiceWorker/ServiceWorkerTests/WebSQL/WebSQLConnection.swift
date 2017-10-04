@@ -32,7 +32,7 @@ class WebSQLConnectionTests: XCTestCase {
             return webSQLTestPath.appendingPathComponent(worker.url.host!, isDirectory: true)
         }
 
-        func serviceWorker(_: ServiceWorker, importScript _: URL, _ callback: @escaping (Error?, String?) -> Void) {
+        func serviceWorker(_: ServiceWorker, importScript _: URL, onQueue _: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
             callback(ErrorMessage("not implemented"), nil)
         }
 

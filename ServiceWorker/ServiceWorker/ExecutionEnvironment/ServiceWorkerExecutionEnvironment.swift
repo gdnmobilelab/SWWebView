@@ -27,6 +27,11 @@ import PromiseKit
         static var allJSContexts = NSHashTable<JSContext>.weakObjects()
     #endif
 
+    // ConstructableFetchResponse needs a reference to the dispatchQueue attached to any particular
+    // JSContext. So we store that connection here, with weak memory so that they are automatically
+    // removed when no longer in use.
+    static var contextDispatchQueues = NSMapTable<JSContext, DispatchQueue>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
+
     var jsContextName: String {
         set(value) {
             self.jsContext.name = value
@@ -46,6 +51,8 @@ import PromiseKit
         self.dispatchQueue = DispatchQueue(label: worker.id, qos: DispatchQoS.utility, attributes: [.concurrent], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.workItem, target: nil)
 
         jsContext = JSContext(virtualMachine: virtualMachine)
+
+        ServiceWorkerExecutionEnvironment.contextDispatchQueues.setObject(self.dispatchQueue, forKey: jsContext)
 
         // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
         #if DEBUG
@@ -161,7 +168,7 @@ import PromiseKit
         // to do the actual import. I'm sure there is a better way of doing this.
 
         DispatchQueue.global(qos: DispatchQoS.QoSClass.utility).async {
-            loadFunction(self.worker, url) { err, body in
+            loadFunction(self.worker, url, self.dispatchQueue) { err, body in
                 if err != nil {
                     error = err
                 } else {

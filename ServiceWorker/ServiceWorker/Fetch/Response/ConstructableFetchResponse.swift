@@ -7,7 +7,7 @@ import JavaScriptCore
         return .Basic
     }
 
-    required init(body: JSValue, options: [String: Any]?) {
+    required init?(body: JSValue, options: [String: Any]?) {
 
         let headers = FetchHeaders()
         var status = 200
@@ -36,7 +36,11 @@ import JavaScriptCore
 
         let inputStream = ConstructableFetchResponse.convert(val: body)
 
-        let streamPipe = StreamPipe(from: inputStream, bufferSize: 32768)
+        guard let dispatchQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: body.context) else {
+            return nil
+        }
+
+        let streamPipe = StreamPipe(from: inputStream, bufferSize: 32768, dispatchQueue: dispatchQueue)
 
         super.init(url: nil, headers: headers, status: status, statusText: statusText, redirected: false, streamPipe: streamPipe)
     }

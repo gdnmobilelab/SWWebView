@@ -7,14 +7,17 @@ import JavaScriptCore
     public static let `default` = FetchSession(qos: DispatchQoS.QoSClass.utility)
 
     fileprivate var session: URLSession!
-//    fileprivate let dispatchQueue: DispatchQueue
+    fileprivate let dispatchQueue: DispatchQueue
 
     fileprivate var runningTasks = Set<FetchTask>()
 
     init(qos: DispatchQoS.QoSClass) {
-//        self.dispatchQueue = DispatchQueue.global(qos: qos)
+        self.dispatchQueue = DispatchQueue.global(qos: qos)
         super.init()
-        self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+        self.dispatchQueue.sync {
+            // ensure the operation queue is the right one. I think?
+            self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: OperationQueue.current)
+        }
     }
 
     public func fetch(_ url: URL) -> Promise<FetchResponseProtocol> {
@@ -25,7 +28,7 @@ import JavaScriptCore
     public func fetch(_ request: FetchRequest, fromOrigin: URL? = nil) -> Promise<FetchResponseProtocol> {
 
         return self.performCORSCheck(for: request, inOrigin: fromOrigin)
-            .then { corsRestrictions in
+            .then(on: self.dispatchQueue, execute: { corsRestrictions -> Promise<FetchResponseProtocol> in
 
                 let nsRequest = request.toURLRequest()
                 let task = self.session.dataTask(with: nsRequest)
@@ -33,7 +36,7 @@ import JavaScriptCore
                 // We use the task wrapper to track which responsea are attached to the task.
                 // Most of the time there is a 1:1 relationship, but if we use response.clone()
                 // then more than one will be attached.
-                let fetchTask = FetchTask(for: task, with: request)
+                let fetchTask = FetchTask(for: task, with: request, on: self.dispatchQueue)
 
                 self.runningTasks.insert(fetchTask)
 
@@ -43,11 +46,11 @@ import JavaScriptCore
 
                 task.resume()
                 return fetchTask.hasResponse
-                    .always {
+                    .always(on: self.dispatchQueue, execute: {
                         // just make sure we don't hold references unnecessarily
                         self.runningTasks.remove(fetchTask)
-                    }
-                    .then { response -> FetchResponseProtocol in
+                    })
+                    .then(on: self.dispatchQueue, execute: { response -> FetchResponseProtocol in
 
                         if request.mode == .NoCORS && corsRestrictions.isCrossDomain == true {
                             return try OpaqueResponse(from: response)
@@ -56,8 +59,8 @@ import JavaScriptCore
                         } else {
                             return try BasicResponse(from: response)
                         }
-                    }
-            }
+                    })
+            })
     }
 
     internal func fetch(_ requestOrURL: JSValue, fromOrigin origin: URL) -> JSValue? {
@@ -110,7 +113,7 @@ import JavaScriptCore
         optionsRequest.method = "OPTIONS"
 
         return self.fetch(optionsRequest)
-            .then { res -> FetchCORSRestrictions in
+            .then(on: self.dispatchQueue, execute: { res -> FetchCORSRestrictions in
 
                 let allowedOrigin = res.headers.get("Access-Control-Allow-Origin")
 
@@ -139,7 +142,7 @@ import JavaScriptCore
                 }
 
                 return FetchCORSRestrictions(isCrossDomain: isCrossOrigin, allowedHeaders: exposedHeaders)
-            }
+            })
     }
 
     public func urlSession(_: URLSession, task: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse, newRequest: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {

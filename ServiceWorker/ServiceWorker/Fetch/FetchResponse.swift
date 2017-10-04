@@ -45,7 +45,7 @@ import JavaScriptCore
         let (passthroughInput, passthroughOutput) = PassthroughStream.create()
         try streamPipe.add(stream: passthroughOutput)
 
-        let newStreamPipe = StreamPipe(from: passthroughInput, bufferSize: streamPipe.bufferSize)
+        let newStreamPipe = StreamPipe(from: passthroughInput, bufferSize: streamPipe.bufferSize, dispatchQueue: streamPipe.dispatchQueue)
 
         let clone = FetchResponse(url: url, headers: headers, status: status, redirected: redirected, streamPipe: newStreamPipe)
         return clone
@@ -70,7 +70,7 @@ import JavaScriptCore
     //        self.dataStream.close()
     //    }
 
-    func data() -> Promise<Data> {
+    fileprivate func dataTransformer<T>(transformer: @escaping (Data) throws -> T) -> Promise<T> {
         return firstly {
             try self.markBodyUsed()
 
@@ -83,15 +83,19 @@ import JavaScriptCore
             try streamPipe.add(stream: memoryStream)
 
             return streamPipe.pipe()
-                .then { () -> Data in
+                .then(on: streamPipe.dispatchQueue, execute: { () -> T in
 
                     guard let data = memoryStream.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as? Data else {
                         throw ErrorMessage("Could not fetch in-memory data from stream")
                     }
 
-                    return data
-                }
+                    return try transformer(data)
+                })
         }
+    }
+
+    func data() -> Promise<Data> {
+        return self.dataTransformer(transformer: { $0 })
     }
 
     public func fileDownload<T>(_ callback: @escaping (URL, Int64) throws -> Promise<T>) -> Promise<T> {
@@ -113,26 +117,26 @@ import JavaScriptCore
 
             try streamPipe.add(stream: fileStream)
             return streamPipe.pipe()
-                .then { () -> Promise<T> in
+                .then(on: streamPipe.dispatchQueue, execute: { () -> Promise<T> in
                     let fileAttributes = try FileManager.default.attributesOfItem(atPath: downloadPath.path)
                     guard let size = fileAttributes[.size] as? Int64 else {
                         throw ErrorMessage("Could not get size of downloaded file")
                     }
 
                     return try callback(downloadPath, size)
-                }
-                .then { result -> T in
+                })
+                .then(on: streamPipe.dispatchQueue, execute: { result -> T in
                     try FileManager.default.removeItem(at: downloadPath)
                     return result
-                }
+                })
         }
     }
 
     func json() -> Promise<Any?> {
-        return self.data()
-            .then { data -> Any in
-                try JSONSerialization.jsonObject(with: data, options: [])
-            }
+
+        return self.dataTransformer(transformer: { data in
+            try JSONSerialization.jsonObject(with: data, options: [])
+        })
     }
 
     func json() -> JSValue? {
@@ -172,13 +176,12 @@ import JavaScriptCore
 
         let encoding = FetchResponse.guessCharsetFrom(headers: headers)
 
-        return self.data()
-            .then { data -> String in
-                guard let str = String(data: data, encoding: encoding) else {
-                    throw ErrorMessage("Could not decode string content")
-                }
-                return str
+        return self.dataTransformer(transformer: { data in
+            guard let str = String(data: data, encoding: encoding) else {
+                throw ErrorMessage("Could not decode string content")
             }
+            return str
+        })
     }
 
     func text() -> JSValue? {
@@ -192,10 +195,9 @@ import JavaScriptCore
             return nil
         }
 
-        return self.data()
-            .then { data -> JSValue in
-                JSArrayBuffer.make(from: data, in: currentContext)
-            }
+        return self.dataTransformer(transformer: { data in
+            JSArrayBuffer.make(from: data, in: currentContext)
+        })
             .toJSPromise(in: currentContext)
     }
 

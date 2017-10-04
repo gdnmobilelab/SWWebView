@@ -4,7 +4,7 @@ import { waitUntilWorkerIsActivated } from "../util/sw-lifecycle";
 import { unregisterEverything } from "../util/unregister-everything";
 import { execInWorker } from "../util/exec-in-worker";
 
-describe.only("Service Worker", () => {
+describe("Service Worker", () => {
     afterEach(() => {
         return unregisterEverything();
     });
@@ -40,7 +40,7 @@ describe.only("Service Worker", () => {
             });
     });
 
-    it.only("Should import scripts successfully", () => {
+    it("Should import a script successfully", () => {
         return navigator.serviceWorker
             .register("/fixtures/exec-worker.js")
             .then(reg => {
@@ -80,5 +80,30 @@ describe.only("Service Worker", () => {
             .then(returnValue => {
                 assert.equal(returnValue, "set again");
             });
+    });
+
+    it.only("Should send fetch events to worker", () => {
+        return withIframe("/fixtures/blank.html", ({ window, navigator }) => {
+            navigator.serviceWorker.register("./test-response-worker.js");
+
+            return new Promise(fulfill => {
+                navigator.serviceWorker.oncontrollerchange = fulfill;
+            })
+                .then(reg => {
+                    return window.fetch("testfile?test=hello");
+                })
+                .then(res => {
+                    assert.equal(res.status, 200);
+                    assert.equal(
+                        res.headers.get("content-type"),
+                        "application/json"
+                    );
+                    return res.json();
+                })
+                .then(json => {
+                    assert.equal(json.success, true);
+                    assert.equal(json.queryValue, "hello");
+                });
+        });
     });
 });

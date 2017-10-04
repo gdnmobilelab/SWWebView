@@ -6,6 +6,7 @@ class FetchTask: NSObject {
     let dataTask: URLSessionDataTask
     var streamTask: URLSessionStreamTask?
     let request: FetchRequest
+    fileprivate let dispatchQueue: DispatchQueue
 
     var responses = Set<FetchResponse>()
     var initialResponse: HTTPURLResponse?
@@ -17,9 +18,10 @@ class FetchTask: NSObject {
         return self.hasResponsePromise.promise
     }
 
-    init(for task: URLSessionDataTask, with request: FetchRequest) {
+    init(for task: URLSessionDataTask, with request: FetchRequest, on queue: DispatchQueue) {
         self.dataTask = task
         self.request = request
+        self.dispatchQueue = queue
         super.init()
     }
 
@@ -46,7 +48,7 @@ class FetchTask: NSObject {
     }
 
     func receiveStream(stream: InputStream) throws {
-        let streamPipe = StreamPipe(from: stream, bufferSize: 32768) // 32KB? No idea what's right
+        let streamPipe = StreamPipe(from: stream, bufferSize: 1024, dispatchQueue: self.dispatchQueue)
 
         guard let initialResponse = self.initialResponse else {
             throw ErrorMessage("Received stream but no HTTP response")

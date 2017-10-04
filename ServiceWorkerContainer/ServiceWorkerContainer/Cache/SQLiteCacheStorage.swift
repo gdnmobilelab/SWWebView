@@ -167,7 +167,12 @@ import PromiseKit
         }
 
         let readStream = try db.openBlobReadStream(table: "cache_entries", column: "response_body", row: rowID)
-        let streamPipe = StreamPipe(from: readStream, bufferSize: 1024)
+
+        guard let dispatchQueue = self.worker?.dispatchQueue else {
+            throw ErrorMessage("Could not get worker dispatch queue")
+        }
+
+        let streamPipe = StreamPipe(from: readStream, bufferSize: 1024, dispatchQueue: dispatchQueue)
         let responseHeaders = try FetchHeaders.fromJSON(responseHeadersJSON)
         let response = FetchResponse(url: url, headers: responseHeaders, status: responseStatus, statusText: responseStatusText, redirected: responseRedirected == 1, streamPipe: streamPipe)
 
@@ -416,7 +421,10 @@ import PromiseKit
                 guard let fileStream = InputStream(url: fileURL) else {
                     throw ErrorMessage("Could not open stream to local file")
                 }
-                return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024)
+                guard let dispatchQueue = self.worker?.dispatchQueue else {
+                    throw ErrorMessage("Could not get worker dispatch queue")
+                }
+                return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024, dispatchQueue: dispatchQueue)
             }
         }
     }
