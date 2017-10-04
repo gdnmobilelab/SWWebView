@@ -114,10 +114,15 @@ import PromiseKit
     }
 
     public func withJSContext(_ cb: @escaping (JSContext) throws -> Void) -> Promise<Void> {
-        return getExecutionEnvironment()
-            .then { exec -> Promise<Void> in
-                exec.withJSContext(cb)
-            }
+
+        if let exec = self._executionEnvironment {
+            return exec.withJSContext(cb)
+        } else {
+            return self.getExecutionEnvironment()
+                .then { exec in
+                    exec.withJSContext(cb)
+                }
+        }
     }
 
     @objc func evaluateScript(_ script: String, callback: @escaping (Error?, JSValue?) -> Void) {
@@ -130,20 +135,20 @@ import PromiseKit
             }
     }
 
-    internal func withExecutionEnvironment(_ cb: @escaping (ServiceWorkerExecutionEnvironment) throws -> Void) -> Promise<Void> {
-        if let exec = self._executionEnvironment {
-            do {
-                try cb(exec)
-                return Promise(value: ())
-            } catch {
-                return Promise(error: error)
-            }
-        }
-        return getExecutionEnvironment()
-            .then { exec in
-                try cb(exec)
-            }
-    }
+    //    internal func withExecutionEnvironment(_ cb: @escaping (ServiceWorkerExecutionEnvironment) throws -> Void) -> Promise<Void> {
+    //        if let exec = self._executionEnvironment {
+    //            do {
+    //                try cb(exec)
+    //                return Promise(value: ())
+    //            } catch {
+    //                return Promise(error: error)
+    //            }
+    //        }
+    //        return getExecutionEnvironment()
+    //            .then { exec in
+    //                try cb(exec)
+    //            }
+    //    }
 
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 

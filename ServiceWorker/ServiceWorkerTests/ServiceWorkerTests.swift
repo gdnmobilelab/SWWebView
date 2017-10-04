@@ -26,4 +26,60 @@ class ServiceWorkerTests: XCTestCase {
             }
             .assertResolves()
     }
+
+    func testThreadFreezing() {
+
+        let sw = ServiceWorker.createTestWorker(id: name, content: "var testValue = 'hello';")
+
+        sw.withJSContext { _ in
+
+            let semaphore = DispatchSemaphore(value: 0)
+
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
+
+                NSLog("signalling")
+                semaphore.signal()
+            })
+
+            DispatchQueue.global().async {
+                Promise(value: ())
+                    .then {
+                        NSLog("doing this now")
+                    }
+            }
+
+            NSLog("waiting")
+            semaphore.wait()
+        }
+        .assertResolves()
+    }
+
+    func testThreadFreezingInJS() {
+
+        let sw = ServiceWorker.createTestWorker(id: name, content: "var testValue = 'hello';")
+
+        let run: @convention(block) () -> Void = {
+            let semaphore = DispatchSemaphore(value: 0)
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
+
+                Promise(value: ())
+                    .then { () -> Void in
+                        NSLog("signalling")
+                        semaphore.signal()
+                    }
+
+            })
+            NSLog("wait")
+            semaphore.wait()
+        }
+
+        sw.withJSContext { context in
+
+            context.globalObject.setValue(run, forProperty: "testFunc")
+        }
+        .then {
+            return sw.evaluateScript("testFunc()")
+        }
+        .assertResolves()
+    }
 }

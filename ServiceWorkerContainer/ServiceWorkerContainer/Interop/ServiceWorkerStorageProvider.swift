@@ -14,70 +14,49 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
         return self.storageURL.appendingPathComponent("core.db")
     }
 
-    public func serviceWorker(_ worker: ServiceWorker, importScripts scripts: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
-        DBConnectionPool.inConnection(at: self.getCoreDatabaseURL(), type: .core) { db -> Promise<[String: String]> in
+    public func serviceWorker(_ worker: ServiceWorker, importScript script: URL, _ callback: @escaping (Error?, String?) -> Void) {
 
-            // first we grab scripts from our local cache
+        var existing: String?
 
-            // We need to pass in the number of parameters manually.
-            let parameters = scripts.map({ _ in "?" }).joined(separator: ",")
+        do {
+            existing = try DBConnectionPool.inConnection(at: self.getCoreDatabaseURL(), type: .core) { db -> String? in
 
-            var params: [Any] = [worker.id]
+                return try db.select(sql: "SELECT content FROM worker_imported_scripts WHERE worker_id = ? AND url = ?", values: [script]) { resultSet in
 
-            // Don't know why, but compiler doesn't like append contentsOf
-            scripts.forEach { params.append($0) }
-
-            return try db.select(sql: "SELECT url, content FROM worker_imported_scripts WHERE worker_id = ? AND url IN (\(parameters))", values: params) { resultSet in
-
-                var scriptBodies: [String: String] = [:]
-
-                while try resultSet.next() {
-                    guard let url = try resultSet.string("url"), let content = try resultSet.string("content") else {
-                        throw ErrorMessage("An imported script was missing a URL or content")
-                    }
-                    scriptBodies[url] = content
-                }
-
-                return Promise(value: scriptBodies)
-            }
-        }
-        .then { cachedScripts -> Promise<Void> in
-
-            var allScripts = cachedScripts
-
-            // then we grab and cache any scripts not already locally cached
-
-            let scriptsToFetch = scripts.filter { cachedScripts.index(forKey: $0.absoluteString) == nil }
-
-            let fetchPromises = scriptsToFetch.map { url in
-                return self.downloadAndCacheScript(id: worker.id, url: url)
-                    .then { body -> Void in
-                        allScripts[url.absoluteString] = body
-                    }
-            }
-
-            return when(fulfilled: fetchPromises)
-                .then { _ -> Void in
-
-                    let scriptBodies = try scripts.map { url -> String in
-
-                        guard let scriptContent = allScripts[url.absoluteString] else {
-                            throw ErrorMessage("Imported script is still not in dictionary")
+                    if try resultSet.next() {
+                        guard let content = try resultSet.string("content") else {
+                            throw ErrorMessage("An imported script was missing a URL or content")
                         }
-
-                        return scriptContent
+                        return content
+                    } else {
+                        return nil
                     }
-
-                    callback(nil, scriptBodies)
                 }
-        }
-        .catch { error in
+            }
+
+        } catch {
             callback(error, nil)
+            return
         }
+
+        if let existingContent = existing {
+            callback(nil, existingContent)
+            return
+        }
+
+        self.downloadAndCacheScript(id: worker.id, url: script)
+            .then { body in
+                callback(nil, body)
+            }
+            .catch { error in
+                callback(error, nil)
+            }
     }
 
     fileprivate func downloadAndCacheScript(id: String, url: URL) -> Promise<String> {
+
         return FetchSession.default.fetch(url)
+
             .then { res in
 
                 // We have to download to a local file first, because we can't rely on a

@@ -4,13 +4,15 @@ import JavaScriptCore
 
 @objc public class FetchSession: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionStreamDelegate {
 
-    public static let `default` = FetchSession()
+    public static let `default` = FetchSession(qos: DispatchQoS.QoSClass.utility)
 
     fileprivate var session: URLSession!
+//    fileprivate let dispatchQueue: DispatchQueue
 
     fileprivate var runningTasks = Set<FetchTask>()
 
-    override init() {
+    init(qos: DispatchQoS.QoSClass) {
+//        self.dispatchQueue = DispatchQueue.global(qos: qos)
         super.init()
         self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
     }

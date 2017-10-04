@@ -43,11 +43,11 @@ import PromiseKit
             throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
         }
 
-        self.dispatchQueue = DispatchQueue(label: worker.id, qos: DispatchQoS.default, attributes: [DispatchQueue.Attributes.concurrent], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
+        self.dispatchQueue = DispatchQueue(label: worker.id, qos: DispatchQoS.utility, attributes: [.concurrent], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.workItem, target: nil)
 
         jsContext = JSContext(virtualMachine: virtualMachine)
-        // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
 
+        // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
         #if DEBUG
             ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
         #endif
@@ -112,8 +112,10 @@ import PromiseKit
 
     public func evaluateScript(_ script: String, withSourceURL: URL? = nil) -> Promise<JSValue?> {
 
-        return Promise(value: ())
-            .then(on: dispatchQueue, execute: { () -> JSValue? in
+        let (promise, fulfill, reject) = Promise<JSValue?>.pending()
+
+        self.dispatchQueue.async {
+            do {
                 if self.currentException != nil {
                     throw ErrorMessage("Cannot run script while context has an exception")
                 }
@@ -122,8 +124,13 @@ import PromiseKit
 
                 try self.throwExceptionIfExists()
 
-                return returnVal
-            })
+                fulfill(returnVal)
+            } catch {
+                reject(error)
+            }
+        }
+
+        return promise
     }
 
     func openWebSQLDatabase(name: String) throws -> WebSQLDatabase {
@@ -134,60 +141,47 @@ import PromiseKit
 
     func importScripts(urls: [URL]) throws {
 
-        dispatchQueue.sync {
+        dispatchPrecondition(condition: .onQueue(self.dispatchQueue))
 
-            // We want our worker execution thread to pause at this point, so that
-            // we can do remote fetching of content.
+        guard let url = urls.first else {
+            // We've finished the array
+            return
+        }
 
-            let semaphore = DispatchSemaphore(value: 0)
+        guard let loadFunction = self.worker.delegate?.serviceWorker else {
+            throw ErrorMessage("Worker delegate does not implement importScripts")
+        }
 
-            var error: Error?
-            var scripts: [String]?
+        let semaphore = DispatchSemaphore(value: 0)
 
-            DispatchQueue.global().async {
+        var error: Error?
+        var content: String?
 
-                // Now, outside of our worker thread, we fetch the scripts
+        // Because we're freezing the worker thread, we need to start another one in order
+        // to do the actual import. I'm sure there is a better way of doing this.
 
-                if self.worker.delegate?.serviceWorker(self.worker, importScripts: urls, { err, importedScripts in
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.utility).async {
+            loadFunction(self.worker, url) { err, body in
+                if err != nil {
                     error = err
-                    scripts = importedScripts
-
-                    // With the variables set, we can now resume on our worker thread.
-                    semaphore.signal()
-                }) == nil {
-                    error = ErrorMessage("ServiceWorkerDelegate does not implement importScript")
-                    semaphore.signal()
+                } else {
+                    content = body
                 }
+                semaphore.signal()
             }
+        }
 
-            // Wait for the above code to execute
-            semaphore.wait()
+        semaphore.wait()
 
-            // Now we have our scripts (or error) and can process.
-            do {
-                if let err = error {
-                    throw err
-                }
-
-                guard let allScripts = scripts else {
-                    throw ErrorMessage("importScripts() returned no error, but no scripts either")
-                }
-
-                try allScripts.enumerated().forEach { idx, script in
-
-                    if idx > urls.count - 1 {
-                        throw ErrorMessage("More scripts were returned than were requested")
-                    }
-
-                    let scriptURL = urls[idx]
-
-                    self.jsContext.evaluateScript(script, withSourceURL: scriptURL)
-                }
-
-            } catch {
-                let jsError = JSValue(newErrorFromMessage: "\(error)", in: self.jsContext)
-                self.jsContext.exception = jsError
-            }
+        if let err = error {
+            throw err
+        } else if let hasContent = content {
+            self.jsContext.evaluateScript(hasContent, withSourceURL: url)
+            var mutableURLs = urls
+            mutableURLs.removeFirst(1)
+            return try importScripts(urls: mutableURLs)
+        } else {
+            throw ErrorMessage("Async code did not complete")
         }
     }
 
@@ -196,11 +190,19 @@ import PromiseKit
     /// this lets us run a (synchronous) piece of code on the correct thread.
     public func withJSContext(_ cb: @escaping (JSContext) throws -> Void) -> Promise<Void> {
 
-        return Promise(value: ())
-            .then(on: dispatchQueue, execute: { () -> Void in
+        let (promise, fulfill, reject) = Promise<Void>.pending()
+
+        self.dispatchQueue.async {
+            do {
                 try cb(self.jsContext)
                 try self.throwExceptionIfExists()
-            })
+                fulfill(())
+            } catch {
+                reject(error)
+            }
+        }
+
+        return promise
     }
 
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
@@ -211,6 +213,7 @@ import PromiseKit
             do {
                 self.globalScope.dispatchEvent(event)
                 try self.throwExceptionIfExists()
+
                 fulfill(())
             } catch {
                 reject(error)

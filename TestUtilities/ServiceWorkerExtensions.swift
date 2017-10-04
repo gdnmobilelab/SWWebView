@@ -9,7 +9,7 @@
 import Foundation
 @testable import ServiceWorker
 
-class StaticContentDelegate : ServiceWorkerDelegate {
+class StaticContentDelegate : NSObject, ServiceWorkerDelegate {
     
     func serviceWorkerGetDomainStoragePath(_ worker: ServiceWorker) throws -> URL {
         return StaticContentDelegate.storageURL
@@ -19,7 +19,7 @@ class StaticContentDelegate : ServiceWorkerDelegate {
     
     static let storageURL = URL(fileURLWithPath: NSTemporaryDirectory())
     
-    func serviceWorker(_: ServiceWorker, importScripts: [URL], _ callback: @escaping (Error?, [String]?) -> Void) {
+    func serviceWorker(_: ServiceWorker, importScript: URL, _ callback: @escaping (Error?, String?) -> Void) {
         callback(ErrorMessage("not implemented"), nil)
     }
     
