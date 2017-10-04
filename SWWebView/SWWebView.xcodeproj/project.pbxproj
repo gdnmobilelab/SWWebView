@@ -31,6 +31,7 @@
 		8A5D983E1F3E50D2002E521F /* SWURLSchemeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */; };
 		8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */; };
 		8A748E861F82D98F00EAAC01 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */; };
+		8A755C111F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C101F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift */; };
 		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -110,6 +111,7 @@
 		8A5D983D1F3E50D2002E521F /* SWURLSchemeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLSchemeTask.swift; sourceTree = "<group>"; };
 		8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerRegistrationCommands.swift; sourceTree = "<group>"; };
 		8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		8A755C101F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWURLSchemeTaskOutputPipe.swift; sourceTree = "<group>"; };
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 			children = (
 				8A35AE981F58669C00E63EF5 /* SWWebViewContainerDelegate.swift */,
 				8A35AE9A1F5869CB00E63EF5 /* SWWebViewCoordinator.swift */,
+				8A755C101F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift */,
 			);
 			path = Interop;
 			sourceTree = "<group>";
@@ -554,6 +557,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A43C17A1F4DD889001221C1 /* SWWebViewBridge.swift in Sources */,
+				8A755C111F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift in Sources */,
 				8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */,
 				8AF85D5C1F38E4EF001B0A87 /* SWNavigationAction.swift in Sources */,
 				8A35AE991F58669C00E63EF5 /* SWWebViewContainerDelegate.swift in Sources */,

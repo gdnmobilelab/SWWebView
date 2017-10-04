@@ -1,8 +1,8 @@
 import Foundation
-public class OutputStreamImplementation: OutputStream {
+open class OutputStreamImplementation: OutputStream {
 
     // Get an error about abstract classes if we do not implement this. No idea why.
-    public override var delegate: StreamDelegate? {
+    open override var delegate: StreamDelegate? {
         get {
             return self._delegate
         }
@@ -13,7 +13,7 @@ public class OutputStreamImplementation: OutputStream {
 
     fileprivate var _streamStatus: Stream.Status = .notOpen
 
-    public internal(set) override var streamStatus: Stream.Status {
+    open internal(set) override var streamStatus: Stream.Status {
         get {
             return self._streamStatus
         }
@@ -24,7 +24,7 @@ public class OutputStreamImplementation: OutputStream {
 
     fileprivate var _streamError: Error?
 
-    public internal(set) override var streamError: Error? {
+    open internal(set) override var streamError: Error? {
         get {
             return self._streamError
         }
@@ -39,13 +39,13 @@ public class OutputStreamImplementation: OutputStream {
 
     fileprivate weak var _delegate: StreamDelegate?
 
-    internal func throwError(_ error: Error) {
+    public func throwError(_ error: Error) {
         self._streamStatus = .error
         self._streamError = error
         self.emitEvent(event: .errorOccurred)
     }
 
-    internal func emitEvent(event: Stream.Event) {
+    public func emitEvent(event: Stream.Event) {
         if self.runLoops.count > 0 {
 
             // If we're already scheduled in a run loop, send immediately
@@ -64,7 +64,7 @@ public class OutputStreamImplementation: OutputStream {
         }
     }
 
-    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoopMode) {
+    open override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoopMode) {
 
         var modeArray = self.runLoops[aRunLoop] ?? Set<RunLoopMode>()
         modeArray.insert(mode)
@@ -75,7 +75,7 @@ public class OutputStreamImplementation: OutputStream {
         self.pendingEvents.removeAll()
     }
 
-    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoopMode) {
+    open override func remove(from aRunLoop: RunLoop, forMode mode: RunLoopMode) {
 
         guard var existing = self.runLoops[aRunLoop] else {
             return

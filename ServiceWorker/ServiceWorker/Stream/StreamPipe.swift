@@ -24,7 +24,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         from.delegate = self
     }
 
-    func add(stream: OutputStream) throws {
+    public func add(stream: OutputStream) throws {
         if self.started {
             throw ErrorMessage("Cannot add streams once piping has started")
         }

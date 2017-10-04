@@ -108,42 +108,64 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
             //            if modifiedTask.request.httpMethod == SWWebViewBridge.serviceWorkerRequestMethod {
             //                return try self.startServiceWorkerTask(modifiedTask, webview: swWebView)
             //            }
-            
-            guard let referrer = task.referrer else {
-                throw ErrorMessage("All non-event stream SW API tasks must send a referer header")
-            }
-    
-            guard let container = webview.containerDelegate?.container(webview, getContainerFor: referrer) else {
-                throw ErrorMessage("ServiceWorkerContainer should already exist before any tasks are run")
-            }
-            
-            
-            
-            
-            
-            
-            // Need to flesh this out, but for now we're using this for tests
-            let req = FetchRequest(url: requestURL)
-            req.cache = .NoCache
 
-            return FetchSession.default.fetch(req)
-                .then { res -> Promise<Data> in
+            let request = FetchRequest(url: requestURL)
 
-                    var headerDict: [String: String] = [:]
-                    res.headers.keys().forEach { header in
-                        headerDict[header] = res.headers.get(header)
+            return firstly { () -> Promise<FetchResponseProtocol?> in
+
+                guard let referrer = modifiedTask.referrer else {
+                    return Promise(value: nil)
+                }
+
+                guard let container = swWebView.containerDelegate?.container(swWebView, getContainerFor: referrer) else {
+                    return Promise(value: nil)
+                }
+
+                guard let controller = container.controller else {
+                    return Promise(value: nil)
+                }
+
+                let fetchEvent = FetchEvent(request: request)
+                return controller.dispatchEvent(fetchEvent)
+                    .then {
+                        try fetchEvent.resolve(in: controller)
                     }
+                    .then { jsValueResponse -> FetchResponseProtocol? in
+                        guard let val = jsValueResponse?.value else {
+                            return nil
+                        }
 
-                    headerDict["Cache-Control"] = "no-cache"
+                        if let response = val.toObject() as? FetchResponseProtocol {
+                            return response
+                        }
 
-                    try modifiedTask.didReceiveHeaders(statusCode: res.status, headers: headerDict)
+                        return nil
 
-                    return res.data()
+                        //                        guard let transformed = try FetchResponse.get(fromJSValue: val) else {
+                        //                            return nil
+                        //                        }
+                        //                        return transformed
+                    }
+            }
+            .then { maybeResponse -> Promise<FetchResponseProtocol> in
+                if let responseExists = maybeResponse {
+                    return Promise(value: responseExists)
+                } else {
+                    return FetchSession.default.fetch(request)
                 }
-                .then { data -> Void in
-                    try modifiedTask.didReceive(data)
-                    try modifiedTask.didFinish()
+            }
+            .then { response -> Promise<Void> in
+
+                let outputStream = try SWURLSchemeTaskOutputStream(task: modifiedTask, response: response)
+
+                guard let streamPipe = response.streamPipe else {
+                    throw ErrorMessage("Could not get response stream")
                 }
+
+                try streamPipe.add(stream: outputStream)
+
+                return streamPipe.pipe()
+            }
         }
         .catch { error in
 

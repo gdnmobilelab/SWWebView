@@ -64,6 +64,7 @@
 		8A755C0B1F8569B1003720B8 /* EventPromiseExtender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0A1F8569B1003720B8 /* EventPromiseExtender.swift */; };
 		8A755C0D1F856B73003720B8 /* FetchEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0C1F856B73003720B8 /* FetchEvent.swift */; };
 		8A755C0F1F856BD0003720B8 /* FetchEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C0E1F856BD0003720B8 /* FetchEventTests.swift */; };
+		8A755C131F858399003720B8 /* URLSearchParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C121F858399003720B8 /* URLSearchParams.swift */; };
 		8A8C3A1F1F4F3DED00EDA645 /* WindowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */; };
 		8A8C3A221F4F47C600EDA645 /* ClientsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */; };
 		8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9831C01F60C5D100ED23F0 /* FetchSession.swift */; };
@@ -206,6 +207,7 @@
 		8A755C0A1F8569B1003720B8 /* EventPromiseExtender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPromiseExtender.swift; sourceTree = "<group>"; };
 		8A755C0C1F856B73003720B8 /* FetchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchEvent.swift; sourceTree = "<group>"; };
 		8A755C0E1F856BD0003720B8 /* FetchEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchEventTests.swift; sourceTree = "<group>"; };
+		8A755C121F858399003720B8 /* URLSearchParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSearchParams.swift; sourceTree = "<group>"; };
 		8A8C3A1E1F4F3DED00EDA645 /* WindowClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowClient.swift; sourceTree = "<group>"; };
 		8A8C3A211F4F47C600EDA645 /* ClientsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsTests.swift; sourceTree = "<group>"; };
 		8A9831C01F60C5D100ED23F0 /* FetchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchSession.swift; sourceTree = "<group>"; };
@@ -683,6 +685,7 @@
 				8ACCD72C1F50755B00F444B6 /* LocationBase.swift */,
 				8ACCD72F1F507E9600F444B6 /* JSURL.swift */,
 				8ACCD7331F50936600F444B6 /* WorkerLocation.swift */,
+				8A755C121F858399003720B8 /* URLSearchParams.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -994,6 +997,7 @@
 				8A463DEC1F6C207700AA5B26 /* GlobalVariableProvider.swift in Sources */,
 				8AEBD3101F7DD42800AF1A21 /* JSArrayBufferStream.swift in Sources */,
 				8ACCD7301F507E9600F444B6 /* JSURL.swift in Sources */,
+				8A755C131F858399003720B8 /* URLSearchParams.swift in Sources */,
 				8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */,
 				8A9831C11F60C5D100ED23F0 /* FetchSession.swift in Sources */,
 				8AD141051F71698900ED2D2C /* Transferable.swift in Sources */,

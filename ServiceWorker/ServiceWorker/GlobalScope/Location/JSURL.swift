@@ -13,6 +13,7 @@ import JavaScriptCore
     var port: String { get set }
     var pathname: String { get set }
     var search: String { get set }
+    var searchParams: URLSearchParams { get }
 
     init?(url: JSValue, relativeTo: JSValue)
 }

@@ -13,6 +13,7 @@ import JavaScriptCore
     var port: String { get }
     var pathname: String { get }
     var search: String { get }
+    var searchParams: URLSearchParams { get }
 }
 
 @objc(WorkerLocation) public class WorkerLocation: LocationBase, WorkerLocationExports {

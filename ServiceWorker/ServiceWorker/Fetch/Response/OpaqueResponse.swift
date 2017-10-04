@@ -9,43 +9,23 @@ import PromiseKit
     }
 
     let emptyHeaders = FetchHeaders()
-    //    let emptyStream: ReadableStream
+    var _streamPipe: StreamPipe?
+    override var streamPipe: StreamPipe? {
+        return self._streamPipe
+    }
 
     override var headers: FetchHeaders {
         return self.emptyHeaders
     }
 
-    //    override func getReader() throws -> ReadableStream {
-    //        return self.emptyStream
-    //    }
-
-    override func text() -> Promise<String> {
-        return Promise(value: "")
-    }
-
-    override func text() -> JSValue? {
-
-        let promise = JSPromise(context: JSContext.current())
-        promise.fulfill("")
-        return promise.jsValue
-    }
-
-    override func json() -> Promise<Any?> {
-        return Promise(error: ErrorMessage("Could not decode JSON content in opaque response"))
-    }
-
-    override func json() -> JSValue? {
-
-        let promise = JSPromise(context: JSContext.current())
-        promise.fulfill(NSNull())
-        return promise.jsValue
-    }
-
     override init(from response: FetchResponse) throws {
+        let dummyStream = InputStream(data: Data(count: 0))
 
-        //        self.emptyStream = ReadableStream()
+        guard let originalPipe = response.streamPipe else {
+            throw ErrorMessage("Could not get original response stream")
+        }
 
-        //        try self.emptyStream.controller.close()
+        self._streamPipe = StreamPipe(from: dummyStream, bufferSize: 1, dispatchQueue: originalPipe.dispatchQueue)
 
         try super.init(from: response)
     }

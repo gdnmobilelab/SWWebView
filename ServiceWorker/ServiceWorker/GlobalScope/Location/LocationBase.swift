@@ -4,6 +4,7 @@ import JavaScriptCore
 @objc public class LocationBase: NSObject {
 
     fileprivate var components: URLComponents
+    @objc public let searchParams: URLSearchParams
 
     init?(withURL: URL) {
         guard let components = URLComponents(url: withURL, resolvingAgainstBaseURL: true) else {
@@ -12,6 +13,7 @@ import JavaScriptCore
             return nil
         }
         self.components = components
+        self.searchParams = URLSearchParams(components: components)
     }
 
     @objc public var href: String {

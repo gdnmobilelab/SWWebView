@@ -1,9 +1,9 @@
 import Foundation
 
-public class InputStreamImplementation: InputStream {
+open class InputStreamImplementation: InputStream {
 
     // Get an error about abstract classes if we do not implement this. No idea why.
-    public override var delegate: StreamDelegate? {
+    open override var delegate: StreamDelegate? {
         get {
             return self._delegate
         }
@@ -14,7 +14,7 @@ public class InputStreamImplementation: InputStream {
 
     fileprivate var _streamStatus: Stream.Status = .notOpen
 
-    public internal(set) override var streamStatus: Stream.Status {
+    open internal(set) override var streamStatus: Stream.Status {
         get {
             return self._streamStatus
         }
@@ -25,7 +25,7 @@ public class InputStreamImplementation: InputStream {
 
     fileprivate var _streamError: Error?
 
-    public internal(set) override var streamError: Error? {
+    open internal(set) override var streamError: Error? {
         get {
             return self._streamError
         }
@@ -65,7 +65,7 @@ public class InputStreamImplementation: InputStream {
         }
     }
 
-    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoopMode) {
+    open override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoopMode) {
 
         var modeArray = self.runLoops[aRunLoop] ?? Set<RunLoopMode>()
         modeArray.insert(mode)
@@ -76,7 +76,7 @@ public class InputStreamImplementation: InputStream {
         self.pendingEvents.removeAll()
     }
 
-    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoopMode) {
+    open override func remove(from aRunLoop: RunLoop, forMode mode: RunLoopMode) {
 
         guard var existing = self.runLoops[aRunLoop] else {
             return

@@ -43,5 +43,6 @@ public protocol FetchResponseProtocol: FetchResponseJSExports {
     func text() -> Promise<String>
     func data() -> Promise<Data>
     func json() -> Promise<Any?>
+    var streamPipe: StreamPipe? { get }
     var url: URL? { get }
 }
