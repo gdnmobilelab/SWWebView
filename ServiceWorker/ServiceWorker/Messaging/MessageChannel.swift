@@ -7,6 +7,9 @@ import JavaScriptCore
     init()
 }
 
+/// An implementation of the JavaScript MessageChannel object:
+/// https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel
+/// This is basically just a pair of MessagePorts, connected to each other.
 @objc public class MessageChannel: NSObject, MessageChannelExports {
     public let port1: SWMessagePort
     public let port2: SWMessagePort

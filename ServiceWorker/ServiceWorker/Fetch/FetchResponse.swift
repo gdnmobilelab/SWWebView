@@ -217,18 +217,4 @@ import JavaScriptCore
 
         throw ErrorMessage("Cannot create protocol for this response type")
     }
-
-    public static func get(fromJSValue val: JSValue) throws -> FetchResponseProtocol? {
-
-        let types = [BasicResponse.self, OpaqueResponse.self, CORSResponse.self, ConstructableFetchResponse.self, FetchResponseProxy.self]
-        let obj = val.toObject()
-        for type in types {
-            NSLog("IS \(type)? \(val.isInstance(of: type))")
-            if let transformed = val.toObjectOf(type) as? FetchResponseProtocol {
-                return transformed
-            }
-        }
-
-        return nil
-    }
 }

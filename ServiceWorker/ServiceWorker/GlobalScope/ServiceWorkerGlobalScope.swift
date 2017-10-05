@@ -74,7 +74,7 @@ import JavaScriptCore
             FetchSession.default.fetch(requestOrURL, fromOrigin: self.worker.url)
         }
 
-        GlobalVariableProvider.add(variable: Event.self, to: self.context, withName: "Event")
+        GlobalVariableProvider.add(variable: ConstructableEvent.self, to: self.context, withName: "Event")
         GlobalVariableProvider.add(variable: skipWaiting, to: self.context, withName: "skipWaiting")
         GlobalVariableProvider.add(variable: self.clients, to: self.context, withName: "clients")
         GlobalVariableProvider.add(variable: self.location, to: self.context, withName: "location")

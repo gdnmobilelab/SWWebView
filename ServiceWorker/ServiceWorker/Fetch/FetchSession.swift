@@ -46,7 +46,7 @@ import JavaScriptCore
 
                 task.resume()
                 return fetchTask.hasResponse
-                    .always(on: self.dispatchQueue, execute: {
+                    .always(on: self.dispatchQueue, execute: { () -> Void in
                         // just make sure we don't hold references unnecessarily
                         self.runningTasks.remove(fetchTask)
                     })

@@ -2,15 +2,16 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-@objc protocol FetchEventExports: JSExport {
+@objc protocol FetchEventExports: Event, JSExport {
     func respondWith(_: JSValue)
     var request: FetchRequest { get }
 }
 
-@objc public class FetchEvent: Event, FetchEventExports {
+@objc public class FetchEvent: NSObject, FetchEventExports {
 
     let request: FetchRequest
     var respondValue: JSValue?
+    public let type = "fetch"
 
     func respondWith(_ val: JSValue) {
         if self.respondValue != nil {
@@ -23,11 +24,7 @@ import PromiseKit
 
     public init(request: FetchRequest) {
         self.request = request
-        super.init(type: "fetch")
-    }
-
-    public required init(type _: String) {
-        fatalError("Must create fetch event with request:")
+        super.init()
     }
 
     public func resolve(in _: ServiceWorker) throws -> Promise<JSManagedValue?> {

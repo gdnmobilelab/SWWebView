@@ -37,6 +37,7 @@ class MessagePortTests: XCTestCase {
 
         let jsc = JSContext()!
         jsc.setObject(portTwo, forKeyedSubscript: "testPort" as NSCopying & NSObjectProtocol)
+        portOne.postMessage(["hello": "there"])
 
         jsc.evaluateScript("""
             var fireResponse = null
@@ -44,8 +45,6 @@ class MessagePortTests: XCTestCase {
                 fireResponse = e.data.hello;
             }
         """)
-
-        portOne.postMessage(["hello": "there"])
 
         XCTAssertEqual(jsc.objectForKeyedSubscript("fireResponse")!.toString(), "there")
     }

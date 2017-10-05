@@ -11,14 +11,16 @@ class FetchEventTests: XCTestCase {
             });
         """)
 
-        let fetch = FetchEvent(type: "fetch")
+        let request = FetchRequest(url: URL(string: "https://www.example.com")!)
+
+        let fetch = FetchEvent(request: request)
 
         sw.dispatchEvent(fetch)
             .then {
-                return fetch.resolve(in: sw)
+                return try fetch.resolve(in: sw)
             }
             .then { jsValue in
-                XCTAssertEqual(jsValue.toString(), "hello")
+                XCTAssertEqual(jsValue?.value.toString(), "hello")
             }
             .assertResolves()
     }
@@ -33,14 +35,16 @@ class FetchEventTests: XCTestCase {
             });
         """)
 
-        let fetch = FetchEvent(type: "fetch")
+        let request = FetchRequest(url: URL(string: "https://www.example.com")!)
+
+        let fetch = FetchEvent(request: request)
 
         sw.dispatchEvent(fetch)
             .then {
-                return fetch.resolve(in: sw)
+                return try fetch.resolve(in: sw)
             }
             .then { jsValue in
-                XCTAssertEqual(jsValue.toString(), "hello")
+                XCTAssertEqual(jsValue?.value.toString(), "hello")
             }
             .assertResolves()
     }

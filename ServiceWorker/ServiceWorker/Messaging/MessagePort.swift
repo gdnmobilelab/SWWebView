@@ -7,13 +7,18 @@ import JavaScriptCore
     var onmessage: JSValue? { get set }
 }
 
+/// An implementation of the JavaScript MessagePort class:
+/// https://developer.mozilla.org/en-US/docs/Web/API/MessagePort
 @objc public class SWMessagePort: EventTarget, Transferable, MessagePortExports, MessagePortTarget {
 
     fileprivate typealias QueuedMessage = (message: Any, transferList: [Transferable])
 
     public weak var targetPort: MessagePortTarget?
     public var started: Bool = false
-    fileprivate var queuedMessages: [QueuedMessage] = []
+
+    /// MessagePorts don't start sending messages immediately - that's done by calling start()
+    /// or setting the onmessage property. Any messages sent before that are queued here.
+    fileprivate var queuedMessages: [ExtendableMessageEvent] = []
 
     fileprivate var onMessageListener: SwiftEventListener<ExtendableMessageEvent>?
     fileprivate var onmessageValue: JSValue?
@@ -31,6 +36,10 @@ import JavaScriptCore
 
     deinit {
         if let target = self.targetPort {
+            // If this is being removed then there's no point keeping the target open.
+            // But more usefully for us, this also allows us to automatically close
+            // MessagePorts that live in SWWebViews (and can't be automatically garbage
+            // collected)
             target.close()
         }
     }
@@ -53,7 +62,7 @@ import JavaScriptCore
 
     public func start() {
         self.started = true
-        self.queuedMessages.forEach { self.postMessage($0.message, $0.transferList) }
+        self.queuedMessages.forEach { self.dispatchEvent($0) }
         self.queuedMessages.removeAll()
     }
 
@@ -63,12 +72,6 @@ import JavaScriptCore
 
     public func postMessage(_ message: Any, _ transferList: [Transferable] = []) {
 
-        if self.started == false {
-            // MessagePorts are manually started (unless triggered by onmessage), so we need
-            // to queue any pending messages before sending.
-            self.queuedMessages.append((message: message, transferList: transferList))
-            return
-        }
         do {
             guard let targetPort = self.targetPort else {
                 throw ErrorMessage("MessagePort does not have a target set")
@@ -93,6 +96,10 @@ import JavaScriptCore
     }
 
     public func receiveMessage(_ evt: ExtendableMessageEvent) {
-        self.dispatchEvent(evt)
+        if self.started == false {
+            self.queuedMessages.append(evt)
+        } else {
+            self.dispatchEvent(evt)
+        }
     }
 }

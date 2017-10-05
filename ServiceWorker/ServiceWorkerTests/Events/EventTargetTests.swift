@@ -62,9 +62,9 @@ class EventTargetTests: XCTestCase {
         let testEvents = EventTarget()
         var fired = false
 
-        let testEvent = Event(type: "test")
+        let testEvent = ConstructableEvent(type: "test")
 
-        testEvents.addEventListener("test") { (ev: Event) in
+        testEvents.addEventListener("test") { (ev: ConstructableEvent) in
             XCTAssertEqual(ev, testEvent)
             fired = true
         }
