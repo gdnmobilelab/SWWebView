@@ -22,7 +22,7 @@ class ImportScriptsTests: XCTestCase {
             throw ErrorMessage("Not implemented")
         }
 
-        typealias ImportFunction = (URL, @escaping (Error?, String?) -> Void) -> Void
+        typealias ImportFunction = (URL, DispatchQueue, @escaping (Error?, String?) -> Void) -> Void
 
         let importFunc: ImportFunction
         var content: String
@@ -32,8 +32,8 @@ class ImportScriptsTests: XCTestCase {
             self.content = ""
         }
 
-        func serviceWorker(_: ServiceWorker, importScript: URL, onQueue _: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
-            self.importFunc(importScript, callback)
+        func serviceWorker(_: ServiceWorker, importScript: URL, onQueue queue: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
+            self.importFunc(importScript, queue, callback)
         }
 
         func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {
@@ -49,7 +49,7 @@ class ImportScriptsTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        let delegate = TestImportDelegate { url, cb in
+        let delegate = TestImportDelegate { url, _, cb in
             XCTAssertEqual(url.absoluteString, "http://www.example.com/test.js")
             cb(nil, "testValue = 'hello';")
         }
@@ -88,25 +88,24 @@ class ImportScriptsTests: XCTestCase {
             GCDWebServerDataResponse(data: "self.testValue = 'hello2';".data(using: String.Encoding.utf8)!, contentType: "text/javascript")
         }
 
-        let delegate = TestImportDelegate { _, cb in
+        let delegate = TestImportDelegate { _, queue, cb in
             NSLog("Running fetch")
             FetchSession.default.fetch(TestWeb.serverURL.appendingPathComponent("/test.js"))
-                .then { res -> Promise<String> in
+                .then(on: queue, execute: { res -> Promise<String> in
                     NSLog("Got fetch")
                     return res.text()
-                }
-                .then { text in
+                })
+                .then(on: queue, execute: { text in
                     cb(nil, text)
-                }
-                .catch { error in
+                })
+                .catch(on: queue, execute: { error in
                     cb(error, nil)
-                }
+                })
         }
 
         delegate.content = "importScripts('test.js');"
 
         let sw = ServiceWorker.createTestWorker(id: name)
-        ServiceWorker.createTestWorker(id: name)
         sw.delegate = delegate
 
         sw.evaluateScript("testValue;")

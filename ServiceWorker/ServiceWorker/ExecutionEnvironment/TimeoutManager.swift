@@ -45,7 +45,7 @@ class TimeoutManager {
 
     fileprivate func setIntervalFunction() -> Int {
 
-        guard let params = self.getArgumentsIfTheyExist() else {
+        guard let params = self.getArgumentsForSetCall() else {
             return -1
         }
 
@@ -81,7 +81,7 @@ class TimeoutManager {
     /// setTimeout() and setInteral() have a dynamic argument length - after
     /// the function and delay, the rest are arguments to be sent to the function
     /// when it runs. So we need to run a specific handler for this.
-    fileprivate func getArgumentsIfTheyExist() -> Arguments? {
+    fileprivate func getArgumentsForSetCall() -> Arguments? {
 
         do {
             guard var args = JSContext.currentArguments() else {
@@ -135,7 +135,7 @@ class TimeoutManager {
 
     fileprivate func setTimeoutFunction() -> Int {
 
-        guard let params = self.getArgumentsIfTheyExist() else {
+        guard let params = self.getArgumentsForSetCall() else {
             return -1
         }
 

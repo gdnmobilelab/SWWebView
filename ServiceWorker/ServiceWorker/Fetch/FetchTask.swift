@@ -6,7 +6,7 @@ class FetchTask: NSObject {
     let dataTask: URLSessionDataTask
     var streamTask: URLSessionStreamTask?
     let request: FetchRequest
-    fileprivate let dispatchQueue: DispatchQueue
+    fileprivate unowned let dispatchQueue: DispatchQueue
 
     var responses = Set<FetchResponse>()
     var initialResponse: HTTPURLResponse?

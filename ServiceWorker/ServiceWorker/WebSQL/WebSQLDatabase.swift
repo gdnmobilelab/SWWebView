@@ -10,7 +10,7 @@ import PromiseKit
 @objc class WebSQLDatabase: NSObject, WebSQLDatabaseExports {
 
     let connection: SQLiteConnection
-    let dispatchQueue: DispatchQueue
+    unowned let dispatchQueue: DispatchQueue
     var transactionQueue: [WebSQLTransaction] = []
 
     init(at path: URL, withQueue queue: DispatchQueue) throws {

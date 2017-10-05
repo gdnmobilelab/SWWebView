@@ -9,7 +9,7 @@ public class StreamPipe: NSObject, StreamDelegate {
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
     var finished: Bool = false
-    let dispatchQueue: DispatchQueue
+    unowned let dispatchQueue: DispatchQueue
     let runLoop = RunLoop()
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 

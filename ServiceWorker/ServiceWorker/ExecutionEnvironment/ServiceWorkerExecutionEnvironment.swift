@@ -2,6 +2,9 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
+/// The wrapper around JSContext that actually runs the ServiceWorker code. We keep this
+/// separate from ServiceWorker itself so that we can create relatively lightwight ServiceWorker
+/// classes in response to getRegistration() etc but only create the JS environment when needed.
 @objc public class ServiceWorkerExecutionEnvironment: NSObject, ServiceWorkerGlobalScopeDelegate {
 
     unowned let worker: ServiceWorker
@@ -9,23 +12,31 @@ import PromiseKit
     // We use this in deinit, by which point the worker is gone
     let workerId: String
 
+    /// The heart of it all - this is where our worker code lives.
     fileprivate let jsContext: JSContext
+
+    /// The objects that populate the global scope/self in the worker environment.
     internal let globalScope: ServiceWorkerGlobalScope
+
+    /// We enforce a dispatch queue on all the events we dispatch to the worker. Partially
+    /// to ensure QoS and keep it off the main thread, but also to respect the queue being
+    /// freezed when we run an importScripts() call.
     let dispatchQueue: DispatchQueue
+
+    /// Adds setTimeout(), setInterval() etc. to the global scope. We keep a reference at
+    /// this level because we need to cancel all timeouts when our execution environment
+    /// is being garbage collected.
     let timeoutManager: TimeoutManager
 
+    /// It seems like a good idea to keep all workers in the same virtual machine - it means
+    /// they can exchange JSValues, so we could implmenent stuff like SharedArrayBuffer in
+    /// communication between workers. We can't do the same inside SWWebView, though.
     fileprivate static var virtualMachine = JSVirtualMachine()
 
-    // Since these retain an open connection as long as they are alive, we need to
+    // Since WebSQL connections retain an open connection as long as they are alive, we need to
     // keep track of them, in order to close them off on shutdown. JS garbage collection
     // is sometimes enough, but not always.
     internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
-
-    #if DEBUG
-        // We use this in tests to check whether all our JSContexts have been
-        // garbage collected or not. We don't need it in production environments.
-        static var allJSContexts = NSHashTable<JSContext>.weakObjects()
-    #endif
 
     // ConstructableFetchResponse needs a reference to the dispatchQueue attached to any particular
     // JSContext. So we store that connection here, with weak memory so that they are automatically
@@ -53,11 +64,6 @@ import PromiseKit
         jsContext = JSContext(virtualMachine: virtualMachine)
 
         ServiceWorkerExecutionEnvironment.contextDispatchQueues.setObject(self.dispatchQueue, forKey: jsContext)
-
-        // We use this in tests to ensure all JSContexts get cleared up. Should put behind a debug flag.
-        #if DEBUG
-            ServiceWorkerExecutionEnvironment.allJSContexts.add(self.jsContext)
-        #endif
 
         globalScope = try ServiceWorkerGlobalScope(context: jsContext, worker)
         timeoutManager = TimeoutManager(withQueue: dispatchQueue, in: jsContext)
