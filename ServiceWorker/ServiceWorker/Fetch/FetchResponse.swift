@@ -140,7 +140,7 @@ import JavaScriptCore
     }
 
     func json() -> JSValue? {
-        return self.json().toJSPromise(in: JSContext.current())
+        return self.json().toJSPromiseInCurrentContext()
     }
 
     fileprivate static func guessCharsetFrom(headers: FetchHeaders) -> String.Encoding {
@@ -185,7 +185,7 @@ import JavaScriptCore
     }
 
     func text() -> JSValue? {
-        return self.text().toJSPromise(in: JSContext.current())
+        return self.text().toJSPromiseInCurrentContext()
     }
 
     internal func arrayBuffer() -> JSValue? {
@@ -194,11 +194,14 @@ import JavaScriptCore
             Log.error?("Tried to call arrayBuffer() outside of a JSContext")
             return nil
         }
-
-        return self.dataTransformer(transformer: { data in
-            JSArrayBuffer.make(from: data, in: currentContext)
+        NSLog("Start data transformer")
+        return self.dataTransformer(transformer: { data -> JSValue in
+            NSLog("make array buffer")
+            let buffer = JSArrayBuffer.make(from: data, in: currentContext)
+            NSLog("array buffer made")
+            return buffer
         })
-            .toJSPromise(in: currentContext)
+            .toJSPromiseInCurrentContext()
     }
 
     //    func getReader() throws -> ReadableStream {

@@ -17,8 +17,8 @@ class EventTargetTests: XCTestCase {
             didFire;
         """)
 
-            .then { didFire -> Void in
-                XCTAssertEqual(didFire!.toBool(), true)
+            .then { (didFire:Bool?) -> Void in
+                XCTAssertEqual(didFire, true)
             }
             .assertResolves()
     }
@@ -46,8 +46,8 @@ class EventTargetTests: XCTestCase {
                 didFire;
             """)
         }
-        .then { didFire -> Void in
-            XCTAssertEqual(didFire!.toBool(), false)
+            .then { (didFire:Bool?) -> Void in
+            XCTAssertEqual(didFire, false)
             expect.fulfill()
         }
         .catch { error -> Void in

@@ -19,8 +19,8 @@ class IndexedDBTests: XCTestCase {
                 openRequest.onerror = reject;
             })
         """)
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            .then { (jsVal: JSContextPromise) in
+                return jsVal.resolve()
             }
             .then { _ -> Promise<Void> in
                 return sw.ensureFinished()
@@ -88,14 +88,13 @@ class IndexedDBTests: XCTestCase {
                 }
             });
         """)
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            .then { (jsVal: JSContextPromise) in
+                return jsVal.resolve()
             }
-            .then { result -> Promise<Void> in
-                let arr = result!.value.toArray()!
+            .then { (arr: [String]) -> Promise<Void> in
 
-                XCTAssertEqual(arr[0] as? String, "John")
-                XCTAssertEqual(arr[1] as? String, "Bob")
+                XCTAssertEqual(arr[0], "John")
+                XCTAssertEqual(arr[1], "Bob")
                 return sw.ensureFinished()
             }
             .assertResolves()

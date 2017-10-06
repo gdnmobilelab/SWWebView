@@ -1,5 +1,6 @@
 import Foundation
 import JavaScriptCore
+import PromiseKit
 
 @objc protocol WindowClientExports: JSExport {
     func focus() -> JSValue?
@@ -12,35 +13,41 @@ import JavaScriptCore
 
     let wrapAroundWindow: WindowClientProtocol
 
-    init(wrapping: WindowClientProtocol, in context: JSContext) {
+    init(wrapping: WindowClientProtocol) {
         self.wrapAroundWindow = wrapping
-        super.init(wrapping: wrapping, in: context)
+        super.init(wrapping: wrapping)
     }
 
     func focus() -> JSValue? {
-        let jsp = JSPromise(context: context)
 
-        wrapAroundWindow.focus(jsp.processCallback(transformer: { windowClientProtocol in
-            Client.getOrCreate(from: windowClientProtocol, in: self.context)
-        }))
+        return Promise<Client> { fulfill, reject in
 
-        return jsp.jsValue
+            wrapAroundWindow.focus { err, windowClient in
+                if let error = err {
+                    reject(error)
+                } else if let client = windowClient {
+                    fulfill(Client.getOrCreate(from: client))
+                }
+            }
+        }
+        .toJSPromiseInCurrentContext()
     }
 
     func navigate(_ url: String) -> JSValue? {
 
-        let jsp = JSPromise(context: context)
+        return Promise<WindowClientProtocol> { fulfill, reject in
+            guard let parsedURL = URL(string: url, relativeTo: nil) else {
+                return reject(ErrorMessage("Could not parse URL returned by native implementation"))
+            }
 
-        guard let parsedURL = URL(string: url, relativeTo: nil) else {
-            jsp.reject(ErrorMessage("Could not parse URL returned by native implementation"))
-            return jsp.jsValue
-        }
-
-        self.wrapAroundWindow.navigate(to: parsedURL, jsp.processCallback(transformer: { windowClient in
-            Client.getOrCreate(from: windowClient, in: self.context)
-        }))
-
-        return jsp.jsValue
+            self.wrapAroundWindow.navigate(to: parsedURL) { err, windowClient in
+                if let error = err {
+                    reject(error)
+                } else if let window = windowClient {
+                    fulfill(window)
+                }
+            }
+        }.toJSPromiseInCurrentContext()
     }
 
     var focused: Bool {

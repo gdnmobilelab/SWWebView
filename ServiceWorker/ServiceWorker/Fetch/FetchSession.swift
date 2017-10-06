@@ -4,20 +4,29 @@ import JavaScriptCore
 
 @objc public class FetchSession: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionStreamDelegate {
 
-    public static let `default` = FetchSession(qos: DispatchQoS.QoSClass.utility)
+    public static let `default` = FetchSession(qos: DispatchQoS.utility)
 
     fileprivate var session: URLSession!
     fileprivate let dispatchQueue: DispatchQueue
 
     fileprivate var runningTasks = Set<FetchTask>()
 
-    init(qos: DispatchQoS.QoSClass) {
-        self.dispatchQueue = DispatchQueue.global(qos: qos)
+    init(qos: DispatchQoS) {
+        self.dispatchQueue = DispatchQueue(label: "FetchSession", qos: qos, attributes: [], autoreleaseFrequency: .inherit, target: nil)
         super.init()
         self.dispatchQueue.sync {
             // ensure the operation queue is the right one. I think?
             self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: OperationQueue.current)
         }
+    }
+
+    init(dispatchQueue: DispatchQueue) {
+        self.dispatchQueue = dispatchQueue
+        super.init()
+        //        self.dispatchQueue.sync {
+        // ensure the operation queue is the right one. I think?
+        self.session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: OperationQueue.current)
+        //        }
     }
 
     public func fetch(_ url: URL) -> Promise<FetchResponseProtocol> {
@@ -26,8 +35,11 @@ import JavaScriptCore
     }
 
     public func fetch(_ request: FetchRequest, fromOrigin: URL? = nil) -> Promise<FetchResponseProtocol> {
+        return Promise(value: ())
+            .then(on: self.dispatchQueue, execute: {
+                self.performCORSCheck(for: request, inOrigin: fromOrigin)
+            })
 
-        return self.performCORSCheck(for: request, inOrigin: fromOrigin)
             .then(on: self.dispatchQueue, execute: { corsRestrictions -> Promise<FetchResponseProtocol> in
 
                 let nsRequest = request.toURLRequest()
@@ -65,6 +77,8 @@ import JavaScriptCore
 
     internal func fetch(_ requestOrURL: JSValue, fromOrigin origin: URL) -> JSValue? {
 
+        ServiceWorkerExecutionEnvironment.ensureOnDispatchQueue()
+
         return firstly { () -> Promise<FetchResponseProtocol> in
 
             var request: FetchRequest
@@ -88,7 +102,7 @@ import JavaScriptCore
 
             return self.fetch(request, fromOrigin: origin)
 
-        }.toJSPromise(in: requestOrURL.context)
+        }.toJSPromiseInCurrentContext()
     }
 
     fileprivate func performCORSCheck(for request: FetchRequest, inOrigin: URL?) -> Promise<FetchCORSRestrictions> {

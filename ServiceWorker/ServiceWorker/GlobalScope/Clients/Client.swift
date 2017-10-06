@@ -17,7 +17,7 @@ import JavaScriptCore
     // a reference it doesn't have anything to compare to.
     fileprivate static var existingClients = NSHashTable<Client>.weakObjects()
 
-    static func getOrCreate<T: ClientProtocol>(from wrapper: T, in context: JSContext) -> Client {
+    static func getOrCreate<T: ClientProtocol>(from wrapper: T) -> Client {
 
         return self.existingClients.allObjects.first(where: { $0.wrapAround.id == wrapper.id }) ?? {
 
@@ -25,9 +25,9 @@ import JavaScriptCore
                 // We could pass back either a Client or the more specific WindowClient - we need
                 // our bridging class to match the protocol being passed in.
                 if let windowWrapper = wrapper as? WindowClientProtocol {
-                    return WindowClient(wrapping: windowWrapper, in: context)
+                    return WindowClient(wrapping: windowWrapper)
                 } else {
-                    return Client(wrapping: wrapper, in: context)
+                    return Client(wrapping: wrapper)
                 }
             }()
 
@@ -37,14 +37,19 @@ import JavaScriptCore
     }
 
     let wrapAround: ClientProtocol
-    let context: JSContext
-
-    internal init(wrapping: ClientProtocol, in context: JSContext) {
+    internal init(wrapping: ClientProtocol) {
         self.wrapAround = wrapping
-        self.context = context
     }
 
     func postMessage(_ toSend: JSValue, _: [JSValue]) {
+
+        guard let currentQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: JSContext.current()) else {
+            Log.error?("Could not get dispatch queue for current JS Context")
+            return
+        }
+
+        dispatchPrecondition(condition: DispatchPredicate.onQueue(currentQueue))
+
         self.wrapAround.postMessage(message: toSend.toObject(), transferable: nil)
     }
 

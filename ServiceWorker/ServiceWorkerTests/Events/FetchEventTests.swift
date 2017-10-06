@@ -7,7 +7,7 @@ class FetchEventTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name, content: """
             self.addEventListener('fetch',(e) => {
-                e.respondWith("hello");
+                e.respondWith(new Response("hello"));
             });
         """)
 
@@ -19,8 +19,11 @@ class FetchEventTests: XCTestCase {
             .then {
                 return try fetch.resolve(in: sw)
             }
-            .then { jsValue in
-                XCTAssertEqual(jsValue?.value.toString(), "hello")
+            .then { res in
+                return res!.text()
+            }
+            .then { responseText in
+                XCTAssertEqual(responseText, "hello")
             }
             .assertResolves()
     }
@@ -30,7 +33,7 @@ class FetchEventTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name, content: """
             self.addEventListener('fetch',(e) => {
                 e.respondWith(new Promise((fulfill) => {
-                    fulfill("hello")
+                    fulfill(new Response("hello"))
                 }));
             });
         """)
@@ -43,8 +46,11 @@ class FetchEventTests: XCTestCase {
             .then {
                 return try fetch.resolve(in: sw)
             }
-            .then { jsValue in
-                XCTAssertEqual(jsValue?.value.toString(), "hello")
+            .then { res in
+                return res!.text()
+            }
+            .then { responseText in
+                XCTAssertEqual(responseText, "hello")
             }
             .assertResolves()
     }

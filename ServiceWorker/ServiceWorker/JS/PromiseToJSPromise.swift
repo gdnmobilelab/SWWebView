@@ -3,17 +3,18 @@ import PromiseKit
 import JavaScriptCore
 
 public extension Promise {
-    func toJSPromise(in context: JSContext) -> JSValue? {
 
-        let jsPromise = JSPromise(context: context)
+    public func toJSPromiseInCurrentContext() -> JSValue? {
+
+        let jsp = JSContextPromise.makeInCurrentContext()
 
         then { response in
-            jsPromise.fulfill(response)
+            jsp.fulfill(response)
         }
         .catch { error in
-            jsPromise.reject(error)
+            jsp.reject(error)
         }
 
-        return jsPromise.jsValue
+        return jsp.jsValue
     }
 }

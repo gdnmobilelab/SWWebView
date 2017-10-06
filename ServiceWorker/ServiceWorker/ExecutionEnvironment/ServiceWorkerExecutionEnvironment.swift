@@ -2,6 +2,10 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
+public protocol OptionalType {}
+
+extension Optional: OptionalType {}
+
 /// The wrapper around JSContext that actually runs the ServiceWorker code. We keep this
 /// separate from ServiceWorker itself so that we can create relatively lightwight ServiceWorker
 /// classes in response to getRegistration() etc but only create the JS environment when needed.
@@ -13,7 +17,7 @@ import PromiseKit
     let workerId: String
 
     /// The heart of it all - this is where our worker code lives.
-    fileprivate let jsContext: JSContext
+    fileprivate var jsContext: JSContext!
 
     /// The objects that populate the global scope/self in the worker environment.
     internal let globalScope: ServiceWorkerGlobalScope
@@ -43,6 +47,8 @@ import PromiseKit
     // removed when no longer in use.
     static var contextDispatchQueues = NSMapTable<JSContext, DispatchQueue>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
 
+    let fetchSession: FetchSession
+
     var jsContextName: String {
         set(value) {
             self.jsContext.name = value
@@ -52,22 +58,35 @@ import PromiseKit
         }
     }
 
-    @objc public init(_ worker: ServiceWorker) throws {
+    static func ensureOnDispatchQueue() {
+        guard let currentContext = JSContext.current() else {
+            return
+        }
+
+        guard let currentDispatchQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: currentContext) else {
+            fatalError("Not on a queue")
+        }
+
+        dispatchPrecondition(condition: DispatchPredicate.onQueue(currentDispatchQueue))
+    }
+
+    @objc public init(_ worker: ServiceWorker, dispatchQueue: DispatchQueue) throws {
         self.worker = worker
         self.workerId = worker.id
         guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
             throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
         }
 
-        self.dispatchQueue = DispatchQueue(label: worker.id, qos: DispatchQoS.utility, attributes: [.concurrent], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.workItem, target: nil)
-
-        jsContext = JSContext(virtualMachine: virtualMachine)
-
+        self.dispatchQueue = dispatchQueue
+        self.fetchSession = FetchSession(dispatchQueue: dispatchQueue)
+        self.jsContext = JSContext()
         ServiceWorkerExecutionEnvironment.contextDispatchQueues.setObject(self.dispatchQueue, forKey: jsContext)
 
         globalScope = try ServiceWorkerGlobalScope(context: jsContext, worker)
         timeoutManager = TimeoutManager(withQueue: dispatchQueue, in: jsContext)
+
         super.init()
+
         jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
             // evaluating, we need to check whether there is a new exception.
@@ -123,9 +142,15 @@ import PromiseKit
         }
     }
 
-    public func evaluateScript(_ script: String, withSourceURL: URL? = nil) -> Promise<JSValue?> {
+    public func evaluateScript(_ script: String, withSourceURL: URL? = nil) -> Promise<Void> {
+        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { _ in
+            ()
+        }
+    }
 
-        let (promise, fulfill, reject) = Promise<JSValue?>.pending()
+    fileprivate func evaluateWithConverter<T>(_ script: String, withSourceURL: URL? = nil, _ converter: @escaping (JSValue?) throws -> T) -> Promise<T> {
+
+        let (promise, fulfill, reject) = Promise<T>.pending()
 
         self.dispatchQueue.async {
             do {
@@ -137,7 +162,8 @@ import PromiseKit
 
                 try self.throwExceptionIfExists()
 
-                fulfill(returnVal)
+                fulfill(try converter(returnVal))
+
             } catch {
                 reject(error)
             }
@@ -145,6 +171,36 @@ import PromiseKit
 
         return promise
     }
+
+    public func evaluateScript<T>(_ script: String, withSourceURL: URL? = nil) -> Promise<T> {
+
+        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { jsValue in
+            NSLog("Convert to \(T.self)")
+            if let valueExists = jsValue, T.self == JSContextPromise.self {
+
+                guard let promise = JSContextPromise(jsValue: valueExists, dispatchQueue: self.dispatchQueue) as? T else {
+                    throw ErrorMessage("Could not convert to promise")
+                }
+                return promise
+            }
+
+            guard let converted = jsValue?.toObject() as? T else {
+                throw ErrorMessage("Could not convert JS object")
+            }
+
+            return converted
+        }
+    }
+
+    //    public func evaluateScript<T>(_ script: String, withSourceURL: URL? = nil) -> Promise<T> where T: JSContextPromise {
+    //
+    //        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { val in
+    //            guard let valExists = val else {
+    //                return nil
+    //            }
+    //            return T(jsValue: valExists, dispatchQueue: self.dispatchQueue)
+    //        }
+    //    }
 
     func openWebSQLDatabase(name: String) throws -> WebSQLDatabase {
         let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name, withQueue: self.dispatchQueue)
@@ -234,5 +290,9 @@ import PromiseKit
         }
 
         return promise
+    }
+
+    func fetch(_ requestOrString: JSValue) -> JSValue? {
+        return self.fetchSession.fetch(requestOrString, fromOrigin: self.worker.url)
     }
 }

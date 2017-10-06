@@ -9,11 +9,8 @@ class GlobalScopeTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name)
 
         sw.evaluateScript("location.host")
-            .then { val in
-                return val!.toString()
-            }
-            .then { host in
-                XCTAssertEqual(host, "www.example.com")
+            .then { (val: String?) in
+                XCTAssertEqual(val, "www.example.com")
             }
             .assertResolves()
     }
@@ -86,17 +83,15 @@ class GlobalScopeTests: XCTestCase {
         ]
 
         sw.evaluateScript("[\(keys.joined(separator: ","))]")
-            .then { vals -> Void in
-
-                if let valArray = vals?.toArray() {
-
+            .then { (val: [Any]?) -> Void in
+                if let valArray = val {
                     valArray.enumerated().forEach { arg in
                         let asJsVal = arg.element as? JSValue
                         XCTAssert(asJsVal == nil || asJsVal!.isUndefined == true, "Not found: " + keys[arg.offset])
                     }
 
                 } else {
-                    XCTFail("Could not get array, val: \(vals!.toString())")
+                    XCTFail("Could not get array, val: \(val)")
                 }
             }
             .assertResolves()
@@ -107,8 +102,7 @@ class GlobalScopeTests: XCTestCase {
         let sw = TestWorker(id: name, state: .activated, url: URL(string: "http://www.example.com/sw.js")!, content: "")
 
         sw.evaluateScript("[self.location, location]")
-            .then { val -> Void in
-                let arr = val?.toArray() as? [WorkerLocation]
+            .then { (arr: [WorkerLocation]?) -> Void in
                 XCTAssertNotNil(arr?[0])
                 XCTAssertNotNil(arr?[1])
                 XCTAssertEqual(arr?[0], arr?[1])

@@ -39,6 +39,8 @@
 		8A235FF91F34D0D300969268 /* SQLiteDataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FF81F34D0D300969268 /* SQLiteDataType.swift */; };
 		8A235FFE1F34DEAB00969268 /* WebSQLConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */; };
 		8A2360061F34F7BE00969268 /* js-dist in Resources */ = {isa = PBXBuildFile; fileRef = 8A2360011F34F3AE00969268 /* js-dist */; };
+		8A2F7D451F867B3400E1A0B0 /* JSConvert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2F7D441F867B3400E1A0B0 /* JSConvert.swift */; };
+		8A2F7D471F8688C300E1A0B0 /* JSContextPromise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2F7D461F8688C300E1A0B0 /* JSContextPromise.swift */; };
 		8A315BF21F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */; };
 		8A35AE901F577BFF00E63EF5 /* ServiceWorkerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */; };
 		8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */; };
@@ -183,6 +185,8 @@
 		8A235FF81F34D0D300969268 /* SQLiteDataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDataType.swift; sourceTree = "<group>"; };
 		8A235FFD1F34DEAB00969268 /* WebSQLConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSQLConnection.swift; sourceTree = "<group>"; };
 		8A2360011F34F3AE00969268 /* js-dist */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "js-dist"; sourceTree = SOURCE_ROOT; };
+		8A2F7D441F867B3400E1A0B0 /* JSConvert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSConvert.swift; sourceTree = "<group>"; };
+		8A2F7D461F8688C300E1A0B0 /* JSContextPromise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSContextPromise.swift; sourceTree = "<group>"; };
 		8A315BF11F50EA3A00BFF5F1 /* ZZZZ_TestEndChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZZZ_TestEndChecks.swift; sourceTree = "<group>"; };
 		8A35AE8F1F577BFF00E63EF5 /* ServiceWorkerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerDelegate.swift; sourceTree = "<group>"; };
 		8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerGlobalScopeDelegate.swift; sourceTree = "<group>"; };
@@ -501,6 +505,8 @@
 				8A5B36171F5F48DF009F72AC /* JSArrayBuffer.swift */,
 				8A463DEB1F6C207700AA5B26 /* GlobalVariableProvider.swift */,
 				8AEBD30F1F7DD42800AF1A21 /* JSArrayBufferStream.swift */,
+				8A2F7D441F867B3400E1A0B0 /* JSConvert.swift */,
+				8A2F7D461F8688C300E1A0B0 /* JSContextPromise.swift */,
 			);
 			path = JS;
 			sourceTree = "<group>";
@@ -931,6 +937,7 @@
 			files = (
 				8AD141071F716AEB00ED2D2C /* ExtendableMessageEvent.swift in Sources */,
 				8AC754CF1F31252B00C6B70A /* Event.swift in Sources */,
+				8A2F7D471F8688C300E1A0B0 /* JSContextPromise.swift in Sources */,
 				8AC754D01F31252B00C6B70A /* EventTarget.swift in Sources */,
 				8AC754D11F31252B00C6B70A /* ExtendableEvent.swift in Sources */,
 				8AC755381F3240BB00C6B70A /* SQLiteConnection.swift in Sources */,
@@ -965,6 +972,7 @@
 				8A181AAD1F755D2E005CED14 /* CacheMatchOptions.swift in Sources */,
 				8AC755391F3240BB00C6B70A /* SQLiteResultSet.swift in Sources */,
 				8A5D97F91F3CB532002E521F /* GlobalEventLog.swift in Sources */,
+				8A2F7D451F867B3400E1A0B0 /* JSConvert.swift in Sources */,
 				8AC755341F3240B500C6B70A /* Migration.swift in Sources */,
 				8A181A941F717C5C005CED14 /* MessageChannel.swift in Sources */,
 				8AC754E31F31252B00C6B70A /* ServiceWorkerRegistrationProtocol.swift in Sources */,

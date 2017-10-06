@@ -47,12 +47,18 @@ public class StreamPipe: NSObject, StreamDelegate {
                 to.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
                 to.open()
             }
+            NSLog("Starting to pipe")
 
             while self.finished == false {
                 let date = Date()
+
                 //                                self.runLoop.acceptInput(forMode: RunLoopMode.commonModes, before: Date())
-                RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: date)
+                let isComplete = RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: date)
+                //                            if isComplete {
+                //                                self.finished = true
+                //                            }
             }
+            NSLog("Finished pipe")
         }
 
         //        CFReadStreamSetDispatchQueue(self.from, self.dispatchQueue)
@@ -86,11 +92,12 @@ public class StreamPipe: NSObject, StreamDelegate {
 
         let pipe = StreamPipe(from: from, bufferSize: bufferSize, dispatchQueue: dispatchQueue)
 
-        return firstly {
-            try pipe.add(stream: to)
+        return Promise(value: ())
+            .then(on: dispatchQueue, execute: {
+                try pipe.add(stream: to)
 
-            return pipe.pipe()
-        }
+                return pipe.pipe()
+            })
     }
 
     public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue: DispatchQueue) -> Promise<Data> {
@@ -193,7 +200,7 @@ public class StreamPipe: NSObject, StreamDelegate {
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
         if source == self.from && eventCode == .hasBytesAvailable {
-            while self.from.hasBytesAvailable {
+            while self.from.hasBytesAvailable && self.finished == false {
                 self.doReadWrite()
             }
             if self.from.hasBytesAvailable {

@@ -6,7 +6,10 @@ import JavaScriptCore
 class CacheTests: XCTestCase {
 
     static func stubReject() -> JSValue {
-        let p = JSPromise(context: JSContext.current())
+
+        let currentQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: JSContext.current())!
+
+        let p = try! JSContextPromise(newPromiseInContext: JSContext.current(), dispatchQueue: currentQueue)
         p.reject(ErrorMessage("Not using this"))
         return p.jsValue!
     }
@@ -44,10 +47,10 @@ class CacheTests: XCTestCase {
         }
 
         func keys(_: JSValue, _: [String: Any]?) -> JSValue? {
-            let promise = JSPromise(context: JSContext.current())
+
             let testKeys = ["\(self.name)-file1.js", "\(self.name)-file2.css"]
-            promise.fulfill(testKeys)
-            return promise.jsValue!
+            return Promise(value: testKeys)
+                .toJSPromiseInCurrentContext()
         }
     }
 
@@ -69,9 +72,8 @@ class CacheTests: XCTestCase {
         }
 
         func open(_ cacheName: String) -> JSValue? {
-            let promise = JSPromise(context: JSContext.current())
-            promise.fulfill(TestCache(name: cacheName))
-            return promise.jsValue!
+            return Promise(value: TestCache(name: cacheName))
+                .toJSPromiseInCurrentContext()
         }
 
         func delete(_: String) -> JSValue? {
@@ -80,9 +82,8 @@ class CacheTests: XCTestCase {
 
         func keys() -> JSValue? {
 
-            let promise = JSPromise(context: JSContext.current())
-            promise.fulfill(self.names)
-            return promise.jsValue!
+            return Promise(value: self.names)
+                .toJSPromiseInCurrentContext()
         }
     }
 
@@ -106,13 +107,15 @@ class CacheTests: XCTestCase {
         sw.cacheStorage = TestStorage(names: ["TestCache", "TestCache2"])
 
         sw.evaluateScript("""
+            debugger;
             self.caches.keys()
         """)
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            .then { (jsVal: JSContextPromise) in
+
+                return jsVal.resolve()
             }
-            .then { items -> Void in
-                let arr = items!.value.toArray() as! [String]
+            .then { (arr: [String]) -> Void in
+
                 XCTAssertEqual(arr[0], "TestCache")
                 XCTAssertEqual(arr[1], "TestCache2")
             }
@@ -128,13 +131,12 @@ class CacheTests: XCTestCase {
             self.caches.open("TestCache")
             .then((cache) => cache.keys())
         """)
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            .then { (jsVal: JSContextPromise) in
+                return jsVal.resolve()
             }
-            .then { items -> Void in
-                let arr = items!.value.toArray() as! [String]
-                XCTAssertEqual(arr[0], "TestCache-file1.js")
-                XCTAssertEqual(arr[1], "TestCache-file2.css")
+            .then { (items: [String]) -> Void in
+                XCTAssertEqual(items[0], "TestCache-file1.js")
+                XCTAssertEqual(items[1], "TestCache-file2.css")
             }
             .assertResolves()
     }
@@ -144,10 +146,9 @@ class CacheTests: XCTestCase {
         sw.cacheStorage = TestStorage(names: ["TestCache"])
 
         sw.evaluateScript("[Cache,CacheStorage]")
-            .then { jsVal -> Void in
-                let arr = jsVal!.toArray()!
-                XCTAssert(arr[0] as! Cache.Type === TestCache.self as Cache.Type)
-                XCTAssert(arr[1] as! CacheStorage.Type === TestStorage.self as CacheStorage.Type)
+            .then { (arr: [Any]?) -> Void in
+                XCTAssert(arr?[0] as! Cache.Type === TestCache.self as Cache.Type)
+                XCTAssert(arr?[1] as! CacheStorage.Type === TestStorage.self as CacheStorage.Type)
             }
             .assertResolves()
     }

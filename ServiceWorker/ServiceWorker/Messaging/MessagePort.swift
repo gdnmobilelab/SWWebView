@@ -50,13 +50,9 @@ import JavaScriptCore
         }
         set(value) {
             self.onmessageValue = value
-            if let target = self.targetPort {
-                // start is called implicitly when onmessage is set:
-                // https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/start
-                if target.started == false {
-                    target.start()
-                }
-            }
+            // start is called implicitly when onmessage is set:
+            // https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/start
+            self.start()
         }
     }
 

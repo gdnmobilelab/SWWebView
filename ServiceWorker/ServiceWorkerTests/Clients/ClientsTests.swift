@@ -93,16 +93,15 @@ class ClientsTests: XCTestCase {
                 return [client.id, client.url, typeof client.postMessage, clients[1] === null]
             })
         """)
-            .then { val in
-                return JSPromise.fromJSValue(val!)
+            .then { (val: JSContextPromise) in
+                return val.resolve()
             }
-            .then { val -> Void in
-                let returnArray = val?.value.toArray()
-                XCTAssertEqual(returnArray?.count, 4)
-                XCTAssertEqual(returnArray?[0] as? String, "TESTCLIENT")
-                XCTAssertEqual(returnArray?[1] as? String, "http://www.example.com")
-                XCTAssertEqual(returnArray?[2] as? String, "function")
-                XCTAssertEqual(returnArray?[3] as? Bool, true)
+            .then { (returnArray: [Any]) -> Void in
+                XCTAssertEqual(returnArray.count, 4)
+                XCTAssertEqual(returnArray[0] as? String, "TESTCLIENT")
+                XCTAssertEqual(returnArray[1] as? String, "http://www.example.com")
+                XCTAssertEqual(returnArray[2] as? String, "function")
+                XCTAssertEqual(returnArray[3] as? Bool, true)
             }
             .assertResolves()
     }
@@ -133,15 +132,15 @@ class ClientsTests: XCTestCase {
                 return {"all":ids[0],"uncontrolled":ids[1],"window":ids[2],"windowUncontrolled":ids[3]}
             })
         """)
-            .then { val in
-                return JSPromise.fromJSValue(val!)
+            .then { (val: JSContextPromise) in
+                return val.resolve()
             }
-            .then { val -> Void in
+            .then { (val: [String: Any]) -> Void in
 
-                let all = val?.value.objectForKeyedSubscript("all").toArray() as? [String]
-                let uncontrolled = val?.value.objectForKeyedSubscript("uncontrolled").toArray() as? [String]
-                let window = val?.value.objectForKeyedSubscript("window").toArray() as? [String]
-                let windowUncontrolled = val?.value.objectForKeyedSubscript("windowUncontrolled").toArray() as? [String]
+                let all = val["all"] as? [String]
+                let uncontrolled = val["uncontrolled"] as? [String]
+                let window = val["window"] as? [String]
+                let windowUncontrolled = val["windowUncontrolled"] as? [String]
 
                 XCTAssertEqual(all?.count, 2)
                 XCTAssertEqual(all?[0], "TESTCLIENT")
@@ -177,8 +176,8 @@ class ClientsTests: XCTestCase {
         worker.evaluateScript("""
             self.clients.claim()
         """)
-            .then { val in
-                return JSPromise.fromJSValue(val!)
+            .then { (val: JSContextPromise) in
+                return val.resolve()
             }
             .then { _ -> Void in
                 XCTAssertEqual(claimed, true)

@@ -91,28 +91,39 @@ import PromiseKit
 
         Log.info?("Creating execution environment for worker: " + id)
 
-        return firstly {
-            let env = try ServiceWorkerExecutionEnvironment(self)
+        let dispatchQueue = DispatchQueue(label: self.id, qos: DispatchQoS.utility, attributes: [], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
 
-            guard let delegate = self.delegate else {
-                throw ErrorMessage("This worker has no delegate to load content through")
-            }
+        return Promise(value: ())
+            .then(on: dispatchQueue, execute: {
+                let env = try ServiceWorkerExecutionEnvironment(self, dispatchQueue: dispatchQueue)
 
-            let script = try delegate.serviceWorkerGetScriptContent(self)
-            return env.evaluateScript(script, withSourceURL: self.url)
-                .then { _ -> ServiceWorkerExecutionEnvironment in
-                    // return value doesn't really mean anything here
-                    self._executionEnvironment = env
-                    self.setJSContextDebuggingName()
-                    return env
+                guard let delegate = self.delegate else {
+                    throw ErrorMessage("This worker has no delegate to load content through")
                 }
-        }
+
+                let script = try delegate.serviceWorkerGetScriptContent(self)
+                return env.evaluateScript(script, withSourceURL: self.url)
+                    .then { () -> ServiceWorkerExecutionEnvironment in
+                        // return value doesn't really mean anything here
+                        self._executionEnvironment = env
+                        self.setJSContextDebuggingName()
+                        return env
+                    }
+            })
     }
 
-    public func evaluateScript(_ script: String) -> Promise<JSValue?> {
+    public func evaluateScript(_ script: String) -> Promise<Void> {
 
         return getExecutionEnvironment()
-            .then { exec in
+            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<Void> in
+                exec.evaluateScript(script)
+            }
+    }
+
+    public func evaluateScript<T>(_ script: String) -> Promise<T> {
+
+        return getExecutionEnvironment()
+            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<T> in
                 exec.evaluateScript(script)
             }
     }
@@ -129,15 +140,15 @@ import PromiseKit
         }
     }
 
-    @objc func evaluateScript(_ script: String, callback: @escaping (Error?, JSValue?) -> Void) {
-        evaluateScript(script)
-            .then { val in
-                callback(nil, val)
-            }
-            .catch { err in
-                callback(err, nil)
-            }
-    }
+    //    @objc func evaluateScript(_ script: String, callback: @escaping (Error?, JSValue?) -> Void) {
+    //        evaluateScript(script)
+    //            .then { val in
+    //                callback(nil, val)
+    //            }
+    //            .catch { err in
+    //                callback(err, nil)
+    //            }
+    //    }
 
     //    internal func withExecutionEnvironment(_ cb: @escaping (ServiceWorkerExecutionEnvironment) throws -> Void) -> Promise<Void> {
     //        if let exec = self._executionEnvironment {

@@ -73,8 +73,8 @@ class WebSQLConnectionTests: XCTestCase {
                 result;
                 """)
             }
-            .then { jsResult -> Promise<Void> in
-                XCTAssertEqual(jsResult?.toBool(), true)
+            .then { (jsResult: Bool?) -> Promise<Void> in
+                XCTAssertEqual(jsResult, true)
                 return Promise { fulfill, _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                         fulfill(())
@@ -108,8 +108,8 @@ class WebSQLConnectionTests: XCTestCase {
                     })
                 """)
             }
-            .then { jsResult in
-                return JSPromise.fromJSValue(jsResult!)
+            .then { (jsResult: JSContextPromise) in
+                return jsResult.resolve()
             }
             .then { _ in
                 return sw.ensureFinished()
@@ -140,11 +140,11 @@ class WebSQLConnectionTests: XCTestCase {
                     })
                 """)
             }
-            .then { jsResult in
-                return JSPromise.fromJSValue(jsResult!)
+            .then { (jsResult: JSContextPromise) in
+                return jsResult.resolve()
             }
-            .then { promiseResult -> Promise<Void> in
-                XCTAssertEqual(promiseResult?.value.toString(), "test")
+            .then { (promiseResult: String) -> Promise<Void> in
+                XCTAssertEqual(promiseResult, "test")
                 return sw.ensureFinished()
             }
             .assertResolves()
@@ -196,10 +196,10 @@ class WebSQLConnectionTests: XCTestCase {
                     });
                 """)
             }
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            .then { (jsResult: JSContextPromise) in
+                return jsResult.resolve()
             }
-            .then { _ in
+            .then {
                 return sw.ensureFinished()
             }
             .assertResolves()
@@ -232,8 +232,8 @@ class WebSQLConnectionTests: XCTestCase {
                             assert.equal(called, 0);
                         });
                 """)
-            }.then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
+            }.then { (jsResult: JSContextPromise) in
+                return jsResult.resolve()
             }
             .then { _ in
                 return sw.ensureFinished()

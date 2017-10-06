@@ -70,8 +70,8 @@ import JavaScriptCore
             self.importScripts()
         }
 
-        let fetchAsConvention: @convention(block) (JSValue, JSValue?) -> JSValue? = { [unowned self] requestOrURL, _ in
-            FetchSession.default.fetch(requestOrURL, fromOrigin: self.worker.url)
+        let fetchAsConvention: @convention(block) (JSValue) -> JSValue? = { [unowned self] requestOrURL in
+            self.delegate?.fetch(requestOrURL)
         }
 
         GlobalVariableProvider.add(variable: ConstructableEvent.self, to: self.context, withName: "Event")

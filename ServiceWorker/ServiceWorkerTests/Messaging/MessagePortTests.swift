@@ -23,7 +23,7 @@ class MessagePortTests: XCTestCase {
             "hello": "there"
         ])
 
-        portOne.start()
+        portTwo.start()
 
         XCTAssertTrue(fired)
     }

@@ -16,10 +16,9 @@ class ConstructableFetchResponseTests: XCTestCase {
                 return [text, response.status, response.url, response.headers.get('content-type')]
             })
         """)
-            .then { jsVal in
-                return JSPromise.fromJSValue(jsVal!)
-            }.then { response -> Void in
-                let array = response!.value!.toArray()!
+            .then { (jsVal: JSContextPromise) in
+                return jsVal.resolve()
+            }.then { (array: [Any]) -> Void in
                 XCTAssertEqual(array[0] as? String, "hello")
                 XCTAssertEqual(array[1] as? Int, 200)
                 XCTAssertEqual(array[2] as? String, "")
@@ -42,15 +41,15 @@ class ConstructableFetchResponseTests: XCTestCase {
                 }
             })
         """)
-            .then { jsVal in
-                let response = jsVal!.toObjectOf(FetchResponseProxy.self) as! FetchResponseProxy
-                XCTAssertEqual(response.status, 201)
-                XCTAssertEqual(response.statusText, "CUSTOM TEXT")
-                XCTAssertEqual(response.headers.get("X-Custom-Header"), "blah")
-                XCTAssertEqual(response.headers.get("Content-Type"), "text/custom-content")
-                return response.text()
+            .then { (response: FetchResponseProxy?) in
+                XCTAssertEqual(response!.status, 201)
+                XCTAssertEqual(response!.statusText, "CUSTOM TEXT")
+                XCTAssertEqual(response!.headers.get("X-Custom-Header"), "blah")
+                XCTAssertEqual(response!.headers.get("Content-Type"), "text/custom-content")
+                return response!.text()
             }
             .then { text -> Void in
+
                 XCTAssertEqual(text, "hello")
             }
             .assertResolves()
@@ -64,9 +63,8 @@ class ConstructableFetchResponseTests: XCTestCase {
             let buffer = new Uint8Array([1,2,3,4]).buffer;
             new Response(buffer)
         """)
-            .then { jsVal -> Promise<Data> in
-                let response = jsVal!.toObjectOf(FetchResponseProxy.self) as! FetchResponseProxy
-                return response.data()
+            .then { (response: FetchResponseProtocol?) -> Promise<Data> in
+                return response!.data()
             }
             .then { data -> Void in
                 let array = [UInt8](data)

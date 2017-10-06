@@ -11,7 +11,7 @@ class ExtendableEventTests: XCTestCase {
 
         let ev = ExtendableEvent(type: "test")
 
-        return sw.withJSContext { context in
+        sw.withJSContext { context in
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -24,12 +24,13 @@ class ExtendableEventTests: XCTestCase {
             """)
         }
 
-        .then { _ in
+        .then {
             ev.resolve(in: sw)
         }
         .then {
 
             sw.withJSContext { context in
+
                 XCTAssertEqual(context.objectForKeyedSubscript("testResult").toBool(), true)
             }
         }
@@ -43,7 +44,7 @@ class ExtendableEventTests: XCTestCase {
 
         let ev = ExtendableEvent(type: "test")
 
-        return sw.withJSContext { context in
+        sw.withJSContext { context in
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -73,7 +74,7 @@ class ExtendableEventTests: XCTestCase {
 
         let ev = ExtendableEvent(type: "test")
 
-        return sw.withJSContext { context in
+        sw.withJSContext { context in
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -96,14 +97,13 @@ class ExtendableEventTests: XCTestCase {
             ev.resolve(in: sw)
         }
         .then {
+            return sw.evaluateScript("resultArray")
+        }
+        .then { (results: [Int]?) -> Void in
 
-            sw.withJSContext { context in
-                let results = context.objectForKeyedSubscript("resultArray").toArray()
-
-                XCTAssertEqual(results?.count, 2)
-                XCTAssertEqual(results?[0] as? Int, 1)
-                XCTAssertEqual(results?[1] as? Int, 2)
-            }
+            XCTAssertEqual(results?.count, 2)
+            XCTAssertEqual(results?[0] as? Int, 1)
+            XCTAssertEqual(results?[1] as? Int, 2)
         }
 
         .assertResolves()

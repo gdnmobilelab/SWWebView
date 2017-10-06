@@ -22,7 +22,7 @@ class ConsoleMirrorTests: XCTestCase {
         // the logging.
 
         testWorker.getExecutionEnvironment()
-            .then { _ -> Promise<JSValue?> in
+            .then { _ -> Promise<Void> in
 
                 Log.info = { msg in
                     XCTAssertEqual(msg, "info-test")
@@ -56,6 +56,7 @@ class ConsoleMirrorTests: XCTestCase {
                 """)
             }
             .then { _ -> Void in
+
                 XCTAssert(functionsRun.contains("info"), "Info")
                 XCTAssert(functionsRun.contains("debug"), "Debug")
                 XCTAssert(functionsRun.contains("warn"), "Warn")
@@ -66,7 +67,7 @@ class ConsoleMirrorTests: XCTestCase {
 
     func testShouldMirrorObjects() {
 
-        let expect = expectation(description: "Code executes")
+        let expect = expectation(description: "Should log")
 
         Log.debug = { msg in
             XCTAssert(msg.contains("test = looks;"))
@@ -77,9 +78,9 @@ class ConsoleMirrorTests: XCTestCase {
         let testWorker = ServiceWorker.createTestWorker(id: name)
 
         testWorker.evaluateScript("console.debug({test:'looks', like: 'this'})")
-            .catch { error in
-                XCTFail("\(error)")
+            .then {
+                self.wait(for: [expect], timeout: 1)
             }
-        wait(for: [expect], timeout: 1)
+            .assertResolves()
     }
 }

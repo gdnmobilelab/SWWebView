@@ -8,9 +8,9 @@ class URLTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name)
 
         sw.evaluateScript("typeof(URL) != 'undefined' && self.URL == URL")
-            .then { val in
+            .then { (val: Bool?) in
 
-                XCTAssertEqual(val!.toBool(), true)
+                XCTAssertEqual(val, true)
             }
             .assertResolves()
     }
@@ -20,9 +20,9 @@ class URLTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name)
 
         sw.evaluateScript("new URL('http://www.example.com/#test').hash")
-            .then { val in
+            .then { (val: String?) in
 
-                XCTAssertEqual(val!.toString(), "#test")
+                XCTAssertEqual(val, "#test")
             }
             .assertResolves()
     }
@@ -32,9 +32,9 @@ class URLTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name)
 
         sw.evaluateScript("let url = new URL('http://www.example.com/#test'); url.hash = 'test2'; url.hash")
-            .then { val in
+            .then { (val: String?) in
 
-                XCTAssertEqual(val!.toString(), "#test2")
+                XCTAssertEqual(val, "#test2")
             }
             .assertResolves()
     }
