@@ -48,7 +48,7 @@ class FetchTask: NSObject {
     }
 
     func receiveStream(stream: InputStream) throws {
-        let streamPipe = StreamPipe(from: stream, bufferSize: 1024, dispatchQueue: self.dispatchQueue)
+        let streamPipe = StreamPipe(from: stream, bufferSize: 1024)
 
         guard let initialResponse = self.initialResponse else {
             throw ErrorMessage("Received stream but no HTTP response")

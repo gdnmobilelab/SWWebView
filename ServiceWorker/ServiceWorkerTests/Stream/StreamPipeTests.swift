@@ -61,7 +61,7 @@ class StreamPipeTests: XCTestCase {
         let outputStream = OutputStream.toMemory()
         let outputStream2 = OutputStream.toMemory()
 
-        let streamPipe = StreamPipe(from: inputStream, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+        let streamPipe = StreamPipe(from: inputStream, bufferSize: 1)
         XCTAssertNoThrow(try streamPipe.add(stream: outputStream))
         XCTAssertNoThrow(try streamPipe.add(stream: outputStream2))
 

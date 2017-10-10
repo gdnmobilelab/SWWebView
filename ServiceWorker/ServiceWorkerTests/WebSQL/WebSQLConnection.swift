@@ -2,6 +2,7 @@ import XCTest
 @testable import ServiceWorker
 import PromiseKit
 import SQLite3
+import JavaScriptCore
 
 class WebSQLConnectionTests: XCTestCase {
 
@@ -32,7 +33,7 @@ class WebSQLConnectionTests: XCTestCase {
             return webSQLTestPath.appendingPathComponent(worker.url.host!, isDirectory: true)
         }
 
-        func serviceWorker(_: ServiceWorker, importScript _: URL, onQueue _: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
+        func serviceWorker(_: ServiceWorker, importScript _: URL, _ callback: @escaping (Error?, String?) -> Void) {
             callback(ErrorMessage("not implemented"), nil)
         }
 
@@ -54,8 +55,12 @@ class WebSQLConnectionTests: XCTestCase {
         return sw.getExecutionEnvironment()
             .then { exec in
 
-                exec.withJSContext { context in
-                    GlobalVariableProvider.add(variable: exec.globalScope.openDatabaseFunction!, to: context, withName: "openDatabase")
+                let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { name, _, _, _, _ in
+                    try! exec.openWebSQLDatabase(name: name)
+                }
+
+                return sw.withJSContext { context in
+                    GlobalVariableProvider.add(variable: openDatabaseFunction, to: context, withName: "openDatabase")
                 }
             }
     }
@@ -75,11 +80,7 @@ class WebSQLConnectionTests: XCTestCase {
             }
             .then { (jsResult: Bool?) -> Promise<Void> in
                 XCTAssertEqual(jsResult, true)
-                return Promise { fulfill, _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-                        fulfill(())
-                    })
-                }
+                return sw.ensureFinished()
             }
             .assertResolves()
     }
@@ -111,7 +112,7 @@ class WebSQLConnectionTests: XCTestCase {
             .then { (jsResult: JSContextPromise) in
                 return jsResult.resolve()
             }
-            .then { _ in
+            .then {
                 return sw.ensureFinished()
             }
             .assertResolves()
@@ -196,7 +197,7 @@ class WebSQLConnectionTests: XCTestCase {
                     });
                 """)
             }
-            .then { (jsResult: JSContextPromise) in
+            .then { (jsResult: JSContextPromise) -> Promise<Void> in
                 return jsResult.resolve()
             }
             .then {
@@ -235,7 +236,7 @@ class WebSQLConnectionTests: XCTestCase {
             }.then { (jsResult: JSContextPromise) in
                 return jsResult.resolve()
             }
-            .then { _ in
+            .then {
                 return sw.ensureFinished()
             }
             .assertResolves()

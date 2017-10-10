@@ -16,7 +16,7 @@ class ServiceWorkerTests: XCTestCase {
             .assertResolves()
     }
 
-    func atestThreadFreezing() {
+    func testThreadFreezing() {
 
         let sw = ServiceWorker.createTestWorker(id: name, content: "var testValue = 'hello';")
 
@@ -43,7 +43,7 @@ class ServiceWorkerTests: XCTestCase {
         .assertResolves()
     }
 
-    func atestThreadFreezingInJS() {
+    func testThreadFreezingInJS() {
 
         let sw = ServiceWorker.createTestWorker(id: name, content: "var testValue = 'hello';")
 
@@ -68,6 +68,9 @@ class ServiceWorkerTests: XCTestCase {
         }
         .then {
             return sw.evaluateScript("testFunc()")
+        }
+        .then { () -> Void in
+            // compiler needs this to be here
         }
         .assertResolves()
     }

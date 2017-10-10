@@ -32,16 +32,15 @@ import JavaScriptCore
 
     func run(_ cb: @escaping () -> Void) {
 
+        guard let processing = self.processingCallback, let complete = self.completeCallback, let errorCB = self.errorCallback else {
+            Log.error?("Callbacks do not exist")
+            return
+        }
+
         // The WebSQL API is asynchronous, so we don't want to immediately execute
-        // any transaction. Instead, we push it into the execution queue and wait.
+        // any transaction. Instead, we push it into the runloop and wait.
 
-        self.db.dispatchQueue.async {
-
-            guard let processing = self.processingCallback, let complete = self.completeCallback, let errorCB = self.errorCallback else {
-                Log.error?("Callbacks do not exist")
-                return
-            }
-
+        RunLoop.current.perform {
             do {
 
                 if self.db.connection.open == false {
@@ -75,6 +74,7 @@ import JavaScriptCore
                     Log.error?("Could not create error instance in WebSQLTransaction callback")
                 }
             }
+
             self.processingCallback = nil
             self.errorCallback = nil
             self.completeCallback = nil

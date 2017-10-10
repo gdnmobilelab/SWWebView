@@ -9,17 +9,15 @@ public class StreamPipe: NSObject, StreamDelegate {
     var buffer: UnsafeMutablePointer<UInt8>
     let bufferSize: Int
     var finished: Bool = false
-    unowned let dispatchQueue: DispatchQueue
     let runLoop = RunLoop()
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 
     public fileprivate(set) var started: Bool = false
 
-    public init(from: InputStream, bufferSize: Int, dispatchQueue: DispatchQueue) {
+    public init(from: InputStream, bufferSize: Int) {
         self.from = from
         self.bufferSize = bufferSize
         self.buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-        self.dispatchQueue = dispatchQueue
         super.init()
         from.delegate = self
     }
@@ -39,34 +37,12 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
         self.started = true
 
-        self.dispatchQueue.async {
-
-            self.from.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-            self.from.open()
-            self.to.forEach { to in
-                to.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-                to.open()
-            }
-            NSLog("Starting to pipe")
-
-            while self.finished == false {
-                let date = Date()
-
-                //                                self.runLoop.acceptInput(forMode: RunLoopMode.commonModes, before: Date())
-                let isComplete = RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: date)
-                //                            if isComplete {
-                //                                self.finished = true
-                //                            }
-            }
-            NSLog("Finished pipe")
+        self.from.schedule(in: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        self.from.open()
+        self.to.forEach { to in
+            to.schedule(in: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+            to.open()
         }
-
-        //        CFReadStreamSetDispatchQueue(self.from, self.dispatchQueue)
-        //        self.from.open()
-        //        self.to.forEach { to in
-        //            CFWriteStreamSetDispatchQueue(to, self.dispatchQueue)
-        //            to.open()
-        //        }
     }
 
     fileprivate let completePromise = Promise<Void>.pending()
@@ -79,33 +55,33 @@ public class StreamPipe: NSObject, StreamDelegate {
         StreamPipe.currentlyRunning.insert(self)
         self.start()
         return self.complete
-            .always(on: self.dispatchQueue, execute: {
+            .always {
                 StreamPipe.currentlyRunning.remove(self)
-            })
+            }
     }
 
     /// This is really dumb, but it loses the reference to the StreamPipe if I do this
     /// any other way
     fileprivate static var currentlyRunning = Set<StreamPipe>()
 
-    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue: DispatchQueue) -> Promise<Void> {
+    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue _: DispatchQueue) -> Promise<Void> {
 
-        let pipe = StreamPipe(from: from, bufferSize: bufferSize, dispatchQueue: dispatchQueue)
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
 
         return Promise(value: ())
-            .then(on: dispatchQueue, execute: {
+            .then {
                 try pipe.add(stream: to)
 
                 return pipe.pipe()
-            })
+            }
     }
 
-    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue: DispatchQueue) -> Promise<Data> {
+    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue _: DispatchQueue) -> Promise<Data> {
 
         var hashToUse = CC_SHA256_CTX()
         CC_SHA256_Init(&hashToUse)
 
-        let pipe = StreamPipe(from: from, bufferSize: bufferSize, dispatchQueue: dispatchQueue)
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
 
         pipe.hashListener = { bytes, count in
             CC_SHA256_Update(&hashToUse, bytes, CC_LONG(count))
@@ -114,11 +90,11 @@ public class StreamPipe: NSObject, StreamDelegate {
         return firstly {
             try pipe.add(stream: to)
             return pipe.pipe()
-                .then(on: pipe.dispatchQueue, execute: { () -> Data in
+                .then { () -> Data in
                     var hashData: [UInt8] = Array(repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
                     CC_SHA256_Final(&hashData, &hashToUse)
                     return Data(bytes: hashData)
-                })
+                }
         }
     }
 
@@ -163,12 +139,10 @@ public class StreamPipe: NSObject, StreamDelegate {
 
         self.finished = true
 
-        self.dispatchQueue.async {
-            self.to.forEach { $0.close() }
-            self.from.close()
-            self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-            self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
-        }
+        self.to.forEach { $0.close() }
+        self.from.close()
+        self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+        self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
 
         //        CFReadStreamSetDispatchQueue(self.from, nil)
         //        self.from.close()

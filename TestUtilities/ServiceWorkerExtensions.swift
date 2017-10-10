@@ -10,7 +10,7 @@ import Foundation
 @testable import ServiceWorker
 
 class StaticContentDelegate : NSObject, ServiceWorkerDelegate {
-    
+
     func serviceWorkerGetDomainStoragePath(_ worker: ServiceWorker) throws -> URL {
         return StaticContentDelegate.storageURL
             .appendingPathComponent("domains", isDirectory: true)
@@ -19,7 +19,7 @@ class StaticContentDelegate : NSObject, ServiceWorkerDelegate {
     
     static let storageURL = URL(fileURLWithPath: NSTemporaryDirectory())
     
-    func serviceWorker(_: ServiceWorker, importScript: URL, onQueue _ :DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
+    func serviceWorker(_: ServiceWorker, importScript: URL, _ callback: @escaping (Error?, String?) -> Void) {
         callback(ErrorMessage("not implemented"), nil)
     }
     

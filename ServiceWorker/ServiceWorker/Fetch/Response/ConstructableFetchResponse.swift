@@ -36,11 +36,7 @@ import JavaScriptCore
 
         let inputStream = ConstructableFetchResponse.convert(val: body)
 
-        guard let dispatchQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: body.context) else {
-            return nil
-        }
-
-        let streamPipe = StreamPipe(from: inputStream, bufferSize: 32768, dispatchQueue: dispatchQueue)
+        let streamPipe = StreamPipe(from: inputStream, bufferSize: 32768)
 
         super.init(url: nil, headers: headers, status: status, statusText: statusText, redirected: false, streamPipe: streamPipe)
     }

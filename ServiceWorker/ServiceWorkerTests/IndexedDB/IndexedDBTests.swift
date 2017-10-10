@@ -14,15 +14,27 @@ class IndexedDBTests: XCTestCase {
 
         sw.evaluateScript("""
             new Promise((fulfill,reject) => {
-                var openRequest = indexedDB.open("testDB",1);
-                openRequest.onsuccess = fulfill;
-                openRequest.onerror = reject;
+                try {
+                    console.log("do open")
+                    var openRequest = indexedDB.open("testDB",1);
+                    console.log("request successful")
+                    openRequest.onsuccess = () => {
+                        console.log("Success");
+                        fulfill()
+                    };
+                    openRequest.onerror = () => {
+                        console.log("failure");
+                    };
+                } catch (err) {
+                    console.log("error caught");
+                    reject(err)
+                }
             })
         """)
             .then { (jsVal: JSContextPromise) in
                 return jsVal.resolve()
             }
-            .then { _ -> Promise<Void> in
+            .then {
                 return sw.ensureFinished()
             }
             .assertResolves()

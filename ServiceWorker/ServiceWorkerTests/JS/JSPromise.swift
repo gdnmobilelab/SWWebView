@@ -1,6 +1,7 @@
 import XCTest
 import JavaScriptCore
 @testable import ServiceWorker
+import PromiseKit
 
 class JSPromiseTests: XCTestCase {
 
@@ -10,7 +11,7 @@ class JSPromiseTests: XCTestCase {
         var promise: JSContextPromise?
 
         sw.withJSContext { context in
-            promise = try JSContextPromise(newPromiseInContext: context, dispatchQueue: sw.dispatchQueue!)
+            promise = try JSContextPromise(newPromiseInContext: context)
             context.globalObject.setValue(promise!.jsValue, forProperty: "testPromise")
         }.then {
             return sw.evaluateScript("""
@@ -19,12 +20,13 @@ class JSPromiseTests: XCTestCase {
                     testValue = newValue;
                 })
             """)
-        }.then {
-            return sw.withJSContext { context in
-                XCTAssert(context.objectForKeyedSubscript("testValue").toInt32() == 0)
-                promise!.fulfill(10)
-                XCTAssert(context.objectForKeyedSubscript("testValue").toInt32() == 10)
-            }
+        }.then { () -> Promise<Void> in
+            promise!.fulfill(10)
+            return sw.evaluateScript("testValue")
+                .then { (returnVal: Int) -> Void in
+                    XCTAssertEqual(returnVal, 10)
+                }
+
         }.assertResolves()
     }
 

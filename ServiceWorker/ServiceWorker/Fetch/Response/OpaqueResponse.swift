@@ -9,9 +9,17 @@ import PromiseKit
     }
 
     let emptyHeaders = FetchHeaders()
-    var _streamPipe: StreamPipe?
-    override var streamPipe: StreamPipe? {
-        return self._streamPipe
+
+    override func data() -> Promise<Data> {
+        return Promise(value: Data(count: 0))
+    }
+
+    override func text() -> Promise<String> {
+        return Promise(value: "")
+    }
+
+    override func json() -> Promise<Any?> {
+        return Promise(value: nil)
     }
 
     override var headers: FetchHeaders {
@@ -24,8 +32,6 @@ import PromiseKit
         guard let originalPipe = response.streamPipe else {
             throw ErrorMessage("Could not get original response stream")
         }
-
-        self._streamPipe = StreamPipe(from: dummyStream, bufferSize: 1, dispatchQueue: originalPipe.dispatchQueue)
 
         try super.init(from: response)
     }

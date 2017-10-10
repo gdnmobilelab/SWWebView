@@ -34,10 +34,6 @@ import PromiseKit
         }
     }
 
-    public var dispatchQueue: DispatchQueue? {
-        return self._executionEnvironment?.dispatchQueue
-    }
-
     public init(id: String, url: URL, state: ServiceWorkerInstallState) {
 
         self.id = id
@@ -50,8 +46,11 @@ import PromiseKit
     /// has completed operations before we shut it down. Right now it only uses WebSQL
     /// stuff, but should probably also include setTimeout.
     public func ensureFinished() -> Promise<Void> {
+
         if let exec = self._executionEnvironment {
-            return exec.ensureFinished()
+            let (promise, passthrough) = Promise<Void>.makePassthrough()
+            exec.perform(#selector(ServiceWorkerExecutionEnvironment.ensureFinished(responsePromise:)), on: exec.thread, with: passthrough, waitUntilDone: false)
+            return promise
         }
         return Promise(value: ())
     }
@@ -75,10 +74,22 @@ import PromiseKit
 
     fileprivate var _executionEnvironment: ServiceWorkerExecutionEnvironment?
 
+    fileprivate var loadingExecutionEnvironmentPromise: Promise<ServiceWorkerExecutionEnvironment>?
+
     internal func getExecutionEnvironment() -> Promise<ServiceWorkerExecutionEnvironment> {
 
         if let exec = _executionEnvironment {
             return Promise(value: exec)
+        }
+
+        if let loadingPromise = self.loadingExecutionEnvironmentPromise {
+
+            // Our worker script loads asynchronously, so it's possible that
+            // getExecutionEnvironment() could be run while an existing environment
+            // is being created. Adding this promise means we can close that loop
+            // and ensure we only ever have one environment per worker.
+
+            return loadingPromise
         }
 
         if isDestroyed {
@@ -91,97 +102,126 @@ import PromiseKit
 
         Log.info?("Creating execution environment for worker: " + id)
 
-        let dispatchQueue = DispatchQueue(label: self.id, qos: DispatchQoS.utility, attributes: [], autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit, target: nil)
+        return firstly { () -> Promise<ServiceWorkerExecutionEnvironment> in
 
-        return Promise(value: ())
-            .then(on: dispatchQueue, execute: {
-                let env = try ServiceWorkerExecutionEnvironment(self, dispatchQueue: dispatchQueue)
+            let (promise, fulfill, reject) = Promise<ServiceWorkerExecutionEnvironment>.pending()
 
-                guard let delegate = self.delegate else {
-                    throw ErrorMessage("This worker has no delegate to load content through")
+            // The execution environment saves Thread.currentThread in its initialiser, so we don't
+            // need to assign the variable here. We create the environment on-thread to try to keep
+            // absolutely all JavaScriptCore stuff inside one thread.
+
+            Thread.detachNewThread { [unowned self] in
+                do {
+                    let env = try ServiceWorkerExecutionEnvironment(self)
+                    fulfill(env)
+                    NSLog("perform?")
+                    //                    env.perform(#selector(ServiceWorkerExecutionEnvironment.run), on: Thread.current, with: nil, waitUntilDone: false)
+                    env.run()
+                    NSLog("okay!")
+                    //                    env = nil
+                    //                    env.run()
+                } catch {
+                    reject(error)
+                }
+            }
+
+            return promise
+        }
+        .then { env in
+
+            // Now that we have a context, we need to load the actual worker script.
+
+            guard let delegate = self.delegate else {
+                throw ErrorMessage("This worker has no delegate to load content through")
+            }
+
+            let script = try delegate.serviceWorkerGetScriptContent(self)
+
+            // And then evaluate that script on the worker thread, waiting for it to complete.
+
+            let eval = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: self.url, returnType: .void)
+
+            //            env.evaluateScript(eval)
+            env.perform(#selector(ServiceWorkerExecutionEnvironment.evaluateScript(_:)), on: env.thread, with: eval, waitUntilDone: false)
+            // As mentioned above, this is set to ensure we don't have two environments
+            // created for one worker
+
+            let finalChain = eval.promise
+                .then { (_) -> ServiceWorkerExecutionEnvironment in
+                    self._executionEnvironment = env
+                    return env
                 }
 
-                let script = try delegate.serviceWorkerGetScriptContent(self)
-                return env.evaluateScript(script, withSourceURL: self.url)
-                    .then { () -> ServiceWorkerExecutionEnvironment in
-                        // return value doesn't really mean anything here
-                        self._executionEnvironment = env
-                        self.setJSContextDebuggingName()
-                        return env
-                    }
-            })
+            self.loadingExecutionEnvironmentPromise = finalChain
+            return finalChain
+        }
     }
 
-    public func evaluateScript(_ script: String) -> Promise<Void> {
+    //    public func evaluateScript(_ script: String) -> Promise<Void> {
+    //
+    //        return self.evaluateScript(script)
+    //            .then { _ in
+    //                ()
+    //            }
+    //    }
 
-        return getExecutionEnvironment()
-            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<Void> in
-                exec.evaluateScript(script)
-            }
+    deinit {
+        NSLog("Garbage collect worker")
+        if let exec = self._executionEnvironment {
+            exec.perform(#selector(ServiceWorkerExecutionEnvironment.stop), on: exec.thread, with: nil, waitUntilDone: true)
+            exec.shouldKeepRunning = false
+        }
     }
 
     public func evaluateScript<T>(_ script: String) -> Promise<T> {
 
         return getExecutionEnvironment()
-            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<T> in
-                exec.evaluateScript(script)
+            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<Any?> in
+
+                let returnType: ServiceWorkerExecutionEnvironment.EvaluateReturnType = T.self == JSContextPromise.self ? .promise : .object
+
+                let call = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: nil, returnType: returnType)
+
+                exec.perform(#selector(ServiceWorkerExecutionEnvironment.evaluateScript), on: exec.thread, with: call, waitUntilDone: false)
+
+                return call.resolve()
+            }
+            .then { result -> T in
+
+                try JSConvert.from(any: result)
             }
     }
 
     public func withJSContext(_ cb: @escaping (JSContext) throws -> Void) -> Promise<Void> {
 
-        if let exec = self._executionEnvironment {
-            return exec.withJSContext(cb)
-        } else {
-            return self.getExecutionEnvironment()
-                .then { exec in
-                    exec.withJSContext(cb)
-                }
-        }
+        let call = ServiceWorkerExecutionEnvironment.WithJSContextCall(cb)
+
+        return self.getExecutionEnvironment()
+            .then { exec in
+                exec.perform(#selector(ServiceWorkerExecutionEnvironment.withJSContext), on: exec.thread, with: call, waitUntilDone: false)
+                return call.resolveVoid()
+            }
     }
-
-    //    @objc func evaluateScript(_ script: String, callback: @escaping (Error?, JSValue?) -> Void) {
-    //        evaluateScript(script)
-    //            .then { val in
-    //                callback(nil, val)
-    //            }
-    //            .catch { err in
-    //                callback(err, nil)
-    //            }
-    //    }
-
-    //    internal func withExecutionEnvironment(_ cb: @escaping (ServiceWorkerExecutionEnvironment) throws -> Void) -> Promise<Void> {
-    //        if let exec = self._executionEnvironment {
-    //            do {
-    //                try cb(exec)
-    //                return Promise(value: ())
-    //            } catch {
-    //                return Promise(error: error)
-    //            }
-    //        }
-    //        return getExecutionEnvironment()
-    //            .then { exec in
-    //                try cb(exec)
-    //            }
-    //    }
 
     public func dispatchEvent(_ event: Event) -> Promise<Void> {
 
+        let call = ServiceWorkerExecutionEnvironment.DispatchEventCall(event)
+
         if let exec = self._executionEnvironment {
-            return exec.dispatchEvent(event)
+
+            exec.perform(#selector(ServiceWorkerExecutionEnvironment.dispatchEvent), on: exec.thread, with: call, waitUntilDone: false)
+
+            return call.resolveVoid()
+
         } else {
+
             return self.getExecutionEnvironment()
                 .then { exec in
-                    exec.dispatchEvent(event)
+                    exec.perform(#selector(ServiceWorkerExecutionEnvironment.dispatchEvent), on: exec.thread, with: call, waitUntilDone: false)
+                    return call.resolveVoid()
                 }
         }
     }
 
-    public var skipWaitingStatus: Bool {
-        if let exec = self._executionEnvironment {
-            return exec.globalScope.skipWaitingStatus
-        } else {
-            return false
-        }
-    }
+    public internal(set) var skipWaitingStatus: Bool = false
 }

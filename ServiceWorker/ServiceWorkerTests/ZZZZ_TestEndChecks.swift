@@ -9,26 +9,26 @@ class ZZZZ_TestEndChecks: XCTestCase {
     /// have been garbage collected. If they haven't, it means we have a memory leak somewhere.
     func testShouldDeinitSuccessfully() {
 
-        let queues = ServiceWorkerExecutionEnvironment.contextDispatchQueues
+        let queues = ServiceWorkerExecutionEnvironment.contexts
 
         Promise(value: ())
-            .then { () -> Void in
+            .then { () -> Promise<Void> in
 
-                if queues.count > 0 {
+                let allContexts = ServiceWorkerExecutionEnvironment.contexts.keyEnumerator().allObjects as! [JSContext]
 
-                    let allContexts = ServiceWorkerExecutionEnvironment.contextDispatchQueues.keyEnumerator().allObjects as! [JSContext]
-
-                    allContexts.forEach { context in
-                        NSLog("Still active context: \(context.name)")
-                    }
-
+                allContexts.forEach { context in
+                    NSLog("Still active context: \(context.name)")
+                }
+                if allContexts.count > 0 {
                     throw ErrorMessage("Contexts still exist")
                 }
 
                 let worker = ServiceWorker.createTestWorker(id: self.name)
-                _ = worker.getExecutionEnvironment()
+                return worker.getExecutionEnvironment()
+                    .then { _ -> Void in
+                        XCTAssertEqual(ServiceWorkerExecutionEnvironment.contexts.keyEnumerator().allObjects.count, 1)
+                    }
 
-                XCTAssertEqual(queues.count, 1)
             }.then { _ -> Promise<Void> in
 
                 Promise<Void> { fulfill, _ in
@@ -45,7 +45,7 @@ class ZZZZ_TestEndChecks: XCTestCase {
                             NSLog("WHAAT")
                         }
 
-                        XCTAssertEqual(ServiceWorkerExecutionEnvironment.contextDispatchQueues.count, 0)
+                        XCTAssertEqual(ServiceWorkerExecutionEnvironment.contexts.keyEnumerator().allObjects.count, 0)
                         fulfill(())
                     })
                 }

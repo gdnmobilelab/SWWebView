@@ -74,7 +74,14 @@ import JavaScriptCore
     fileprivate func mirror(_ level: String, _ msg: JSValue) {
 
         let values = msg.toArray()
-            .map { String(describing: $0) }
+            .map { val in
+
+                if let str = val as? String {
+                    return str
+                }
+
+                return String(describing: val)
+            }
             .joined(separator: ",")
 
         switch level {

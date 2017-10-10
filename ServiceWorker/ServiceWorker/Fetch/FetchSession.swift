@@ -77,8 +77,6 @@ import JavaScriptCore
 
     internal func fetch(_ requestOrURL: JSValue, fromOrigin origin: URL) -> JSValue? {
 
-        ServiceWorkerExecutionEnvironment.ensureOnDispatchQueue()
-
         return firstly { () -> Promise<FetchResponseProtocol> in
 
             var request: FetchRequest

@@ -179,7 +179,7 @@ class ClientsTests: XCTestCase {
             .then { (val: JSContextPromise) in
                 return val.resolve()
             }
-            .then { _ -> Void in
+            .then {
                 XCTAssertEqual(claimed, true)
             }
             .assertResolves()

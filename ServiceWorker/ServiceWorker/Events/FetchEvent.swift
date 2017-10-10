@@ -15,19 +15,21 @@ import PromiseKit
 
     func respondWith(_ val: JSValue) {
 
-        guard let dispatchQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: val.context) else {
-            Log.error?("Could not get dispatch queue for this JSContext")
-            return
-        }
-
-        dispatchPrecondition(condition: DispatchPredicate.onQueue(dispatchQueue))
-
         if self.respondValue != nil {
             let err = JSValue(newErrorFromMessage: "respondWith() has already been called", in: val.context)
             val.context.exception = err
             return
         }
-        self.respondValue = val
+
+        guard let resolved = val.context
+            .evaluateScript("(val) => Promise.resolve(val)")
+            .call(withArguments: [val]) else {
+            let err = JSValue(newErrorFromMessage: "Could not call Promise.resolve() on provided value", in: val.context)
+            val.context.exception = err
+            return
+        }
+
+        self.respondValue = resolved
     }
 
     public init(request: FetchRequest) {
@@ -35,21 +37,15 @@ import PromiseKit
         super.init()
     }
 
-    public func resolve(in worker: ServiceWorker) throws -> Promise<FetchResponseProtocol?> {
+    public func resolve(in _: ServiceWorker) throws -> Promise<FetchResponseProtocol?> {
         guard let promise = self.respondValue else {
             return Promise(value: nil)
         }
 
-        guard let dispatchQueue = worker.dispatchQueue else {
-            return Promise(error: ErrorMessage("Could not get dispatch queue for worker"))
+        guard let exec = ServiceWorkerExecutionEnvironment.contexts.object(forKey: promise.context) else {
+            return Promise(error: ErrorMessage("Could not get execution environment for this JSContext"))
         }
 
-        guard let resolve = promise.context
-            .evaluateScript("(val) => Promise.resolve(val)")
-            .call(withArguments: [promise]) else {
-            throw ErrorMessage("Could not call Promise.resolve() on provided value")
-        }
-
-        return JSContextPromise(jsValue: resolve, dispatchQueue: dispatchQueue).resolve()
+        return JSContextPromise(jsValue: promise, thread: exec.thread).resolve()
     }
 }

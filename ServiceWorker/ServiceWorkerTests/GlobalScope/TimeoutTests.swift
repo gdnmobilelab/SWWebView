@@ -28,14 +28,13 @@ class TimeoutTests: XCTestCase {
             }, 30);
 
         """)
-            .then { _ in
+            .then {
                 return self.promiseDelay(delay: 20)
             }
             .then {
                 return sw.evaluateScript("ticks")
             }
-            .then { (response: Int?) -> Void in
-
+            .then { (response: Int) -> Void in
                 XCTAssertEqual(response, 1)
             }
             .assertResolves()
@@ -75,7 +74,7 @@ class TimeoutTests: XCTestCase {
             }, 10);
 
         """)
-            .then { _ in
+            .then {
                 return self.promiseDelay(delay: 25)
             }
             .then {
@@ -86,10 +85,10 @@ class TimeoutTests: XCTestCase {
                 // check clearInterval works
                 return self.promiseDelay(delay: 10)
             }
-            .then {
+            .then { () -> Promise<Int> in
                 return sw.evaluateScript("ticks")
             }
-            .then { (response: Int?) -> Void in
+            .then { (response: Int) -> Void in
                 XCTAssertEqual(response, 2)
             }
             .assertResolves()

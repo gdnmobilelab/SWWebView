@@ -92,7 +92,7 @@ class FetchResponseTests: XCTestCase {
             .assertResolves()
     }
 
-    func atestResponseInWorker() {
+    func testResponseInWorker() {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
@@ -166,7 +166,7 @@ class FetchResponseTests: XCTestCase {
             .assertResolves()
     }
 
-    func atestArrayBufferResponse() {
+    func testArrayBufferResponse() {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.dat", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
 

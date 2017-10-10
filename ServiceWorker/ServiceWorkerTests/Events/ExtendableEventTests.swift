@@ -9,9 +9,8 @@ class ExtendableEventTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        let ev = ExtendableEvent(type: "test")
-
         sw.withJSContext { context in
+            let ev = ExtendableEvent(type: "test")
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -20,19 +19,19 @@ class ExtendableEventTests: XCTestCase {
                 testEvent.waitUntil(new Promise(function(fulfill,reject) {
                     testResult = true
                     fulfill()
-                }))
+                }));
+                 testEvent;
             """)
         }
 
-        .then {
+        .then { (ev: ExtendableEvent) in
             ev.resolve(in: sw)
         }
         .then {
-
-            sw.withJSContext { context in
-
-                XCTAssertEqual(context.objectForKeyedSubscript("testResult").toBool(), true)
-            }
+            return sw.evaluateScript("testResult")
+        }
+        .then { (result: Bool) in
+            XCTAssertEqual(result, true)
         }
 
         .assertResolves()
@@ -42,9 +41,8 @@ class ExtendableEventTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        let ev = ExtendableEvent(type: "test")
-
         sw.withJSContext { context in
+            let ev = ExtendableEvent(type: "test")
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -52,10 +50,11 @@ class ExtendableEventTests: XCTestCase {
                 testEvent.waitUntil(new Promise(function(fulfill,reject) {
                     reject(new Error("failure"))
                 }))
+                testEvent;
             """)
         }
 
-        .then { _ in
+        .then { (ev: ExtendableEvent) in
             ev.resolve(in: sw)
         }
         .then {
@@ -72,9 +71,8 @@ class ExtendableEventTests: XCTestCase {
 
         let sw = ServiceWorker.createTestWorker(id: name)
 
-        let ev = ExtendableEvent(type: "test")
-
         sw.withJSContext { context in
+            let ev = ExtendableEvent(type: "test")
             context.globalObject.setValue(ev, forProperty: "testEvent")
         }
         .then {
@@ -89,11 +87,12 @@ class ExtendableEventTests: XCTestCase {
                         resultArray.push(2);
                         fulfill();
                     },10);
-                }))
+                }));
+                testEvent;
             """)
         }
 
-        .then { _ in
+        .then { (ev: ExtendableEvent) in
             ev.resolve(in: sw)
         }
         .then {
@@ -113,17 +112,10 @@ class ExtendableEventTests: XCTestCase {
         let sw = ServiceWorker.createTestWorker(id: name)
 
         let ev = ExtendableEvent(type: "test")
-
-        return sw.withJSContext { context in
-
-            context.evaluateScript("self.addEventListener('test', function() {});")
-        }
-        .then {
-            sw.dispatchEvent(ev)
-        }
-        .then {
-            ev.resolve(in: sw)
-        }
-        .assertResolves()
+        ev.resolve(in: sw)
+            .then { () -> Void in
+                // compiler requires this
+            }
+            .assertResolves()
     }
 }

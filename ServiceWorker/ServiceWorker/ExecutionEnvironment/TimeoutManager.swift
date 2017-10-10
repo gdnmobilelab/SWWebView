@@ -27,10 +27,10 @@ class TimeoutManager {
     var cancelledTimeouts = Set<Int>()
     var stopAllTimeouts = false
 
-    unowned let queue: DispatchQueue
+    weak var thread: Thread?
 
-    init(withQueue: DispatchQueue, in context: JSContext) {
-        self.queue = withQueue
+    init(for thread: Thread, in context: JSContext) {
+        self.thread = thread
 
         let clearInterval = unsafeBitCast((self.clearIntervalFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
         let clearTimeout = unsafeBitCast((self.clearTimeoutFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
@@ -60,7 +60,7 @@ class TimeoutManager {
 
     fileprivate func fireInterval(_ interval: Interval) {
 
-        self.queue.asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
+        DispatchQueue.global().asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
 
             if self.cancelledTimeouts.contains(interval.timeoutIndex) == true {
                 self.cancelledTimeouts.remove(interval.timeoutIndex)
@@ -68,7 +68,16 @@ class TimeoutManager {
             } else if self.stopAllTimeouts {
                 return
             } else {
-                interval.function.call(withArguments: interval.args)
+
+                // ensure that we perform this function on our worker thread
+
+                guard let thread = self.thread else {
+                    Log.error?("Tried to execute setInterval function but environment no longer exists")
+                    return
+                }
+
+                interval.function.perform(#selector(JSValue.call), on: thread, with: interval.args, waitUntilDone: false)
+
                 self.fireInterval(interval)
             }
         })
@@ -143,14 +152,20 @@ class TimeoutManager {
 
         let thisTimeoutIndex = lastTimeoutIndex
 
-        queue.asyncAfter(deadline: .now() + (params.delay / 1000), execute: {
+        DispatchQueue.global().asyncAfter(deadline: .now() + (params.delay / 1000), execute: {
             if self.cancelledTimeouts.contains(thisTimeoutIndex) == true {
                 self.cancelledTimeouts.remove(thisTimeoutIndex)
                 return
             } else if self.stopAllTimeouts {
                 return
             } else {
-                params.funcToRun.call(withArguments: params.args)
+
+                guard let thread = self.thread else {
+                    Log.error?("Tried to execute setInterval function but environment no longer exists")
+                    return
+                }
+
+                params.funcToRun.perform(#selector(JSValue.call), on: thread, with: params.args, waitUntilDone: false)
             }
         })
 

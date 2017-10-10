@@ -7,9 +7,7 @@ class CacheTests: XCTestCase {
 
     static func stubReject() -> JSValue {
 
-        let currentQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: JSContext.current())!
-
-        let p = try! JSContextPromise(newPromiseInContext: JSContext.current(), dispatchQueue: currentQueue)
+        let p = try! JSContextPromise(newPromiseInContext: JSContext.current())
         p.reject(ErrorMessage("Not using this"))
         return p.jsValue!
     }

@@ -22,7 +22,7 @@ class ImportScriptsTests: XCTestCase {
             throw ErrorMessage("Not implemented")
         }
 
-        typealias ImportFunction = (URL, DispatchQueue, @escaping (Error?, String?) -> Void) -> Void
+        typealias ImportFunction = (URL, @escaping (Error?, String?) -> Void) -> Void
 
         let importFunc: ImportFunction
         var content: String
@@ -32,8 +32,8 @@ class ImportScriptsTests: XCTestCase {
             self.content = ""
         }
 
-        func serviceWorker(_: ServiceWorker, importScript: URL, onQueue queue: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
-            self.importFunc(importScript, queue, callback)
+        func serviceWorker(_: ServiceWorker, importScript: URL, _ callback: @escaping (Error?, String?) -> Void) {
+            self.importFunc(importScript, callback)
         }
 
         func serviceWorkerGetScriptContent(_: ServiceWorker) throws -> String {

@@ -2,10 +2,6 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
-public protocol OptionalType {}
-
-extension Optional: OptionalType {}
-
 /// The wrapper around JSContext that actually runs the ServiceWorker code. We keep this
 /// separate from ServiceWorker itself so that we can create relatively lightwight ServiceWorker
 /// classes in response to getRegistration() etc but only create the JS environment when needed.
@@ -20,17 +16,14 @@ extension Optional: OptionalType {}
     fileprivate var jsContext: JSContext!
 
     /// The objects that populate the global scope/self in the worker environment.
-    internal let globalScope: ServiceWorkerGlobalScope
+    fileprivate let globalScope: ServiceWorkerGlobalScope
 
-    /// We enforce a dispatch queue on all the events we dispatch to the worker. Partially
-    /// to ensure QoS and keep it off the main thread, but also to respect the queue being
-    /// freezed when we run an importScripts() call.
-    let dispatchQueue: DispatchQueue
+    internal let thread: Thread
 
     /// Adds setTimeout(), setInterval() etc. to the global scope. We keep a reference at
     /// this level because we need to cancel all timeouts when our execution environment
     /// is being garbage collected.
-    let timeoutManager: TimeoutManager
+    fileprivate let timeoutManager: TimeoutManager
 
     /// It seems like a good idea to keep all workers in the same virtual machine - it means
     /// they can exchange JSValues, so we could implmenent stuff like SharedArrayBuffer in
@@ -40,14 +33,12 @@ extension Optional: OptionalType {}
     // Since WebSQL connections retain an open connection as long as they are alive, we need to
     // keep track of them, in order to close them off on shutdown. JS garbage collection
     // is sometimes enough, but not always.
-    internal var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
+    fileprivate var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
 
-    // ConstructableFetchResponse needs a reference to the dispatchQueue attached to any particular
+    // ConstructableFetchResponse needs a reference to the environment attached to any particular
     // JSContext. So we store that connection here, with weak memory so that they are automatically
     // removed when no longer in use.
-    static var contextDispatchQueues = NSMapTable<JSContext, DispatchQueue>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
-
-    let fetchSession: FetchSession
+    static var contexts = NSMapTable<JSContext, ServiceWorkerExecutionEnvironment>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
 
     var jsContextName: String {
         set(value) {
@@ -58,34 +49,27 @@ extension Optional: OptionalType {}
         }
     }
 
-    static func ensureOnDispatchQueue() {
-        guard let currentContext = JSContext.current() else {
-            return
-        }
-
-        guard let currentDispatchQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: currentContext) else {
-            fatalError("Not on a queue")
-        }
-
-        dispatchPrecondition(condition: DispatchPredicate.onQueue(currentDispatchQueue))
-    }
-
-    @objc public init(_ worker: ServiceWorker, dispatchQueue: DispatchQueue) throws {
+    @objc public init(_ worker: ServiceWorker) throws {
         self.worker = worker
         self.workerId = worker.id
-        guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
-            throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
-        }
+        //        guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
+        //            throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
+        //        }
 
-        self.dispatchQueue = dispatchQueue
-        self.fetchSession = FetchSession(dispatchQueue: dispatchQueue)
+        self.thread = Thread.current
+
+        self.thread.name = "ServiceWorker:" + self.workerId // self.worker.url.absoluteString
+        self.thread.qualityOfService = QualityOfService.utility
         self.jsContext = JSContext()
-        ServiceWorkerExecutionEnvironment.contextDispatchQueues.setObject(self.dispatchQueue, forKey: jsContext)
+
+        self.jsContext.name = worker.id
 
         globalScope = try ServiceWorkerGlobalScope(context: jsContext, worker)
-        timeoutManager = TimeoutManager(withQueue: dispatchQueue, in: jsContext)
+        timeoutManager = TimeoutManager(for: Thread.current, in: jsContext)
 
         super.init()
+
+        ServiceWorkerExecutionEnvironment.contexts.setObject(self, forKey: jsContext)
 
         jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
@@ -98,23 +82,44 @@ extension Optional: OptionalType {}
         globalScope.delegate = self
     }
 
+    var shouldKeepRunning = true
+
+    @objc func run() {
+        self.checkOnThread()
+        CFRunLoopRun()
+        //        RunLoop.current.run()
+        //        while shouldKeepRunning {
+        //            RunLoop.current.
+        //            RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: Date())
+        //        }
+    }
+
+    @objc func stop() {
+        self.checkOnThread()
+        CFRunLoopStop(CFRunLoopGetCurrent())
+    }
+
     /// Sometimes we want to make sure that our worker has finished all execution before
     /// we shut it down.
-    func ensureFinished() -> Promise<Void> {
+    @objc func ensureFinished(responsePromise: PromisePassthrough) {
         let allWebSQL = self.activeWebSQLDatabases.allObjects
 
         if allWebSQL.count == 0 {
-            return Promise(value: ())
+            return responsePromise.fulfill(())
         }
         Log.info?("Waiting until \(allWebSQL.count) WebSQL connections close before we stop.")
         let mappedClosePromises = allWebSQL.map { $0.close() }
 
-        return when(fulfilled: mappedClosePromises)
+        when(fulfilled: mappedClosePromises)
+            .then {
+                NSLog("Closed WebSQL connections")
+            }
+            .passthrough(responsePromise)
     }
 
     deinit {
         Log.info?("Closing execution environment for: \(self.workerId)")
-
+        self.shouldKeepRunning = false
         let allWebSQL = self.activeWebSQLDatabases.allObjects
             .filter { $0.connection.open == true }
 
@@ -142,75 +147,53 @@ extension Optional: OptionalType {}
         }
     }
 
-    public func evaluateScript(_ script: String, withSourceURL: URL? = nil) -> Promise<Void> {
-        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { _ in
-            ()
+    fileprivate func checkOnThread() {
+        if Thread.current != self.thread {
+            fatalError("Tried to execute worker code outside of worker thread")
         }
     }
 
-    fileprivate func evaluateWithConverter<T>(_ script: String, withSourceURL: URL? = nil, _ converter: @escaping (JSValue?) throws -> T) -> Promise<T> {
+    @objc func evaluateScript(_ call: EvaluateScriptCall) {
 
-        let (promise, fulfill, reject) = Promise<T>.pending()
+        self.checkOnThread()
 
-        self.dispatchQueue.async {
-            do {
-                if self.currentException != nil {
-                    throw ErrorMessage("Cannot run script while context has an exception")
-                }
-
-                let returnVal = self.jsContext.evaluateScript(script, withSourceURL: withSourceURL)
-
-                try self.throwExceptionIfExists()
-
-                fulfill(try converter(returnVal))
-
-            } catch {
-                reject(error)
-            }
-        }
-
-        return promise
-    }
-
-    public func evaluateScript<T>(_ script: String, withSourceURL: URL? = nil) -> Promise<T> {
-
-        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { jsValue in
-            NSLog("Convert to \(T.self)")
-            if let valueExists = jsValue, T.self == JSContextPromise.self {
-
-                guard let promise = JSContextPromise(jsValue: valueExists, dispatchQueue: self.dispatchQueue) as? T else {
-                    throw ErrorMessage("Could not convert to promise")
-                }
-                return promise
+        do {
+            if self.currentException != nil {
+                throw ErrorMessage("Cannot run script while context has an exception")
             }
 
-            guard let converted = jsValue?.toObject() as? T else {
-                throw ErrorMessage("Could not convert JS object")
+            let returnJSValue = self.jsContext.evaluateScript(call.script, withSourceURL: call.url)
+
+            try self.throwExceptionIfExists()
+
+            guard let returnExists = returnJSValue else {
+                call.fulfill(nil)
+                return
             }
 
-            return converted
+            if call.returnType == .promise {
+                call.fulfill(JSContextPromise(jsValue: returnExists, thread: self.thread))
+            } else if call.returnType == .void {
+                call.fulfill(nil)
+            } else {
+                call.fulfill(returnExists.toObject())
+            }
+
+        } catch {
+            call.reject(error)
         }
     }
-
-    //    public func evaluateScript<T>(_ script: String, withSourceURL: URL? = nil) -> Promise<T> where T: JSContextPromise {
-    //
-    //        return self.evaluateWithConverter(script, withSourceURL: withSourceURL) { val in
-    //            guard let valExists = val else {
-    //                return nil
-    //            }
-    //            return T(jsValue: valExists, dispatchQueue: self.dispatchQueue)
-    //        }
-    //    }
 
     func openWebSQLDatabase(name: String) throws -> WebSQLDatabase {
-        let db = try WebSQLDatabase.openDatabase(for: self.worker, name: name, withQueue: self.dispatchQueue)
+        self.checkOnThread()
+        let db = try WebSQLDatabase.openDatabase(for: self.worker, in: self, name: name)
         self.activeWebSQLDatabases.add(db)
         return db
     }
 
     func importScripts(urls: [URL]) throws {
 
-        dispatchPrecondition(condition: .onQueue(self.dispatchQueue))
+        self.checkOnThread()
 
         guard let url = urls.first else {
             // We've finished the array
@@ -230,7 +213,7 @@ extension Optional: OptionalType {}
         // to do the actual import. I'm sure there is a better way of doing this.
 
         DispatchQueue.global(qos: DispatchQoS.QoSClass.utility).async {
-            loadFunction(self.worker, url, self.dispatchQueue) { err, body in
+            loadFunction(self.worker, url) { err, body in
                 if err != nil {
                     error = err
                 } else {
@@ -257,42 +240,35 @@ extension Optional: OptionalType {}
     /// We want to run our JSContext on its own thread, but every now and then we need to
     /// manually manipulate JSValues etc, so we can't use evaluateScript() directly. Instead,
     /// this lets us run a (synchronous) piece of code on the correct thread.
-    public func withJSContext(_ cb: @escaping (JSContext) throws -> Void) -> Promise<Void> {
+    @objc internal func withJSContext(_ call: WithJSContextCall) {
 
-        let (promise, fulfill, reject) = Promise<Void>.pending()
-
-        self.dispatchQueue.async {
-            do {
-                try cb(self.jsContext)
-                try self.throwExceptionIfExists()
-                fulfill(())
-            } catch {
-                reject(error)
-            }
+        self.checkOnThread()
+        do {
+            try call.funcToRun(self.jsContext)
+            call.fulfill(())
+        } catch {
+            call.reject(error)
         }
-
-        return promise
     }
 
-    public func dispatchEvent(_ event: Event) -> Promise<Void> {
+    @objc func dispatchEvent(_ call: DispatchEventCall) {
 
-        let (promise, fulfill, reject) = Promise<Void>.pending()
+        self.checkOnThread()
+        self.globalScope.dispatchEvent(call.event)
 
-        self.dispatchQueue.async {
-            do {
-                self.globalScope.dispatchEvent(event)
-                try self.throwExceptionIfExists()
-
-                fulfill(())
-            } catch {
-                reject(error)
-            }
+        do {
+            try self.throwExceptionIfExists()
+            call.fulfill(nil)
+        } catch {
+            call.reject(error)
         }
-
-        return promise
     }
 
     func fetch(_ requestOrString: JSValue) -> JSValue? {
-        return self.fetchSession.fetch(requestOrString, fromOrigin: self.worker.url)
+        return FetchSession.default.fetch(requestOrString, fromOrigin: self.worker.url)
+    }
+
+    func skipWaiting() {
+        self.worker.skipWaitingStatus = true
     }
 }

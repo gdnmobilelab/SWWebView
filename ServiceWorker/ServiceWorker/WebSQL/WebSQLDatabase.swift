@@ -10,12 +10,12 @@ import PromiseKit
 @objc class WebSQLDatabase: NSObject, WebSQLDatabaseExports {
 
     let connection: SQLiteConnection
-    unowned let dispatchQueue: DispatchQueue
+    weak var environment: ServiceWorkerExecutionEnvironment?
     var transactionQueue: [WebSQLTransaction] = []
 
-    init(at path: URL, withQueue queue: DispatchQueue) throws {
+    init(at path: URL, in environment: ServiceWorkerExecutionEnvironment) throws {
         self.connection = try SQLiteConnection(path)
-        self.dispatchQueue = queue
+        self.environment = environment
     }
 
     func transaction(_ withCallback: JSValue, _ errorCallback: JSValue, _ completeCallback: JSValue) {
@@ -90,7 +90,7 @@ import PromiseKit
         }
     }
 
-    static func openDatabase(for worker: ServiceWorker, name: String, withQueue queue: DispatchQueue) throws -> WebSQLDatabase {
+    static func openDatabase(for worker: ServiceWorker, in environment: ServiceWorkerExecutionEnvironment, name: String) throws -> WebSQLDatabase {
 
         guard let storagePath = try worker.delegate?.serviceWorkerGetDomainStoragePath(worker) else {
             throw ErrorMessage("ServiceWorker has no delegate")
@@ -111,7 +111,7 @@ import PromiseKit
             try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
         }
 
-        let db = try WebSQLDatabase(at: dbURL, withQueue: queue)
+        let db = try WebSQLDatabase(at: dbURL, in: environment)
         return db
     }
 }

@@ -43,13 +43,6 @@ import JavaScriptCore
 
     func postMessage(_ toSend: JSValue, _: [JSValue]) {
 
-        guard let currentQueue = ServiceWorkerExecutionEnvironment.contextDispatchQueues.object(forKey: JSContext.current()) else {
-            Log.error?("Could not get dispatch queue for current JS Context")
-            return
-        }
-
-        dispatchPrecondition(condition: DispatchPredicate.onQueue(currentQueue))
-
         self.wrapAround.postMessage(message: toSend.toObject(), transferable: nil)
     }
 

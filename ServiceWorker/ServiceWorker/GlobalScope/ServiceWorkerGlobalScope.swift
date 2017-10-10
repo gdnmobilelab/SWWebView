@@ -63,7 +63,7 @@ import JavaScriptCore
         GlobalVariableProvider.addSelf(to: self.context)
 
         let skipWaiting: @convention(block) () -> Void = { [unowned self] in
-            self.skipWaitingStatus = true
+            self.delegate?.skipWaiting()
         }
 
         let importAsConvention: @convention(block) () -> Void = { [unowned self] in

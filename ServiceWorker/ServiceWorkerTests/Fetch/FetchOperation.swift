@@ -199,7 +199,7 @@ class FetchOperationTests: XCTestCase {
         wait(for: [fulfilled, expectResponse], timeout: 1)
     }
 
-    func atestJSFetch() {
+    func testJSFetch() {
 
         TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             GCDWebServerDataResponse(text: "THIS IS TEST CONTENT")
