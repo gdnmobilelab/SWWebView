@@ -10,7 +10,7 @@ import PromiseKit
 
     public let type: String
 
-    init(type: String) {
+    public init(type: String) {
         self.type = type
     }
 
@@ -61,7 +61,7 @@ import PromiseKit
     //            }
     //    }
 
-    func resolve<T>(in worker: ServiceWorker) -> Promise<T> {
+    public func resolve<T>(in worker: ServiceWorker) -> Promise<T> {
 
         self.state = .resolved
 

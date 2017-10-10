@@ -130,22 +130,6 @@ public class SWWebViewBridge: NSObject, WKURLSchemeHandler, WKScriptMessageHandl
                     .then {
                         try fetchEvent.resolve(in: controller)
                     }
-                    .then { jsValueResponse -> FetchResponseProtocol? in
-                        guard let val = jsValueResponse?.value else {
-                            return nil
-                        }
-
-                        if let response = val.toObject() as? FetchResponseProtocol {
-                            return response
-                        }
-
-                        return nil
-
-                        //                        guard let transformed = try FetchResponse.get(fromJSValue: val) else {
-                        //                            return nil
-                        //                        }
-                        //                        return transformed
-                    }
             }
             .then { maybeResponse -> Promise<FetchResponseProtocol> in
                 if let responseExists = maybeResponse {

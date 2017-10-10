@@ -269,7 +269,7 @@ class SQLiteTests: XCTestCase {
 
             let output = OutputStream.toMemory()
 
-            StreamPipe.pipe(from: stream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+            StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
                 .then { () -> Void in
 
                     let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
@@ -297,7 +297,7 @@ class SQLiteTests: XCTestCase {
 
         let output = OutputStream.toMemory()
 
-        StreamPipe.pipe(from: stream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+        StreamPipe.pipe(from: stream, to: output, bufferSize: 1)
             .then { () -> Void in
 
                 let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
@@ -364,7 +364,7 @@ class SQLiteTests: XCTestCase {
             let insertStream = InputStream(url: tempFile)!
             let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
-            StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+            StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1)
                 .then { () -> Void in
 
                     NSLog("hi")
@@ -391,14 +391,14 @@ class SQLiteTests: XCTestCase {
 
             let output = OutputStream.toMemory()
 
-            StreamPipe.pipe(from: readstream, to: output, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+            StreamPipe.pipe(from: readstream, to: output, bufferSize: 1)
                 .then {
 
                     let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
                     let newInput = InputStream(data: result)
                     let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
-                    return StreamPipe.pipe(from: newInput, to: writestream, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+                    return StreamPipe.pipe(from: newInput, to: writestream, bufferSize: 1)
                     //                    let str = String(data: result, encoding: .utf8)
                     //
                     //                    XCTAssertEqual(str, "abcdefghijk")

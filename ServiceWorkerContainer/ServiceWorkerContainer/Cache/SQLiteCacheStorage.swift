@@ -81,17 +81,11 @@ import PromiseKit
     }
 
     public func match(_ stringOrRequest: JSValue, _ options: [String: Any]?) -> JSValue? {
-        let jsp = JSPromise(context: JSContext.current())
-
-        self.matchAll(stringOrRequest, options, stopAfterFirst: true)
+        return self.matchAll(stringOrRequest, options, stopAfterFirst: true)
             .then { responses in
-                jsp.fulfill(responses.first)
+                responses.first
             }
-            .catch { error in
-                jsp.reject(error)
-            }
-
-        return jsp.jsValue
+            .toJSPromiseInCurrentContext()
     }
 
     func matchAll(_ stringOrRequest: JSValue, _ options: [String: Any]?, stopAfterFirst: Bool = false) -> Promise<[FetchResponseProtocol]> {
@@ -168,11 +162,7 @@ import PromiseKit
 
         let readStream = try db.openBlobReadStream(table: "cache_entries", column: "response_body", row: rowID)
 
-        guard let dispatchQueue = self.worker?.dispatchQueue else {
-            throw ErrorMessage("Could not get worker dispatch queue")
-        }
-
-        let streamPipe = StreamPipe(from: readStream, bufferSize: 1024, dispatchQueue: dispatchQueue)
+        let streamPipe = StreamPipe(from: readStream, bufferSize: 1024)
         let responseHeaders = try FetchHeaders.fromJSON(responseHeadersJSON)
         let response = FetchResponse(url: url, headers: responseHeaders, status: responseStatus, statusText: responseStatusText, redirected: responseRedirected == 1, streamPipe: streamPipe)
 
@@ -202,7 +192,7 @@ import PromiseKit
     public func has(_ name: String) -> JSValue? {
         return firstly {
             Promise(value: try self.nativeHas(name))
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     public func open(_ name: String) -> JSValue? {
@@ -215,7 +205,7 @@ import PromiseKit
 
             return Promise(value: SQLiteCache(in: self, name: name))
 
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     public func delete(_ name: String) -> JSValue? {
@@ -232,7 +222,7 @@ import PromiseKit
 
             return Promise(value: alreadyExists)
 
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     public func keys() -> JSValue? {
@@ -252,7 +242,7 @@ import PromiseKit
                     return Promise(value: names)
                 }
             }
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     /// We don't want to keep these SQL connections open longer than we have to for memory reasons
@@ -421,10 +411,8 @@ import PromiseKit
                 guard let fileStream = InputStream(url: fileURL) else {
                     throw ErrorMessage("Could not open stream to local file")
                 }
-                guard let dispatchQueue = self.worker?.dispatchQueue else {
-                    throw ErrorMessage("Could not get worker dispatch queue")
-                }
-                return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024, dispatchQueue: dispatchQueue)
+
+                return StreamPipe.pipe(from: fileStream, to: writeStream, bufferSize: 1024)
             }
         }
     }

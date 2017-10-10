@@ -40,6 +40,13 @@ import PromiseKit
     // removed when no longer in use.
     static var contexts = NSMapTable<JSContext, ServiceWorkerExecutionEnvironment>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
 
+    public static func ensureContextIsOnCorrectThread() {
+        let thread = self.contexts.object(forKey: JSContext.current())?.thread
+        if thread != Thread.current {
+            fatalError("Not executing on context thread")
+        }
+    }
+
     var jsContextName: String {
         set(value) {
             self.jsContext.name = value

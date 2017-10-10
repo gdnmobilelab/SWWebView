@@ -81,10 +81,10 @@ import JavaScriptCore
             }
 
             try streamPipe.add(stream: memoryStream)
-
+            NSLog("start pipe")
             return streamPipe.pipe()
                 .then { () -> T in
-
+                    NSLog("end pipe")
                     guard let data = memoryStream.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as? Data else {
                         throw ErrorMessage("Could not fetch in-memory data from stream")
                     }
@@ -175,11 +175,12 @@ import JavaScriptCore
     public func text() -> Promise<String> {
 
         let encoding = FetchResponse.guessCharsetFrom(headers: headers)
-
+        NSLog("start text grab!")
         return self.dataTransformer(transformer: { data in
             guard let str = String(data: data, encoding: encoding) else {
                 throw ErrorMessage("Could not decode string content")
             }
+            NSLog("transformed to text")
             return str
         })
     }

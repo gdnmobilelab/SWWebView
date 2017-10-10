@@ -79,7 +79,7 @@ class ServiceWorkerCommands {
                 // performance hit - should find a better way to do this.
 
                 worker.dispatchEvent(event)
-                    .then {
+                    .then { (_) -> Promise<Void> in
                         event.resolve(in: worker)
                     }
                     .catch { error in

@@ -11,6 +11,7 @@ describe("Cache", () => {
                 return execInWorker(
                     reg.active!,
                     `
+                    console.log("END CACHE TEST");
                 return caches.keys().then(keys => {
                     return Promise.all(keys.map(k => caches.delete(k)));
                 });
@@ -43,6 +44,7 @@ describe("Cache", () => {
                             })
                         })
                         .then((response) => {
+                            console.log("GOT RESPONSE")
                             return response.text()
                         })
                     `

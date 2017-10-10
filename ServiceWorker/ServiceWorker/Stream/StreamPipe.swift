@@ -4,6 +4,8 @@ import CommonCrypto
 
 public class StreamPipe: NSObject, StreamDelegate {
 
+    typealias ReadPosition = (start: Int, length: Int)
+
     let from: InputStream
     fileprivate var to = Set<OutputStream>()
     var buffer: UnsafeMutablePointer<UInt8>
@@ -13,6 +15,8 @@ public class StreamPipe: NSObject, StreamDelegate {
     var hashListener: ((UnsafePointer<UInt8>, Int) -> Void)?
 
     public fileprivate(set) var started: Bool = false
+
+    fileprivate var outputStreamLeftovers: [OutputStream: ReadPosition] = [:]
 
     public init(from: InputStream, bufferSize: Int) {
         self.from = from
@@ -64,7 +68,7 @@ public class StreamPipe: NSObject, StreamDelegate {
     /// any other way
     fileprivate static var currentlyRunning = Set<StreamPipe>()
 
-    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue _: DispatchQueue) -> Promise<Void> {
+    public static func pipe(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Void> {
 
         let pipe = StreamPipe(from: from, bufferSize: bufferSize)
 
@@ -76,7 +80,7 @@ public class StreamPipe: NSObject, StreamDelegate {
             }
     }
 
-    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int, dispatchQueue _: DispatchQueue) -> Promise<Data> {
+    public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Data> {
 
         var hashToUse = CC_SHA256_CTX()
         CC_SHA256_Init(&hashToUse)
@@ -98,24 +102,67 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
     }
 
-    func doReadWrite() {
-        let readLength = self.from.read(self.buffer, maxLength: self.bufferSize)
-        if readLength == 0 {
-            // end of file
-            self.finish()
+    func doRead() {
+
+        // OK. Having multiple streams really confuses this. Because different output streams can accept
+        // bytes at different points, we need to make sure ALL streams have consumed the currently
+        // read data before continuing.
+
+        // SO. If our set of leftover data is empty, we're good to read in a new set of bytes, and set
+        // each output to have a pending write of that data:
+
+        let newReadPosition: ReadPosition = (0, self.from.read(self.buffer, maxLength: self.bufferSize))
+
+        if newReadPosition.length == 0 {
+
+            // Special case here - if we went to get new data, and there is none, then the stream
+            // has ended. In which case we need to do no writes, and just do an early return.
+
+            return self.finish()
+        }
+
+        // If we do have data, we now add a read position for each of our output streams.
+
+        self.to.forEach { stream in
+            self.outputStreamLeftovers[stream] = newReadPosition
+        }
+
+        // Special case here, but if we have hashing set up it doesn't really care about
+        // throttling (at least, not the way we're using it) so we can just throw that
+        // through immediately.
+
+        if let hashListener = self.hashListener {
+            hashListener(self.buffer.advanced(by: newReadPosition.start), newReadPosition.length)
+        }
+    }
+
+    func doWrite(to stream: OutputStream, with position: ReadPosition) {
+
+        // So now we have either a collection of leftover data or a new read. Either way, we now go
+        // through and write to each destination.
+
+        if stream.hasSpaceAvailable == false {
+
+            // If we can't write at all then we'll just immediately return, leaving the leftover
+            // position stored for the next time doReadWrite() is called.
+
             return
         }
 
-        if let hashListener = self.hashListener {
-            hashListener(self.buffer, readLength)
-        }
+        let lengthWritten = stream.write(buffer.advanced(by: position.start), maxLength: position.length)
 
-        self.to.forEach { toStream in
-            let lengthWritten = toStream.write(self.buffer, maxLength: readLength)
-            if lengthWritten != readLength {
-                Log.error?("Stream could not accept all the data given to it. Removing it from target array")
-                self.to.remove(toStream)
-            }
+        if lengthWritten == position.length {
+
+            // If we've written all the data in the read, we can just remove this position
+            // entirely from our store
+
+            self.outputStreamLeftovers.removeValue(forKey: stream)
+
+        } else {
+
+            // Otherwise, we now record our new position.
+
+            self.outputStreamLeftovers[stream] = (start: position.start + lengthWritten, length: position.length - lengthWritten)
         }
     }
 
@@ -141,31 +188,8 @@ public class StreamPipe: NSObject, StreamDelegate {
 
         self.to.forEach { $0.close() }
         self.from.close()
-        self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
-
-        //        CFReadStreamSetDispatchQueue(self.from, nil)
-        //        self.from.close()
-        //
-        //        self.to.forEach { to in
-        //            CFWriteStreamSetDispatchQueue(to, nil)
-        //            to.close()
-        //        }
-
-        //        let doStop = {
-        //            self.to.forEach { $0.close() }
-        //            self.from.close()
-        //            self.from.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        //            self.to.forEach { $0.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode) }
-        //        }
-        //
-        //        if Thread.isMainThread == false {
-        //            DispatchQueue.main.async(execute: doStop)
-        //        } else {
-        //            doStop()
-        //        }
-
-        //        doStop()
+        self.from.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        self.to.forEach { $0.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode) }
 
         if self.completePromise.promise.isPending {
             self.completePromise.fulfill(())
@@ -173,16 +197,32 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
+        if eventCode == .openCompleted {
+            NSLog("Open complete")
+        }
+
+        NSLog("Stream event! \(eventCode)")
         if source == self.from && eventCode == .hasBytesAvailable {
-            while self.from.hasBytesAvailable && self.finished == false {
-                self.doReadWrite()
+            NSLog("has bytes")
+
+            while self.from.hasBytesAvailable && self.finished == false && self.outputStreamLeftovers.count == 0 {
+                self.doRead()
+                self.outputStreamLeftovers.forEach({ stream, position in
+                    self.doWrite(to: stream, with: position)
+                })
             }
-            if self.from.hasBytesAvailable {
-                NSLog("Stopped while still have bytes to write?")
+        }
+
+        if eventCode == .hasSpaceAvailable, let output = source as? OutputStream {
+
+            if let position = self.outputStreamLeftovers[output] {
+                self.doWrite(to: output, with: position)
+                NSLog("HAS SPACE: \(position.start) \(position.length)")
             }
         }
 
         if eventCode == .errorOccurred {
+            NSLog("error")
             guard let error = source.streamError else {
                 self.completePromise.reject(ErrorMessage("Stream failed but does not have an error"))
                 return
@@ -190,7 +230,12 @@ public class StreamPipe: NSObject, StreamDelegate {
             self.completePromise.reject(error)
         }
 
+        if eventCode == .endEncountered {
+            NSLog("END? \(source)")
+        }
+
         if source == self.from && eventCode == .endEncountered {
+            NSLog("end")
             self.finish()
         }
     }

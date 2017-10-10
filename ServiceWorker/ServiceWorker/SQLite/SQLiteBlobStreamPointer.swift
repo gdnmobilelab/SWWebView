@@ -52,7 +52,9 @@ class SQLiteBlobStreamPointer {
             throw ErrorMessage("SQLite Blob pointer was not created successfully")
         }
 
-        self.openState = State(pointer: setPointer, blobLength: sqlite3_blob_bytes(setPointer))
+        let blobLength = sqlite3_blob_bytes(setPointer)
+        NSLog("Blob length? \(blobLength)")
+        self.openState = State(pointer: setPointer, blobLength: blobLength)
     }
 
     func close() {

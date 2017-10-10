@@ -14,7 +14,7 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
         return self.storageURL.appendingPathComponent("core.db")
     }
 
-    public func serviceWorker(_ worker: ServiceWorker, importScript script: URL, onQueue queue: DispatchQueue, _ callback: @escaping (Error?, String?) -> Void) {
+    public func serviceWorker(_ worker: ServiceWorker, importScript script: URL, _ callback: @escaping (Error?, String?) -> Void) {
 
         var existing: String?
 
@@ -44,20 +44,20 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
             return
         }
 
-        self.downloadAndCacheScript(id: worker.id, url: script, onQueue: queue)
-            .then(on: queue, execute: { body in
+        self.downloadAndCacheScript(id: worker.id, url: script)
+            .then { body in
                 callback(nil, body)
-            })
-            .catch(on: queue, execute: { error in
+            }
+            .catch { error in
                 callback(error, nil)
-            })
+            }
     }
 
-    fileprivate func downloadAndCacheScript(id: String, url: URL, onQueue queue: DispatchQueue) -> Promise<String> {
+    fileprivate func downloadAndCacheScript(id: String, url: URL) -> Promise<String> {
 
         return FetchSession.default.fetch(url)
 
-            .then(on: queue, execute: { res in
+            .then { res in
 
                 // We have to download to a local file first, because we can't rely on a
                 // Content-Length header always existing.
@@ -76,8 +76,8 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
                             throw ErrorMessage("Could not create input stream for local file")
                         }
 
-                        return StreamPipe.pipeSHA256(from: fileStream, to: stream, bufferSize: 1024, dispatchQueue: queue)
-                            .then(on: queue, execute: { hash -> String in
+                        return StreamPipe.pipeSHA256(from: fileStream, to: stream, bufferSize: 1024)
+                            .then { hash -> String in
 
                                 // Now we update the hash for the script
                                 try db.update(sql: "UPDATE worker_imported_scripts SET content_hash = ? WHERE worker_id = ? AND url = ?", values: [hash, id, url])
@@ -95,10 +95,10 @@ public class ServiceWorkerStorageProvider: ServiceWorkerDelegate {
 
                                     return content
                                 }
-                            })
+                            }
                     }
                 })
-            })
+            }
     }
 
     public func serviceWorkerGetScriptContent(_ worker: ServiceWorker) throws -> String {

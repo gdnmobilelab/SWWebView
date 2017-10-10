@@ -187,7 +187,7 @@ public class WorkerFactory {
                         throw ErrorMessage("Could not open stream to temporary file")
                     }
 
-                    return StreamPipe.pipeSHA256(from: fileStream, to: writeStream, bufferSize: 32768, dispatchQueue: DispatchQueue.default)
+                    return StreamPipe.pipeSHA256(from: fileStream, to: writeStream, bufferSize: 32768)
                         .then { hash in
                             try db.update(sql: "UPDATE workers SET content_hash = ? WHERE worker_id = ?", values: [hash, worker.id])
                         }

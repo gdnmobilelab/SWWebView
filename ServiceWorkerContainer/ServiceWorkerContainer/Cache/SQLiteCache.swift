@@ -25,16 +25,7 @@ import PromiseKit
         var modified = options ?? [:]
         modified["cacheName"] = self.name
 
-        let jsp = JSPromise(context: JSContext.current())
-
-        self.storage.matchAll(toMatch, modified)
-            .then { responses in
-                jsp.fulfill(responses)
-            }.catch { error in
-                jsp.reject(error)
-            }
-
-        return jsp.jsValue
+        return self.storage.matchAll(toMatch, modified).toJSPromiseInCurrentContext()
     }
 
     public func add(_ request: JSValue) -> JSValue? {
@@ -49,7 +40,7 @@ import PromiseKit
                 .then { response -> Promise<Void> in
                     self.storage.put(cacheName: self.name, request: request, response: response.toCacheable())
                 }
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     public func addAll(_ requests: JSValue) -> JSValue? {
@@ -87,19 +78,17 @@ import PromiseKit
 
             return when(fulfilled: actualPuts)
 
-        }.toJSPromise(in: JSContext.current())
+        }.toJSPromiseInCurrentContext()
     }
 
     public func put(_ request: FetchRequest, _ response: CacheableFetchResponse) -> JSValue? {
         return self.storage.put(cacheName: self.name, request: request, response: response)
-            .toJSPromise(in: JSContext.current())
+            .toJSPromiseInCurrentContext()
     }
 
     public func delete(_ request: JSValue, _ options: [String: Any]?) -> JSValue? {
 
-        let jsp = JSPromise(context: JSContext.current())
-
-        do {
+        return firstly { () -> Promise<Bool> in
             var opts = options ?? [:]
             opts["cacheName"] = self.name
 
@@ -111,19 +100,13 @@ import PromiseKit
                 return (db.lastNumberChanges ?? 0) > 0
             }
 
-            jsp.fulfill(rowsChanged)
-        } catch {
-            jsp.reject(error)
-        }
-
-        return jsp.jsValue
+            return Promise(value: rowsChanged)
+        }.toJSPromiseInCurrentContext()
     }
 
     public func keys(_ request: JSValue, _ options: [String: Any]?) -> JSValue? {
 
-        let jsp = JSPromise(context: JSContext.current())
-
-        do {
+        return firstly { () -> Promise<[FetchRequest]> in
             var opts = options ?? [:]
             opts["cacheName"] = self.name
 
@@ -179,12 +162,7 @@ import PromiseKit
                     return requests
                 }
             }
-
-            jsp.fulfill(requests)
-        } catch {
-            jsp.reject(error)
-        }
-
-        return jsp.jsValue
+            return Promise(value: requests)
+        }.toJSPromiseInCurrentContext()
     }
 }

@@ -16,6 +16,8 @@ import JavaScriptCore
 
     func addEventListener(_ name: String, _ funcToRun: JSValue) {
 
+        ServiceWorkerExecutionEnvironment.ensureContextIsOnCorrectThread()
+
         let existing = listeners.first(where: { listener in
 
             guard let jsListener = listener as? JSEventListener else {
@@ -30,7 +32,7 @@ import JavaScriptCore
             return
         }
 
-        self.listeners.append(JSEventListener(name: name, funcToRun: funcToRun))
+        self.listeners.append(JSEventListener(name: name, funcToRun: funcToRun, thread: Thread.current))
     }
 
     func addEventListener<T>(_ name: String, _ callback: @escaping (T) -> Void) -> SwiftEventListener<T> {

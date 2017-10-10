@@ -13,10 +13,10 @@ class PassthroughStreamTests: XCTestCase {
 
         let finalOutput = OutputStream.toMemory()
 
-        StreamPipe.pipe(from: originalInput, to: passthroughOutput, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+        StreamPipe.pipe(from: originalInput, to: passthroughOutput, bufferSize: 1)
             .then { _ in
 
-                StreamPipe.pipe(from: passthroughInput, to: finalOutput, bufferSize: 1, dispatchQueue: DispatchQueue.default)
+                StreamPipe.pipe(from: passthroughInput, to: finalOutput, bufferSize: 1)
             }
             .then { () -> Void in
 
