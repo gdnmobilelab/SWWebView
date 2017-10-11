@@ -164,7 +164,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         // through and write to each destination.
 
         if stream.hasSpaceAvailable == false {
-
+            NSLog("!!!!!! \(stream) says it has no space available")
             // If we can't write at all then we'll just immediately return, leaving the leftover
             // position stored for the next time doReadWrite() is called.
 
@@ -233,33 +233,47 @@ public class StreamPipe: NSObject, StreamDelegate {
         if source == self.from && eventCode == .hasBytesAvailable {
             NSLog("has bytes \(self.from) \(self.from.hasBytesAvailable), \(self.finished) \(self.outputStreamLeftovers.count)")
 
-            while self.from.hasBytesAvailable && self.finished == false && self.outputStreamLeftovers.count == 0 {
-                NSLog("Reading and writing to outputs")
+            if self.outputStreamLeftovers.count == 0 {
+                NSLog("\(self.from) has data and we're going to pipe it")
                 self.doRead()
                 self.outputStreamLeftovers.forEach({ stream, position in
                     self.doWrite(to: stream, with: position)
                 })
+            } else {
+                NSLog("\(self.from) has data but we have leftover data, so we're going to ignore that")
             }
         }
 
-        if eventCode == .hasSpaceAvailable, let output = source as? OutputStream {
-            NSLog("has space! \(output)")
+        // I have absolutely no idea why, but some OutputStreams send a .hasSpaceAvailable event while the
+        // stream's hasSpaceAvailable property is false. They THEN fire an .openCompleted event, at which point
+        // hasSpaceAvailable is true. I might be missing something obvious, but we're handling both here and
+        // it seems to work out (because doWrite() will exit if hasSpaceAvailable is false)
+        
+        if eventCode == .hasSpaceAvailable || eventCode == .openCompleted, let output = source as? OutputStream {
+            NSLog("Stream \(output) has space available")
 
             if let position = self.outputStreamLeftovers[output] {
-                NSLog("Writing leftover into output")
+                NSLog("Writing leftover into output \(output)")
                 self.doWrite(to: output, with: position)
+            } else {
+                NSLog("No data waiting for stream")
             }
 
-            NSLog("Well: \(self.outputStreamLeftovers.count) and \(self.from.hasBytesAvailable) and \(self.from) / \(self.from.streamStatus == .atEnd)")
-            if self.outputStreamLeftovers.count > 0 || self.from.hasBytesAvailable {
-                // Have space available, and there are bytes, so let's do a read
-                NSLog("have space and bytes, so we're going to fire a bytes available event")
-                self.stream(self.from, handle: .hasBytesAvailable)
-            }
-
-            if self.outputStreamLeftovers.count == 0 && self.from.streamStatus == .atEnd {
-                NSLog("DO FINISHHH")
-                self.finish()
+            if self.outputStreamLeftovers.count == 0 {
+                NSLog("There is now no leftover data left")
+                if self.from.hasBytesAvailable {
+                    NSLog("No leftover data for any stream, and input has available, so sending read event")
+                    RunLoop.main.perform {
+                        self.stream(self.from, handle: .hasBytesAvailable)
+                    }
+                } else if self.from.streamStatus == .atEnd {
+                    NSLog("Input stream is exhausted, finishing")
+                    self.finish()
+                } else {
+                    NSLog("\(self.from) does not have data available, but nor is it finished")
+                }
+            } else {
+                NSLog("There is still leftover data in \(Array(self.outputStreamLeftovers.keys))")
             }
         }
 
@@ -281,5 +295,7 @@ public class StreamPipe: NSObject, StreamDelegate {
             NSLog("end")
             self.finish()
         }
+
+        NSLog("Finished handling the event")
     }
 }

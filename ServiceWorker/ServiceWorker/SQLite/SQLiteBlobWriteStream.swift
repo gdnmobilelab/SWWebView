@@ -65,6 +65,7 @@ public class SQLiteBlobWriteStream: OutputStreamImplementation {
                 self.emitEvent(event: .endEncountered)
             } else {
                 self.streamStatus = .open
+                self.emitEvent(event: .hasSpaceAvailable)
             }
             return Int(lengthToWrite)
 

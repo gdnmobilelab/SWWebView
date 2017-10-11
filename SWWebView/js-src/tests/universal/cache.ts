@@ -23,8 +23,7 @@ describe("Cache", () => {
             });
     });
 
-    it.only("should put() requests and responses", function() {
-        this.timeout(5000);
+    it("should put() requests and responses", function() {
         return navigator.serviceWorker
             .register("/fixtures/exec-worker.js")
             .then(reg => {

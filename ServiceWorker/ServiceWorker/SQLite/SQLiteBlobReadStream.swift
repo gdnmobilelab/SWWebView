@@ -66,6 +66,7 @@ public class SQLiteBlobReadStream: InputStreamImplementation {
                 self.emitEvent(event: .endEncountered)
             } else {
                 self.streamStatus = .open
+                self.emitEvent(event: .hasBytesAvailable)
             }
             return Int(lengthToRead)
         } catch {
