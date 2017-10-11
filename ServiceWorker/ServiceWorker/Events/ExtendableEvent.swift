@@ -6,6 +6,9 @@ import PromiseKit
     func waitUntil(_: JSValue)
 }
 
+/// A version of the ExtendableEvent interface service workers use: https://developer.mozilla.org/en-US/docs/Web/API/ExtendableEvent
+/// it lets us prolong the life of an event by sending a promise to waitUntil(). It's useful in the install and active events
+/// to not update the state of a worker until you've cached URLs, set up a database, etc.
 @objc public class ExtendableEvent: NSObject, ExtendableEventExports {
 
     public let type: String
@@ -14,38 +17,30 @@ import PromiseKit
         self.type = type
     }
 
-    public enum ExtendableEventState {
+    fileprivate enum ExtendableEventState {
         case valid
-        case invalid
         case resolved
     }
 
-    var state: ExtendableEventState = .valid
+    /// You can only call waitUntil() when the event is initally dispatched - after that point resolve() has
+    /// been called and the promise can't be added to the chain.
+    fileprivate var state: ExtendableEventState = .valid
 
+    /// You can call waitUntil() multiple times, chaining multiple promises one after the other. This array
+    /// keeps track of those promises.
     fileprivate var pendingPromises: [JSValue] = []
 
     func waitUntil(_ val: JSValue) {
 
-        if self.state == .invalid {
-            val.context.exception = JSValue(newErrorFromMessage: "Invalid state for waitUntil()", in: val.context)
+        if self.state == .resolved {
+            val.context.exception = JSValue(newErrorFromMessage: "You used waitUntil() too late - the event has already been resolved", in: val.context)
             return
         }
-        //        guard let managed = JSManagedValue(value: val, andOwner: self) else {
-        //            let err = JSValue(newErrorFromMessage: "Could not create JSManagedValue for waitUntil()", in: val.context)
-        //            val.context.exception = err
-        //            return
-        //        }
-        //        val.context.virtualMachine.addManagedReference(managed, withOwner: self)
 
         self.pendingPromises.append(val)
     }
 
     fileprivate func clearManagedReferences() {
-        //        self.pendingPromises.forEach { managed in
-        //            if let context = managed.value?.context {
-        //                context.virtualMachine.removeManagedReference(managed, withOwner: self)
-        //            }
-        //        }
         self.pendingPromises.removeAll()
     }
 
@@ -53,68 +48,82 @@ import PromiseKit
         self.clearManagedReferences()
     }
 
-    //    func resolve(in worker: ServiceWorker) -> Promise<Void> {
-    //
-    //        return self.resolve(in: worker)
-    //            .then { (_: JSValueConvert.VoidReturn) -> Void in
-    //                ()
-    //            }
-    //    }
-
-    public func resolve<T>(in worker: ServiceWorker) -> Promise<T> {
+    public func resolve(in worker: ServiceWorker) -> Promise<Void> {
 
         self.state = .resolved
 
-        return Promise<T> { fulfill, reject in
+        // Create a native promise to bridge the JS promise success/failure
 
-            worker.withJSContext { context in
+        let (promise, fulfill, reject) = Promise<Void>.pending()
 
-                let success: @convention(block) (JSValue) -> Void = { val in
-                    do {
+        // We run this inside a withJSContext() call because we create a JSValue then
+        // execute it - withJSContext runs on the worker thread, so we know we won't be leaking
+        // any JSValues anywhere.
 
-                        if T.self == JSContextPromise.self {
-                            guard let promise = JSContextPromise(jsValue: val, thread: Thread.current) as? T else {
-                                throw ErrorMessage("Cannot convert JSContextPromise to JSContextPromise, which should always be possible?")
-                            }
-                            fulfill(promise)
-                        }
+        return worker.withJSContext { context in
 
-                        let transformed: T = try JSConvert.from(any: val.toObject())
-                        fulfill(transformed)
-                    } catch {
-                        reject(error)
-                    }
-                }
+            let success: @convention(block) (JSValue) -> Void = { _ in
 
-                let failure: @convention(block) (JSValue) -> Void = { val in
+                // If our promise(es) resolve successfully, we can safely resolve our
+                // native promise. ExtendableEvents can't actually return a value
+                // (unlike, say, FetchEvent) so we don't need to worry about
+                // what the return value actually is.
 
-                    let err = ErrorMessage(val.objectForKeyedSubscript("message").toString())
-                    reject(err)
-                }
-
-                guard let jsFunc = context.evaluateScript("""
-                    (function(promises, success, failure) {
-                        return Promise.all(promises).then(success).catch(failure)
-                    })
-                """) else {
-                    reject(ErrorMessage("Failed to wrap promise inside JS context"))
-                    return
-                }
-
-                let successCast = unsafeBitCast(success, to: AnyObject.self)
-                let failureCast = unsafeBitCast(failure, to: AnyObject.self)
-
-                jsFunc.call(withArguments: [self.pendingPromises, successCast, failureCast])
-
-                if context.exception != nil {
-                    throw ErrorMessage(context.exception.toString())
-                }
-
-            }.catch { error in
-                reject(error)
-            }.always {
-                self.clearManagedReferences()
+                fulfill(())
             }
+
+            let failure: @convention(block) (JSValue) -> Void = { val in
+
+                // If our promise chain fails, we grab the message and turn it into a native
+                // error. We can probably improve on this and add more useful error information.
+
+                let err = ErrorMessage(val.objectForKeyedSubscript("message").toString())
+                reject(err)
+            }
+
+            // If we don't cast to AnyObject the functions don't seem to work in a JSContext.
+
+            let successCast = unsafeBitCast(success, to: AnyObject.self)
+            let failureCast = unsafeBitCast(failure, to: AnyObject.self)
+
+            // Now create a JS function that calls Promise.resolve() on all the values passed into
+            // waitUntil() (in case they aren't promises, though they really should be), then waits
+            // until all are executed, then grafts our success and failure functions onto the end
+
+            guard let jsFunc = context.evaluateScript("""
+                (function(promises, success, failure) {
+                    let resolved = promises.map(p => Promise.resolve(p));
+                    return Promise.all(resolved).then(success).catch(failure)
+                })
+            """) else {
+                throw ErrorMessage("Failed to wrap promise inside JS context")
+            }
+
+            // Now call the function we just made to actually resolve the promise.
+
+            jsFunc.call(withArguments: [self.pendingPromises, successCast, failureCast])
+
+            // Because we're not doing this with the usual evaluateScript() call, we need
+            // to manually throw any error that occurred.
+
+            if context.exception != nil {
+                throw ErrorMessage(context.exception.toString())
+            }
+        }
+        .then {
+
+            // Now that the withJSContext() code has executed, we return the original
+            // promise we created, which will resolve once the jsFunc call above resolves
+            // all the JS promises.
+
+            promise
+
+        }.always {
+
+            // There's no point keeping onto the JSValues that were attached with waitUntil()
+            // once the promise has been resolved or rejected, so we'll proactively clear them out.
+
+            self.clearManagedReferences()
         }
     }
 }

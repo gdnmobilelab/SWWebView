@@ -115,6 +115,12 @@ import JavaScriptCore
                 throw ErrorMessage("Could not create local file stream")
             }
 
+            var fileLength: Int64 = 0
+
+            streamPipe.hashListener = { _, count in
+                fileLength += Int64(count)
+            }
+
             try streamPipe.add(stream: fileStream)
             return streamPipe.pipe()
                 .then { () -> Promise<T> in
@@ -122,7 +128,7 @@ import JavaScriptCore
                     guard let size = fileAttributes[.size] as? Int64 else {
                         throw ErrorMessage("Could not get size of downloaded file")
                     }
-
+                    NSLog("\(size), \(fileLength)")
                     return try callback(downloadPath, size)
                 }
                 .then { result -> T in

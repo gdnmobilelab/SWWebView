@@ -80,6 +80,26 @@ public class StreamPipe: NSObject, StreamDelegate {
             }
     }
 
+    public static func pipeRecordingLength(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Int64> {
+
+        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
+        var length: Int64 = 0
+
+        pipe.hashListener = { _, count in
+            length += Int64(count)
+        }
+
+        return Promise(value: ())
+            .then {
+                try pipe.add(stream: to)
+
+                return pipe.pipe()
+            }
+            .then {
+                length
+            }
+    }
+
     public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Data> {
 
         var hashToUse = CC_SHA256_CTX()
@@ -117,8 +137,10 @@ public class StreamPipe: NSObject, StreamDelegate {
 
             // Special case here - if we went to get new data, and there is none, then the stream
             // has ended. In which case we need to do no writes, and just do an early return.
-
-            return self.finish()
+            if self.outputStreamLeftovers.count == 0 {
+                self.finish()
+            }
+            return
         }
 
         // If we do have data, we now add a read position for each of our output streams.
@@ -184,12 +206,16 @@ public class StreamPipe: NSObject, StreamDelegate {
             return
         }
 
+        if self.outputStreamLeftovers.count > 0 {
+            fatalError("NO")
+        }
+
         self.finished = true
 
         self.to.forEach { $0.close() }
         self.from.close()
-        self.from.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
-        self.to.forEach { $0.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode) }
+        //        self.from.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        //        self.to.forEach { $0.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode) }
 
         if self.completePromise.promise.isPending {
             self.completePromise.fulfill(())
@@ -197,15 +223,18 @@ public class StreamPipe: NSObject, StreamDelegate {
     }
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
-        if eventCode == .openCompleted {
-            NSLog("Open complete")
-        }
 
         NSLog("Stream event! \(eventCode)")
+
+        if eventCode == .openCompleted {
+            NSLog("Open complete \(source)")
+        }
+
         if source == self.from && eventCode == .hasBytesAvailable {
-            NSLog("has bytes")
+            NSLog("has bytes \(self.from) \(self.from.hasBytesAvailable), \(self.finished) \(self.outputStreamLeftovers.count)")
 
             while self.from.hasBytesAvailable && self.finished == false && self.outputStreamLeftovers.count == 0 {
+                NSLog("Reading and writing to outputs")
                 self.doRead()
                 self.outputStreamLeftovers.forEach({ stream, position in
                     self.doWrite(to: stream, with: position)
@@ -214,10 +243,23 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
 
         if eventCode == .hasSpaceAvailable, let output = source as? OutputStream {
+            NSLog("has space! \(output)")
 
             if let position = self.outputStreamLeftovers[output] {
+                NSLog("Writing leftover into output")
                 self.doWrite(to: output, with: position)
-                NSLog("HAS SPACE: \(position.start) \(position.length)")
+            }
+
+            NSLog("Well: \(self.outputStreamLeftovers.count) and \(self.from.hasBytesAvailable) and \(self.from) / \(self.from.streamStatus == .atEnd)")
+            if self.outputStreamLeftovers.count > 0 || self.from.hasBytesAvailable {
+                // Have space available, and there are bytes, so let's do a read
+                NSLog("have space and bytes, so we're going to fire a bytes available event")
+                self.stream(self.from, handle: .hasBytesAvailable)
+            }
+
+            if self.outputStreamLeftovers.count == 0 && self.from.streamStatus == .atEnd {
+                NSLog("DO FINISHHH")
+                self.finish()
             }
         }
 
@@ -228,13 +270,14 @@ public class StreamPipe: NSObject, StreamDelegate {
                 return
             }
             self.completePromise.reject(error)
+            self.finish()
         }
 
         if eventCode == .endEncountered {
             NSLog("END? \(source)")
         }
 
-        if source == self.from && eventCode == .endEncountered {
+        if source == self.from && eventCode == .endEncountered && self.outputStreamLeftovers.count == 0 {
             NSLog("end")
             self.finish()
         }

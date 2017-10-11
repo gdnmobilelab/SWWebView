@@ -27,12 +27,6 @@ import PromiseKit
     }
 
     override init(from response: FetchResponse) throws {
-        let dummyStream = InputStream(data: Data(count: 0))
-
-        guard let originalPipe = response.streamPipe else {
-            throw ErrorMessage("Could not get original response stream")
-        }
-
         try super.init(from: response)
     }
 }

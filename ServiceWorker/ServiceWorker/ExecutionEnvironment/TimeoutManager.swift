@@ -4,93 +4,117 @@ import JavaScriptCore
 /// JSContext has no built-in support for setTimeout, setInterval, etc. So we need to manually
 /// add that support into the context. All public methods are exactly as you'd expect. As documented:
 /// https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout
-class TimeoutManager {
+class TimeoutManager: NSObject {
 
-    fileprivate struct Arguments {
+    @objc fileprivate class TimeoutArguments: NSObject {
         let delay: Double
         let funcToRun: JSValue
         let args: [Any]
+        let timeoutIndex: Int64
+        let isInterval: Bool
+
+        init(delay: Double, funcToRun: JSValue, args: [Any], timeoutIndex: Int64, isInterval: Bool) {
+            self.delay = delay
+            self.funcToRun = funcToRun
+            self.args = args
+            self.timeoutIndex = timeoutIndex
+            self.isInterval = isInterval
+        }
     }
 
-    fileprivate struct Interval {
-        var timeout: Double
-        var function: JSValue
-        var timeoutIndex: Int
-        var args: [Any]
-    }
+    fileprivate var lastTimeoutIndex: Int64 = -1
 
-    var lastTimeoutIndex: Int = -1
-
-    /// Couldn't find an easy way to cancel a dispatch_after, so instead, when the dispatch completes
-    /// we check this array to see if the timeout has been cancelled. If it has, we don't run the
-    /// corresponding JS function.
-    var cancelledTimeouts = Set<Int>()
+    /// Couldn't find an easy way to cancel call after it's been set, so instead we store cancelled
+    /// indexes in this set, and check when the timeout is run.
+    fileprivate var cancelledTimeouts = Set<Int64>()
     var stopAllTimeouts = false
 
+    /// Provided by the ServiceWorkerExecutionEnvironment, and ensures that all our timeouts run on
+    /// the correct thread.
     weak var thread: Thread?
 
     init(for thread: Thread, in context: JSContext) {
         self.thread = thread
+        super.init()
 
-        let clearInterval = unsafeBitCast((self.clearIntervalFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
-        let clearTimeout = unsafeBitCast((self.clearTimeoutFunction as @convention(block) (Int) -> Void), to: AnyObject.self)
-        let setTimeout = unsafeBitCast((self.setTimeoutFunction as @convention(block) () -> Int), to: AnyObject.self)
-        let setInterval = unsafeBitCast((self.setIntervalFunction as @convention(block) () -> Int), to: AnyObject.self)
+        // In order to add these to a JSContext, we have to cast our functions to Obj-C conventions, then to AnyObject.
 
-        GlobalVariableProvider.add(variable: clearInterval, to: context, withName: "clearInterval")
+        let clearTimeout = unsafeBitCast((self.clearTimeout as @convention(block) (Int64) -> Void), to: AnyObject.self)
+        let setTimeout = unsafeBitCast((self.setTimeout as @convention(block) () -> Int64), to: AnyObject.self)
+        let setInterval = unsafeBitCast((self.setInterval as @convention(block) () -> Int64), to: AnyObject.self)
+
+        // Then actually attach them to the specific variable names. clearTimeout and clearInterval do the exact
+        // same thing so we just reuse the same function.
+
+        GlobalVariableProvider.add(variable: clearTimeout, to: context, withName: "clearInterval")
         GlobalVariableProvider.add(variable: clearTimeout, to: context, withName: "clearTimeout")
         GlobalVariableProvider.add(variable: setTimeout, to: context, withName: "setTimeout")
         GlobalVariableProvider.add(variable: setInterval, to: context, withName: "setInterval")
     }
 
-    fileprivate func setIntervalFunction() -> Int {
-
-        guard let params = self.getArgumentsForSetCall() else {
+    fileprivate func setTimeout() -> Int64 {
+        guard let params = self.getArgumentsForSetCall(isInterval: false) else {
             return -1
         }
 
-        self.lastTimeoutIndex += 1
+        self.perform(#selector(self.runTimeout(_:)), with: params, afterDelay: params.delay)
 
-        let interval = Interval(timeout: params.delay, function: params.funcToRun, timeoutIndex: lastTimeoutIndex, args: params.args)
-
-        fireInterval(interval)
-
-        return self.lastTimeoutIndex
+        return params.timeoutIndex
     }
 
-    fileprivate func fireInterval(_ interval: Interval) {
+    fileprivate func setInterval() -> Int64 {
+        guard let params = self.getArgumentsForSetCall(isInterval: true) else {
+            return -1
+        }
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + (interval.timeout / 1000), execute: {
+        self.perform(#selector(self.runTimeout(_:)), with: params, afterDelay: params.delay)
 
-            if self.cancelledTimeouts.contains(interval.timeoutIndex) == true {
-                self.cancelledTimeouts.remove(interval.timeoutIndex)
-                return
-            } else if self.stopAllTimeouts {
-                return
-            } else {
-
-                // ensure that we perform this function on our worker thread
-
-                guard let thread = self.thread else {
-                    Log.error?("Tried to execute setInterval function but environment no longer exists")
-                    return
-                }
-
-                interval.function.perform(#selector(JSValue.call), on: thread, with: interval.args, waitUntilDone: false)
-
-                self.fireInterval(interval)
-            }
-        })
+        return params.timeoutIndex
     }
 
-    fileprivate func clearIntervalFunction(_ index: Int) {
-        self.clearTimeoutFunction(index)
+    fileprivate func clearTimeout(_ index: Int64) {
+        self.cancelledTimeouts.insert(index)
+    }
+
+    @objc fileprivate func runTimeout(_ timeout: TimeoutArguments) {
+
+        if self.cancelledTimeouts.contains(timeout.timeoutIndex) == true {
+
+            // There isn't any way to proactively cancel this before it runs, but when it does
+            // we check to see if the index is in our collection of cancelled timeouts. If it is,
+            // we return immediately.
+
+            self.cancelledTimeouts.remove(timeout.timeoutIndex)
+
+            return
+
+        } else if self.stopAllTimeouts {
+
+            // If we've stopped all execution (i.e. the worker is shutting down) then we shouldn't
+            // fire either.
+
+            return
+        }
+
+        // If we've got this far, it's still a valid timeout call. So call it.
+
+        timeout.funcToRun.call(withArguments: timeout.args)
+
+        if timeout.isInterval {
+
+            // If this was a setInterval call as opposed to a setTimeout call, we need to keep firing
+            // the function repeatedly until clearInterval is called.
+
+            self.perform(#selector(TimeoutManager.runTimeout(_:)), with: timeout, afterDelay: timeout.delay)
+        }
     }
 
     /// setTimeout() and setInteral() have a dynamic argument length - after
     /// the function and delay, the rest are arguments to be sent to the function
     /// when it runs. So we need to run a specific handler for this.
-    fileprivate func getArgumentsForSetCall() -> Arguments? {
+    fileprivate func getArgumentsForSetCall(isInterval: Bool) -> TimeoutArguments? {
+
+        ServiceWorkerExecutionEnvironment.ensureContextIsOnCorrectThread()
 
         do {
             guard var args = JSContext.currentArguments() else {
@@ -128,7 +152,13 @@ class TimeoutManager {
                 timeout = timeoutFromString
             }
 
-            return Arguments(delay: timeout, funcToRun: funcToRun, args: args)
+            // Not sure what logic browser environments use, but all we require is that every timeout
+            // call has its own unique ID. So we're just using an incremental number here.
+            self.lastTimeoutIndex += 1
+
+            // Divided by 1000 because the native timeout is in seconds, wheras the JS timeout is in ms
+
+            return TimeoutArguments(delay: timeout / 1000, funcToRun: funcToRun, args: args, timeoutIndex: self.lastTimeoutIndex, isInterval: isInterval)
 
         } catch {
 
@@ -140,39 +170,5 @@ class TimeoutManager {
             }
             return nil
         }
-    }
-
-    fileprivate func setTimeoutFunction() -> Int {
-
-        guard let params = self.getArgumentsForSetCall() else {
-            return -1
-        }
-
-        self.lastTimeoutIndex += 1
-
-        let thisTimeoutIndex = lastTimeoutIndex
-
-        DispatchQueue.global().asyncAfter(deadline: .now() + (params.delay / 1000), execute: {
-            if self.cancelledTimeouts.contains(thisTimeoutIndex) == true {
-                self.cancelledTimeouts.remove(thisTimeoutIndex)
-                return
-            } else if self.stopAllTimeouts {
-                return
-            } else {
-
-                guard let thread = self.thread else {
-                    Log.error?("Tried to execute setInterval function but environment no longer exists")
-                    return
-                }
-
-                params.funcToRun.perform(#selector(JSValue.call), on: thread, with: params.args, waitUntilDone: false)
-            }
-        })
-
-        return thisTimeoutIndex
-    }
-
-    fileprivate func clearTimeoutFunction(_ index: Int) {
-        self.cancelledTimeouts.insert(index)
     }
 }

@@ -25,21 +25,19 @@ import PromiseKit
     /// is being garbage collected.
     fileprivate let timeoutManager: TimeoutManager
 
-    /// It seems like a good idea to keep all workers in the same virtual machine - it means
-    /// they can exchange JSValues, so we could implmenent stuff like SharedArrayBuffer in
-    /// communication between workers. We can't do the same inside SWWebView, though.
-    fileprivate static var virtualMachine = JSVirtualMachine()
-
     // Since WebSQL connections retain an open connection as long as they are alive, we need to
     // keep track of them, in order to close them off on shutdown. JS garbage collection
     // is sometimes enough, but not always.
     fileprivate var activeWebSQLDatabases = NSHashTable<WebSQLDatabase>.weakObjects()
 
-    // ConstructableFetchResponse needs a reference to the environment attached to any particular
+    // Various clases that interact with the worker context need a reference to the environment attached to any particular
     // JSContext. So we store that connection here, with weak memory so that they are automatically
     // removed when no longer in use.
     static var contexts = NSMapTable<JSContext, ServiceWorkerExecutionEnvironment>(keyOptions: NSPointerFunctions.Options.weakMemory, valueOptions: NSPointerFunctions.Options.weakMemory)
 
+    /// We use this at various points to ensure that functions available in a JSContext are called on the right thread.
+    /// Right now it'll throw a fatal error if they aren't, to help with debugging, but maybe we can do something better
+    /// than that.
     public static func ensureContextIsOnCorrectThread() {
         let thread = self.contexts.object(forKey: JSContext.current())?.thread
         if thread != Thread.current {
@@ -47,6 +45,8 @@ import PromiseKit
         }
     }
 
+    // This controls the title that appears in the Safari debugger - helpful to indentify
+    // which worker you are looking at when multiple are running at once.
     var jsContextName: String {
         set(value) {
             self.jsContext.name = value
@@ -59,26 +59,27 @@ import PromiseKit
     @objc public init(_ worker: ServiceWorker) throws {
         self.worker = worker
         self.workerId = worker.id
-        //        guard let virtualMachine = ServiceWorkerExecutionEnvironment.virtualMachine else {
-        //            throw ErrorMessage("There is no virtual machine associated with ServiceWorkerExecutionEnvironment")
-        //        }
 
         self.thread = Thread.current
 
-        self.thread.name = "ServiceWorker:" + self.workerId // self.worker.url.absoluteString
+        // This shows up in the XCode debugger, helps us to identify the worker thread
+        self.thread.name = "ServiceWorker:" + self.workerId
+
+        // Haven't really profiled the difference, but this seems like the category that makes
+        // the most sense for a worker
         self.thread.qualityOfService = QualityOfService.utility
+
         self.jsContext = JSContext()
 
-        self.jsContext.name = worker.id
-
-        globalScope = try ServiceWorkerGlobalScope(context: jsContext, worker)
-        timeoutManager = TimeoutManager(for: Thread.current, in: jsContext)
+        self.globalScope = try ServiceWorkerGlobalScope(context: self.jsContext, worker)
+        self.timeoutManager = TimeoutManager(for: Thread.current, in: self.jsContext)
 
         super.init()
 
-        ServiceWorkerExecutionEnvironment.contexts.setObject(self, forKey: jsContext)
+        // We keep track of the Context -> ExecEnvironment mapping for the static ensure call
+        ServiceWorkerExecutionEnvironment.contexts.setObject(self, forKey: self.jsContext)
 
-        jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
+        self.jsContext.exceptionHandler = { [unowned self] (_: JSContext?, error: JSValue?) in
             // Thrown errors don't error on the evaluateScript call (necessarily?), so after
             // evaluating, we need to check whether there is a new exception.
             // unowned is *required* to avoid circular references that mean this never gets garbage
@@ -86,28 +87,32 @@ import PromiseKit
             self.currentException = error
         }
 
-        globalScope.delegate = self
+        self.globalScope.delegate = self
     }
 
     var shouldKeepRunning = true
 
     @objc func run() {
         self.checkOnThread()
+
+        // I'm not super sure about all of this (need to read more) but this seems to do what we need - keeps
+        // the worker thread alive by running RunLoop.current inside the worker thread. This function does not
+        // return, as CFRunLoopRun() loops infinitely.
         CFRunLoopRun()
-        //        RunLoop.current.run()
-        //        while shouldKeepRunning {
-        //            RunLoop.current.
-        //            RunLoop.current.run(mode: RunLoopMode.defaultRunLoopMode, before: Date())
-        //        }
     }
 
     @objc func stop() {
         self.checkOnThread()
+
+        // ...until we run stop() - CFRunLoopStop() kills the current run loop and allows the run() function
+        // above to successfully return
+
         CFRunLoopStop(CFRunLoopGetCurrent())
     }
 
     /// Sometimes we want to make sure that our worker has finished all execution before
-    /// we shut it down.
+    /// we shut it down. Need to flesh this out a lot more (what about timeouts?) but for now
+    /// it ensures that all WebSQL databases clean up after themselves on close.
     @objc func ensureFinished(responsePromise: PromisePassthrough) {
         let allWebSQL = self.activeWebSQLDatabases.allObjects
 
@@ -149,17 +154,23 @@ import PromiseKit
 
     fileprivate func throwExceptionIfExists() throws {
         if let exc = currentException {
-            currentException = nil
+            self.currentException = nil
             throw ErrorMessage("\(exc)")
         }
     }
 
+    /// Similar to the ensureOnCurrentThread() static function, this is here to make sure that the calls
+    /// we run from ServiceWorker by calling NSObject.perform() are actually being run on the correct thread.
     fileprivate func checkOnThread() {
         if Thread.current != self.thread {
             fatalError("Tried to execute worker code outside of worker thread")
         }
     }
 
+    /// Actually run some JavaScript inside the worker context. evaluateScript() itself is
+    /// synchronous, but ServiceWorker calls it without waiting for response (because this
+    /// thread could be frozen) so we use the EvaluateScriptCall wrapper to asynchronously
+    /// send back the response.
     @objc func evaluateScript(_ call: EvaluateScriptCall) {
 
         self.checkOnThread()
@@ -238,7 +249,7 @@ import PromiseKit
             self.jsContext.evaluateScript(hasContent, withSourceURL: url)
             var mutableURLs = urls
             mutableURLs.removeFirst(1)
-            return try importScripts(urls: mutableURLs)
+            return try self.importScripts(urls: mutableURLs)
         } else {
             throw ErrorMessage("Async code did not complete")
         }

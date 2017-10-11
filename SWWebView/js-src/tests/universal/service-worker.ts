@@ -106,4 +106,39 @@ describe("Service Worker", () => {
                 });
         });
     });
+
+    // it.only("Should successfully open an indexedDB database", function() {
+    //     this.timeout(50000);
+    //     return navigator.serviceWorker
+    //         .register("/fixtures/exec-worker.js")
+    //         .then(reg => {
+    //             return waitUntilWorkerIsActivated(reg.installing!);
+    //         })
+    //         .then(worker => {
+    //             return execInWorker(
+    //                 worker,
+    //                 `
+    //         return new Promise((fulfill,reject) => {
+    //             try {
+    //                 console.log("do open")
+    //                 var openRequest = indexedDB.open("testDB",1);
+    //                 console.log("request successful")
+    //                 openRequest.onsuccess = () => {
+    //                     // fulfill(true)
+    //                 };
+    //                 openRequest.onerror = (err) => {
+    //                     reject(err)
+    //                 };
+    //             } catch (err) {
+    //                 console.log("error caught");
+    //                 reject(err)
+    //             }
+    //         })
+    //         `
+    //             );
+    //         })
+    //         .then(returnValue => {
+    //             assert.equal(returnValue, true);
+    //         });
+    // });
 });

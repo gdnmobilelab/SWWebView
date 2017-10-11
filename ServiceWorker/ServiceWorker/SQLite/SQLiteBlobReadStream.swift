@@ -62,9 +62,11 @@ public class SQLiteBlobReadStream: InputStreamImplementation {
             state.currentPosition += lengthToRead
 
             if state.currentPosition == state.blobLength {
+                self.streamStatus = .atEnd
                 self.emitEvent(event: .endEncountered)
+            } else {
+                self.streamStatus = .open
             }
-            self.streamStatus = .open
             return Int(lengthToRead)
         } catch {
             self.throwError(error)

@@ -5,8 +5,12 @@ private struct MigrationAndVersion {
     let version: Int
 }
 
+/// This could probably be fleshed out a lot more than it is, but a very quick and dirty class to manage database
+/// migrations.
 public class DatabaseMigration {
 
+    /// Creates a table with identifier and value fields - right now it's only ever used to insert one row
+    /// called 'currentVersion'. But extendable for... something in the future.
     private static func ensureMigrationTableCreated(_ db: SQLiteConnection) throws {
 
         try db.exec(sql: """
@@ -27,7 +31,7 @@ public class DatabaseMigration {
                 throw ErrorMessage("Could not find row for current migration version")
             }
             guard let currentVersion = try rs.int("value") else {
-                throw ErrorMessage("Could not find row for current migration version")
+                throw ErrorMessage("Current migration version is not a number?")
             }
             return currentVersion
         }

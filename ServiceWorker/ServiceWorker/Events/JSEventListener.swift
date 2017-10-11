@@ -1,6 +1,9 @@
 import Foundation
 import JavaScriptCore
 
+/// A wrapper around a JavaScript function, stored as a JSValue, to be called when
+/// an event is dispatched. Also contains a reference to the correct thread to
+/// run the function on.
 class JSEventListener: EventListener {
     let eventName: String
     let funcToRun: JSValue
@@ -13,6 +16,6 @@ class JSEventListener: EventListener {
     }
 
     func dispatch(_ event: Event) {
-        self.funcToRun.perform(#selector(JSValue.call(withArguments:)), on: self.targetThread, with: [event], waitUntilDone: false)
+        self.funcToRun.perform(#selector(JSValue.call(withArguments:)), on: self.targetThread, with: [event], waitUntilDone: true)
     }
 }

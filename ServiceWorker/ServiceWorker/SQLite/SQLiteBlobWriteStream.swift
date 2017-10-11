@@ -58,10 +58,13 @@ public class SQLiteBlobWriteStream: OutputStreamImplementation {
             }
 
             state.currentPosition += lengthToWrite
-            self.streamStatus = .open
+
             if state.currentPosition == state.blobLength {
                 NSLog("Sent end at \(state.blobLength)")
+                self.streamStatus = .atEnd
                 self.emitEvent(event: .endEncountered)
+            } else {
+                self.streamStatus = .open
             }
             return Int(lengthToWrite)
 
