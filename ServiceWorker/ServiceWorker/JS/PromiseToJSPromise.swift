@@ -9,8 +9,6 @@ public extension Promise {
         let jsp = JSContextPromise.makeInCurrentContext()
 
         then { response -> Void in
-            NSLog("Fulfilling JSPromise with \(response)")
-
             jsp.fulfill(response)
         }
         .catch { error in

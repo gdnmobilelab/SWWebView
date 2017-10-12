@@ -1,9 +1,9 @@
 import Foundation
 
-/// Our webview representations of the API need to be able to reflect
-/// changes made natively. So we have a "log" that classes like
-/// ServiceWorkerContainer push to, allowing us to listen and forward
-/// these details to our webview.
+/// Our webview representations of the API need to be able to reflect changes made natively.
+/// So we have a "log" that classes like ServiceWorkerContainer push to, allowing us to
+/// listen and forward these details to our webview. Made this very quickly, it should
+/// almost definitely actually be using NSNotificationCenter or similar.
 public class GlobalEventLog {
 
     // We only keep weak references to our listeners because if the object containing

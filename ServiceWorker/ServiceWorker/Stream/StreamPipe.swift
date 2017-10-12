@@ -2,6 +2,12 @@ import Foundation
 import PromiseKit
 import CommonCrypto
 
+let logFunction: ((String) -> Void)? = nil
+
+/// Probably the code I'm least confident about in the whole project, which is great, because it underpins
+/// a lot of stuff! Anyway, it's a class to facilitate piping data from one stream to another. There are all
+/// sorts of logging messages in here that I don't want to get rid of just yet, because I'm had some weirdly
+/// inconsistent bugs pop up from time to time, and they're useful in debugging.
 public class StreamPipe: NSObject, StreamDelegate {
 
     typealias ReadPosition = (start: Int, length: Int)
@@ -164,7 +170,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         // through and write to each destination.
 
         if stream.hasSpaceAvailable == false {
-            NSLog("!!!!!! \(stream) says it has no space available")
+            logFunction?("!!!!!! \(stream) says it has no space available")
             // If we can't write at all then we'll just immediately return, leaving the leftover
             // position stored for the next time doReadWrite() is called.
 
@@ -224,23 +230,23 @@ public class StreamPipe: NSObject, StreamDelegate {
 
     public func stream(_ source: Stream, handle eventCode: Stream.Event) {
 
-        NSLog("Stream event! \(eventCode)")
+        logFunction?("Stream event! \(eventCode)")
 
         if eventCode == .openCompleted {
-            NSLog("Open complete \(source)")
+            logFunction?("Open complete \(source)")
         }
 
         if source == self.from && eventCode == .hasBytesAvailable {
-            NSLog("has bytes \(self.from) \(self.from.hasBytesAvailable), \(self.finished) \(self.outputStreamLeftovers.count)")
+            logFunction?("has bytes \(self.from) \(self.from.hasBytesAvailable), \(self.finished) \(self.outputStreamLeftovers.count)")
 
             if self.outputStreamLeftovers.count == 0 {
-                NSLog("\(self.from) has data and we're going to pipe it")
+                logFunction?("\(self.from) has data and we're going to pipe it")
                 self.doRead()
                 self.outputStreamLeftovers.forEach({ stream, position in
                     self.doWrite(to: stream, with: position)
                 })
             } else {
-                NSLog("\(self.from) has data but we have leftover data, so we're going to ignore that")
+                logFunction?("\(self.from) has data but we have leftover data, so we're going to ignore that")
             }
         }
 
@@ -250,35 +256,35 @@ public class StreamPipe: NSObject, StreamDelegate {
         // it seems to work out (because doWrite() will exit if hasSpaceAvailable is false)
 
         if eventCode == .hasSpaceAvailable || eventCode == .openCompleted, let output = source as? OutputStream {
-            NSLog("Stream \(output) has space available")
+            logFunction?("Stream \(output) has space available")
 
             if let position = self.outputStreamLeftovers[output] {
-                NSLog("Writing leftover into output \(output)")
+                logFunction?("Writing leftover into output \(output)")
                 self.doWrite(to: output, with: position)
             } else {
-                NSLog("No data waiting for stream")
+                logFunction?("No data waiting for stream")
             }
 
             if self.outputStreamLeftovers.count == 0 {
-                NSLog("There is now no leftover data left")
+                logFunction?("There is now no leftover data left")
                 if self.from.hasBytesAvailable {
-                    NSLog("No leftover data for any stream, and input has available, so sending read event")
+                    logFunction?("No leftover data for any stream, and input has available, so sending read event")
                     RunLoop.main.perform {
                         self.stream(self.from, handle: .hasBytesAvailable)
                     }
                 } else if self.from.streamStatus == .atEnd {
-                    NSLog("Input stream is exhausted, finishing")
+                    logFunction?("Input stream is exhausted, finishing")
                     self.finish()
                 } else {
-                    NSLog("\(self.from) does not have data available, but nor is it finished")
+                    logFunction?("\(self.from) does not have data available, but nor is it finished")
                 }
             } else {
-                NSLog("There is still leftover data in \(Array(self.outputStreamLeftovers.keys))")
+                logFunction?("There is still leftover data in \(Array(self.outputStreamLeftovers.keys))")
             }
         }
 
         if eventCode == .errorOccurred {
-            NSLog("error")
+            logFunction?("error")
             guard let error = source.streamError else {
                 self.completePromise.reject(ErrorMessage("Stream failed but does not have an error"))
                 return
@@ -288,14 +294,14 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
 
         if eventCode == .endEncountered {
-            NSLog("END? \(source)")
+            logFunction?("END? \(source)")
         }
 
         if source == self.from && eventCode == .endEncountered && self.outputStreamLeftovers.count == 0 {
-            NSLog("end")
+            logFunction?("end")
             self.finish()
         }
 
-        NSLog("Finished handling the event")
+        logFunction?("Finished handling the event")
     }
 }

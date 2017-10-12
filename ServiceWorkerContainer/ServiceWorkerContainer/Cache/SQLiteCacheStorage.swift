@@ -166,13 +166,7 @@ import PromiseKit
         let responseHeaders = try FetchHeaders.fromJSON(responseHeadersJSON)
         let response = FetchResponse(url: url, headers: responseHeaders, status: responseStatus, statusText: responseStatusText, redirected: responseRedirected == 1, streamPipe: streamPipe)
 
-        var corsHeaders: [String]?
-
-        if responseType == .CORS {
-            corsHeaders = try rs.string("response_cors_allowed_headers")?.components(separatedBy: ",")
-        }
-
-        return try response.getWrappedVersion(for: responseType, corsAllowedHeaders: corsHeaders)
+        return try response.getWrappedVersion(for: responseType)
     }
 
     fileprivate func nativeHas(_ name: String) throws -> Bool {
@@ -362,9 +356,12 @@ import PromiseKit
         // not all responses have a Content-Length header, so we download to disk first,
         // then transfer that file into SQLite.
         return response.internalResponse.fileDownload { fileURL, fileSize -> Promise<Void> in
+
+            let cacheResponse = response.internalResponse
+
             let (urlNoQuery, query) = try self.separateQueryAndMakeSW(fromURL: request.url)
 
-            let varyHeaders = self.getVaryHeaders(varyHeader: response.headers.get("Vary"), requestHeaders: request.headers)
+            let varyHeaders = self.getVaryHeaders(varyHeader: cacheResponse.headers.get("Vary"), requestHeaders: request.headers)
 
             var params: [String: Any?] = [
                 "cache_name": cacheName,
@@ -373,20 +370,14 @@ import PromiseKit
                 "request_query": query,
                 "vary_by_headers": try varyHeaders?.toJSON(),
                 "request_headers": try request.headers.toJSON(),
-                "response_headers": try response.internalResponse.headers.toJSON(),
-                "response_url": response.internalResponse.url?.absoluteString,
-                "response_status": response.status,
-                "response_status_text": response.statusText,
-                "response_redirected": response.redirected ? 1 : 0,
+                "response_headers": try cacheResponse.headers.toJSON(),
+                "response_url": cacheResponse.url?.absoluteString,
+                "response_status": cacheResponse.status,
+                "response_status_text": cacheResponse.statusText,
+                "response_redirected": cacheResponse.redirected ? 1 : 0,
                 "response_type": response.responseTypeString,
                 "response_body": fileSize
             ]
-
-            if ResponseType(rawValue: response.responseTypeString) == .CORS {
-                // This is kind of gross, but we need to store the allowed headers in a CORS response
-                // somewhere.
-                params["response_cors_allowed_headers"] = response.headers.keys().joined(separator: ",")
-            }
 
             let valuePlaceholders = params.keys.map { $0 == "response_body" ? "zeroblob(?)" : "?" }
 

@@ -55,7 +55,7 @@ class WebSQLConnectionTests: XCTestCase {
         return sw.getExecutionEnvironment()
             .then { exec in
 
-                let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { name, _, _, _, _ in
+                let openDatabaseFunction: @convention(block) (String, String, String, Int, JSValue?) -> WebSQLDatabase? = { [unowned exec] name, _, _, _, _ in
                     try! exec.openWebSQLDatabase(name: name)
                 }
 

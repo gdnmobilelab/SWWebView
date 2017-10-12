@@ -47,7 +47,6 @@ public enum FetchRequestMode: String {
     init?(url: JSValue, options: JSValue)
 }
 
-
 /// Replicating the Request API: https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
 @objc public class FetchRequest: NSObject, FetchRequestExports {
     public var method: String = "GET"
@@ -82,16 +81,30 @@ public enum FetchRequestMode: String {
         super.init()
     }
 
+    public func clone() -> FetchRequest {
+
+        let request = FetchRequest(url: self.url)
+        request.method = self.method
+        request.body = self.body
+        request.cache = self.cache
+        request.headers = self.headers.clone()
+        request.mode = self.mode
+        request.redirect = self.redirect
+        request.referrer = self.referrer
+
+        return request
+    }
+
     public required convenience init?(url: JSValue, options: JSValue) {
         do {
 
             if url.isString == false {
                 throw ErrorMessage("Must provide a string URL")
             }
-            
+
             // In JS we can pass in relative string URLs. So we need to get our execution environment
             // , and from that the worker URL. Then we create our native, absolute URL.
-            
+
             guard let exec = ServiceWorkerExecutionEnvironment.contexts.object(forKey: JSContext.current()) else {
                 throw ErrorMessage("Initialiser must be run inside a service worker")
             }
@@ -99,9 +112,9 @@ public enum FetchRequestMode: String {
             guard let absoluteURL = URL(string: url.toString(), relativeTo: exec.worker.url) else {
                 throw ErrorMessage("Could not create relative URL with string provided")
             }
-            
+
             // URL.standardized means we lose any /root/../back stuff and get a fully resolved URL
-            
+
             self.init(url: absoluteURL.standardized.absoluteURL)
             if let optionsObject = options.toObject() as? [String: AnyObject] {
                 try self.applyOptions(opts: optionsObject)
@@ -114,7 +127,6 @@ public enum FetchRequestMode: String {
         }
     }
 
-    
     /// Request.options.headers can either be an instance of Headers or a key-value object.
     /// We need to handle both types here.
     internal func applyHeadersIfExist(opts: [String: AnyObject]) {
@@ -173,7 +185,6 @@ public enum FetchRequestMode: String {
         }
     }
 
-    
     /// Turn this into a native URLRequest that we can use with URLSession. We could probably
     /// actually have FetchRequest inherit from URLRequest instead of doing this, but oh well.
     internal func toURLRequest() -> URLRequest {
@@ -190,7 +201,7 @@ public enum FetchRequestMode: String {
             // Appears to be this: http://www.openradar.me/31284156
             cachePolicy = .reloadIgnoringLocalCacheData
         }
-        
+
         var nsRequest = URLRequest(url: self.url, cachePolicy: cachePolicy, timeoutInterval: 60)
 
         nsRequest.httpMethod = self.method

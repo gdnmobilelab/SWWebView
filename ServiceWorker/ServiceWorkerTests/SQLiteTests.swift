@@ -365,10 +365,6 @@ class SQLiteTests: XCTestCase {
             let writestream = try conn.openBlobWriteStream(table: "testtable", column: "val", row: emptyRowId)
 
             StreamPipe.pipe(from: insertStream, to: writestream, bufferSize: 1)
-                .then { () -> Void in
-
-                    NSLog("hi")
-                }
                 .assertResolves()
 
         }())
@@ -402,9 +398,6 @@ class SQLiteTests: XCTestCase {
                     //                    let str = String(data: result, encoding: .utf8)
                     //
                     //                    XCTAssertEqual(str, "abcdefghijk")
-                }
-                .then { () -> Void in
-                    NSLog("yay?")
                 }
                 .assertResolves()
 

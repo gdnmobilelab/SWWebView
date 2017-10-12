@@ -53,7 +53,6 @@ class SQLiteBlobStreamPointer {
         }
 
         let blobLength = sqlite3_blob_bytes(setPointer)
-        NSLog("Blob length? \(blobLength)")
         self.openState = State(pointer: setPointer, blobLength: blobLength)
     }
 

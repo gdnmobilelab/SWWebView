@@ -2,6 +2,7 @@ import Foundation
 import JavaScriptCore
 import PromiseKit
 
+/// These are the FetchProtocol components that we expose to our JS environment
 @objc public protocol FetchResponseJSExports: JSExport {
     var headers: FetchHeaders { get }
     var statusText: String { get }
@@ -23,26 +24,27 @@ import PromiseKit
 
     @objc(clone)
     func cloneResponseExports() -> FetchResponseJSExports?
-}
 
-@objc public protocol ConstructableFetchResponseJSExports: FetchResponseJSExports, JSExport {
     init?(body: JSValue, options: [String: Any]?)
 }
 
-/// This is now a giant swirling mess of protocols, but FetchResponseProtocol isn't
-/// Objective-C compatible, so we have to make a special case.
-@objc public protocol CacheableFetchResponse: FetchResponseJSExports {
-    var internalResponse: FetchResponse { get }
-}
-
+/// Then, in addition to the above, these are the elements we make available natively.
+/// I think FetchResponseProxy is now the only class that implements these, so in theory
+/// we could flatten this out.
 public protocol FetchResponseProtocol: FetchResponseJSExports {
     func clone() throws -> FetchResponseProtocol
     var internalResponse: FetchResponse { get }
     var responseType: ResponseType { get }
-    func toCacheable() -> CacheableFetchResponse
     func text() -> Promise<String>
     func data() -> Promise<Data>
     func json() -> Promise<Any?>
     var streamPipe: StreamPipe? { get }
     var url: URL? { get }
+}
+
+/// Just to add a little complication to the mix, this is a special case for caching. Obj-C
+/// can't represent the Promises in FetchResponseProtocol, so we have a special-case, Obj-C
+/// compatible protocol that lets us get to the inner fetch response.
+@objc public protocol CacheableFetchResponse: FetchResponseJSExports {
+    var internalResponse: FetchResponse { get }
 }

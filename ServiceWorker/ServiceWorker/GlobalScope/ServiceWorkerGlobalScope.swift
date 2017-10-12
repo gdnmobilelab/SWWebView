@@ -81,7 +81,7 @@ import JavaScriptCore
         GlobalVariableProvider.add(variable: importAsConvention, to: self.context, withName: "importScripts")
         GlobalVariableProvider.add(variable: fetchAsConvention, to: self.context, withName: "fetch")
         GlobalVariableProvider.add(variable: FetchRequest.self, to: self.context, withName: "Request")
-        GlobalVariableProvider.add(variable: ConstructableFetchResponse.self, to: self.context, withName: "Response")
+        GlobalVariableProvider.add(variable: FetchResponseProxy.self, to: self.context, withName: "Response")
         GlobalVariableProvider.add(variable: MessageChannel.self, to: self.context, withName: "MessageChannel")
         GlobalVariableProvider.add(variable: SWMessagePort.self, to: self.context, withName: "MessagePort")
         // These have weird hacks involving hash get/set, so we have specific functions

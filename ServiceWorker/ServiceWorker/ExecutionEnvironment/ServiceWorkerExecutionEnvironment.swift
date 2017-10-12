@@ -106,7 +106,7 @@ import PromiseKit
 
         // ...until we run stop() - CFRunLoopStop() kills the current run loop and allows the run() function
         // above to successfully return
-
+        Log.info?("Stopping run loop for worker thread...")
         CFRunLoopStop(CFRunLoopGetCurrent())
     }
 
@@ -124,7 +124,7 @@ import PromiseKit
 
         when(fulfilled: mappedClosePromises)
             .then {
-                NSLog("Closed WebSQL connections")
+                Log.info?("Closed WebSQL connections")
             }
             .passthrough(responsePromise)
     }
@@ -336,10 +336,34 @@ import PromiseKit
         }
     }
 
-    /// Global scope delegate for running a remote fetch. Maybe we should set up worker-specific
-    /// FetchSessions that run on the worker thread, not sure really.
+    /// fetch() can be run with either a string or a full Request object. This separates them
+    /// out, as well as parsing strings to native URL objects.
     func fetch(_ requestOrString: JSValue) -> JSValue? {
-        return FetchSession.default.fetch(requestOrString, fromOrigin: self.worker.url)
+
+        return firstly { () -> Promise<FetchResponseProtocol> in
+
+            var request: FetchRequest
+
+            if let fetchInstance = requestOrString.toObjectOf(FetchRequest.self) as? FetchRequest {
+                request = fetchInstance
+            } else if requestOrString.isString {
+
+                guard let requestString = requestOrString.toString() else {
+                    throw ErrorMessage("Could not convert request to string")
+                }
+
+                guard let parsedURL = URL(string: requestString) else {
+                    throw ErrorMessage("Could not parse URL string")
+                }
+
+                request = FetchRequest(url: parsedURL)
+            } else {
+                throw ErrorMessage("Did not understand first argument passed in")
+            }
+
+            return FetchSession.default.fetch(request, fromOrigin: self.worker.url)
+
+        }.toJSPromiseInCurrentContext()
     }
 
     /// Part of the Service Worker spec: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/skipWaiting

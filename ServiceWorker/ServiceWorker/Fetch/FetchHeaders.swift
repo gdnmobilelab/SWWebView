@@ -62,6 +62,15 @@ import JavaScriptCore
         super.init()
     }
 
+    fileprivate init(existing: [KeyValuePair]) {
+        super.init()
+        self.values = existing
+    }
+
+    public func clone() -> FetchHeaders {
+        return FetchHeaders(existing: self.values)
+    }
+
     /// Transform a JSON string into a FetchHeaders object. Used when returning responses from the service worker
     /// cache, which stores headers as a JSON string in the database.
     ///
@@ -115,5 +124,41 @@ import JavaScriptCore
             throw ErrorMessage("Could not encode JSON to string")
         }
         return string
+    }
+
+    public func filteredBy(allowedKeys: [String]) -> FetchHeaders {
+
+        let lowercaseAllowed = allowedKeys.map { $0.lowercased() }
+
+        let filteredHeaders = FetchHeaders()
+
+        self.keys()
+            .filter { lowercaseAllowed.contains($0) == true }
+            .forEach { key in
+
+                if let value = self.get(key) {
+                    filteredHeaders.set(key, value)
+                }
+            }
+
+        return filteredHeaders
+    }
+
+    public func filteredBy(disallowedKeys: [String]) -> FetchHeaders {
+
+        let lowercaseDisallowed = disallowedKeys.map { $0.lowercased() }
+
+        let filteredHeaders = FetchHeaders()
+
+        self.keys()
+            .filter { lowercaseDisallowed.contains($0) == false }
+            .forEach { key in
+
+                if let value = self.get(key) {
+                    filteredHeaders.set(key, value)
+                }
+            }
+
+        return filteredHeaders
     }
 }

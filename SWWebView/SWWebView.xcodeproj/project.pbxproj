@@ -19,8 +19,6 @@
 		8A5D98011F3CC62A002E521F /* ServiceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98001F3CC62A002E521F /* ServiceWorker.swift */; };
 		8A5D98051F3CEEB0002E521F /* ServiceWorkerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98041F3CEEB0002E521F /* ServiceWorkerRegistration.swift */; };
 		8A5D98071F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98061F3CFBEA002E521F /* ServiceWorkerContainerCommands.swift */; };
-		8A5D980C1F3DF55B002E521F /* ServiceWorkerContainer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980A1F3DF55B002E521F /* ServiceWorkerContainer.framework */; };
-		8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980B1F3DF55B002E521F /* ServiceWorker.framework */; };
 		8A5D98271F3E0D77002E521F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98261F3E0D77002E521F /* AppDelegate.swift */; };
 		8A5D98291F3E0D77002E521F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5D98281F3E0D77002E521F /* ViewController.swift */; };
 		8A5D982E1F3E0D77002E521F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A5D982D1F3E0D77002E521F /* Assets.xcassets */; };
@@ -32,8 +30,6 @@
 		8A6F15411F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6F15401F42527A0025DA50 /* ServiceWorkerRegistrationCommands.swift */; };
 		8A748E861F82D98F00EAAC01 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8A748E851F82D98F00EAAC01 /* Default-568h@2x.png */; };
 		8A755C111F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A755C101F85784D003720B8 /* SWURLSchemeTaskOutputPipe.swift */; };
-		8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
-		8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */; };
 		8AA76F5F1F38B81700EFB4E1 /* SWWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AA76F511F38B81600EFB4E1 /* SWWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8AABC41F1F6082DA00429EF3 /* SWWebView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; };
 		8AABC4201F6082DA00429EF3 /* SWWebView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -53,13 +49,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		8AA76F591F38B81700EFB4E1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8AA76F451F38B81600EFB4E1 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8AA76F4D1F38B81600EFB4E1;
-			remoteInfo = SWWebView;
-		};
 		8AABC41D1F60827500429EF3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8AA76F451F38B81600EFB4E1 /* Project object */;
@@ -115,9 +104,6 @@
 		8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SWWebView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AA76F511F38B81600EFB4E1 /* SWWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SWWebView.h; sourceTree = "<group>"; };
 		8AA76F521F38B81600EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SWWebViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWWebViewTests.swift; sourceTree = "<group>"; };
-		8AA76F5E1F38B81700EFB4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8AABC4261F60839600429EF3 /* ServiceWorker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ServiceWorker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ServiceWorkerContainer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC7BBC11F47751B0001CD49 /* ServiceWorkerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerContainer.swift; sourceTree = "<group>"; };
@@ -150,16 +136,6 @@
 			files = (
 				8AF85D751F3A2747001B0A87 /* ServiceWorker.framework in Frameworks */,
 				8AF85D531F38BA1D001B0A87 /* ServiceWorkerContainer.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8AA76F541F38B81700EFB4E1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8A5D980C1F3DF55B002E521F /* ServiceWorkerContainer.framework in Frameworks */,
-				8A5D980D1F3DF55B002E521F /* ServiceWorker.framework in Frameworks */,
-				8AA76F581F38B81700EFB4E1 /* SWWebView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,7 +201,6 @@
 				8AABC4291F60839D00429EF3 /* ServiceWorkerContainer.framework */,
 				8AABC4261F60839600429EF3 /* ServiceWorker.framework */,
 				8AA76F501F38B81600EFB4E1 /* SWWebView */,
-				8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */,
 				8A5D98251F3E0D77002E521F /* SWWebView-JSTestSuite */,
 				8AA76F4F1F38B81600EFB4E1 /* Products */,
 				8AF85D511F38BA1D001B0A87 /* Frameworks */,
@@ -236,7 +211,6 @@
 			isa = PBXGroup;
 			children = (
 				8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */,
-				8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */,
 				8A5D98241F3E0D77002E521F /* SWWebView-JSTestSuite.app */,
 			);
 			name = Products;
@@ -257,15 +231,6 @@
 				8AF85D581F38C2BA001B0A87 /* SWWebViewNavigationDelegate.swift */,
 			);
 			path = SWWebView;
-			sourceTree = "<group>";
-		};
-		8AA76F5B1F38B81700EFB4E1 /* SWWebViewTests */ = {
-			isa = PBXGroup;
-			children = (
-				8AA76F5C1F38B81700EFB4E1 /* SWWebViewTests.swift */,
-				8AA76F5E1F38B81700EFB4E1 /* Info.plist */,
-			);
-			path = SWWebViewTests;
 			sourceTree = "<group>";
 		};
 		8AF85D511F38BA1D001B0A87 /* Frameworks */ = {
@@ -358,26 +323,6 @@
 			productReference = 8AA76F4E1F38B81600EFB4E1 /* SWWebView.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		8AA76F561F38B81700EFB4E1 /* SWWebViewTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 8AA76F651F38B81700EFB4E1 /* Build configuration list for PBXNativeTarget "SWWebViewTests" */;
-			buildPhases = (
-				8AF85DB61F3B7AA6001B0A87 /* Compile JS Tests */,
-				8AA76F531F38B81700EFB4E1 /* Sources */,
-				8AA76F541F38B81700EFB4E1 /* Frameworks */,
-				8AA76F551F38B81700EFB4E1 /* Resources */,
-				8AF85D921F3A3848001B0A87 /* Copy Carthage Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				8AA76F5A1F38B81700EFB4E1 /* PBXTargetDependency */,
-			);
-			name = SWWebViewTests;
-			productName = SWWebViewTests;
-			productReference = 8AA76F571F38B81700EFB4E1 /* SWWebViewTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -395,9 +340,6 @@
 						CreatedOnToolsVersion = 9.0;
 						LastSwiftMigration = 0900;
 					};
-					8AA76F561F38B81700EFB4E1 = {
-						CreatedOnToolsVersion = 9.0;
-					};
 				};
 			};
 			buildConfigurationList = 8AA76F481F38B81600EFB4E1 /* Build configuration list for PBXProject "SWWebView" */;
@@ -414,7 +356,6 @@
 			projectRoot = "";
 			targets = (
 				8AA76F4D1F38B81600EFB4E1 /* SWWebView */,
-				8AA76F561F38B81700EFB4E1 /* SWWebViewTests */,
 				8A5D98231F3E0D77002E521F /* SWWebView-JSTestSuite */,
 			);
 		};
@@ -437,13 +378,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8AF85D941F3A3A39001B0A87 /* js-dist in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8AA76F551F38B81700EFB4E1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,22 +430,6 @@
 			shellPath = /bin/sh;
 			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
 		};
-		8AF85D921F3A3848001B0A87 /* Copy Carthage Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/../Carthage/Build/iOS/PromiseKit.framework",
-			);
-			name = "Copy Carthage Frameworks";
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/PromiseKit.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
-		};
 		8AF85DAF1F3A4780001B0A87 /* Compile runtime JS */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -525,20 +443,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cd ${SRCROOT}/js-src\nnpm run build";
-		};
-		8AF85DB61F3B7AA6001B0A87 /* Compile JS Tests */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Compile JS Tests";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cd ${SRCROOT}/js-src\nnpm run build-tests";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -580,22 +484,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		8AA76F531F38B81700EFB4E1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8AA76F5D1F38B81700EFB4E1 /* SWWebViewTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		8AA76F5A1F38B81700EFB4E1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8AA76F4D1F38B81600EFB4E1 /* SWWebView */;
-			targetProxy = 8AA76F591F38B81700EFB4E1 /* PBXContainerItemProxy */;
-		};
 		8AABC41E1F60827500429EF3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8AA76F4D1F38B81600EFB4E1 /* SWWebView */;
@@ -809,34 +700,6 @@
 			};
 			name = Release;
 		};
-		8AA76F661F38B81700EFB4E1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				DEVELOPMENT_TEAM = 998P9U5NGJ;
-				INFOPLIST_FILE = SWWebViewTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.SWWebViewTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		8AA76F671F38B81700EFB4E1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				DEVELOPMENT_TEAM = 998P9U5NGJ;
-				INFOPLIST_FILE = SWWebViewTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.gdnmobilelab.SWWebViewTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -863,15 +726,6 @@
 			buildConfigurations = (
 				8AA76F631F38B81700EFB4E1 /* Debug */,
 				8AA76F641F38B81700EFB4E1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		8AA76F651F38B81700EFB4E1 /* Build configuration list for PBXNativeTarget "SWWebViewTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8AA76F661F38B81700EFB4E1 /* Debug */,
-				8AA76F671F38B81700EFB4E1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -26,18 +26,18 @@ class ServiceWorkerTests: XCTestCase {
 
             DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
 
-                NSLog("signalling")
+                Log.info?("signalling")
                 semaphore.signal()
             })
 
             DispatchQueue.global().async {
                 Promise(value: ())
                     .then {
-                        NSLog("doing this now")
+                        Log.info?("doing this now")
                     }
             }
 
-            NSLog("waiting")
+            Log.info?("waiting")
             semaphore.wait()
         }
         .assertResolves()
@@ -53,12 +53,12 @@ class ServiceWorkerTests: XCTestCase {
 
                 Promise(value: ())
                     .then { () -> Void in
-                        NSLog("signalling")
+                        Log.info?("signalling")
                         semaphore.signal()
                     }
 
             })
-            NSLog("wait")
+            Log.info?("wait")
             semaphore.wait()
         }
 

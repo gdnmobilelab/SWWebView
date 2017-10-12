@@ -227,7 +227,7 @@ class FetchOperationCORSTests: XCTestCase {
         TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
             let res = GCDWebServerResponse()
             res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-            res.setValue("X-Additional-Header, X-Header-Two", forAdditionalHeader: "Access-Control-Expose-Headers")
+
             res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
 
             serverExpectation.fulfill()
@@ -238,24 +238,109 @@ class FetchOperationCORSTests: XCTestCase {
             let res = GCDWebServerDataResponse(text: "blah")!
             res.setValue("TESTVALUE", forAdditionalHeader: "X-Additional-Header")
             res.setValue("TESTVALUE2", forAdditionalHeader: "X-Header-Two")
+            res.setValue("X-Additional-Header, X-Header-Two", forAdditionalHeader: "Access-Control-Expose-Headers")
             return res
         }
 
         let request = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
 
-        let expect = expectation(description: "Fetch call is missing header")
+        let fetchExpectation = expectation(description: "Fetch call should return")
 
         FetchSession.default.fetch(request, fromOrigin: URL(string: "http://not-localhost"))
             .then { response -> Void in
                 XCTAssert(response.responseType == ResponseType.CORS)
                 XCTAssertEqual(response.headers.get("X-Additional-Header"), "TESTVALUE")
                 XCTAssertEqual(response.headers.get("X-Header-Two"), "TESTVALUE2")
-                expect.fulfill()
+                fetchExpectation.fulfill()
             }.catch { _ in
                 XCTFail()
             }
 
-        wait(for: [expect, serverExpectation], timeout: 1)
+        wait(for: [serverExpectation, fetchExpectation], timeout: 1)
+    }
+
+    func testFiltersRequestHeadersWhenNoAllowHeaderIsProvided() {
+
+        let optionsExpectation = expectation(description: "Fetch call should hit OPTIONS")
+
+        TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+            let res = GCDWebServerResponse()
+            res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+
+            optionsExpectation.fulfill()
+            return res
+        }
+
+        let getExpectation = expectation(description: "Fetch call should hit OPTIONS")
+
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (request) -> GCDWebServerResponse? in
+
+            XCTAssertNil(request.headers["X-Custom-Header"])
+
+            getExpectation.fulfill()
+
+            let res = GCDWebServerDataResponse(text: "blah")!
+
+            return res
+        }
+
+        let fetchRequest = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
+
+        let fetchExpectation = expectation(description: "Fetch call should return")
+
+        fetchRequest.headers.set("x-custom-header", "test-value")
+
+        FetchSession.default.fetch(fetchRequest, fromOrigin: URL(string: "http://not-localhost"))
+            .then { _ -> Void in
+                fetchExpectation.fulfill()
+            }.catch { _ in
+                XCTFail()
+            }
+
+        wait(for: [optionsExpectation, getExpectation, fetchExpectation], timeout: 1)
+    }
+
+    func testKeepsRequestHeadersWhenAllowHeaderIsProvided() {
+
+        let optionsExpectation = expectation(description: "Fetch call should hit OPTIONS")
+
+        TestWeb.server!.addHandler(forMethod: "OPTIONS", path: "/test.txt", request: GCDWebServerRequest.self) { (_) -> GCDWebServerResponse? in
+            let res = GCDWebServerResponse()
+            res.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+            res.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+            res.setValue("X-Custom-Header", forAdditionalHeader: "Access-Control-Allow-Headers")
+            optionsExpectation.fulfill()
+            return res
+        }
+
+        let getExpectation = expectation(description: "Fetch call should hit OPTIONS")
+
+        TestWeb.server!.addHandler(forMethod: "GET", path: "/test.txt", request: GCDWebServerRequest.self) { (request) -> GCDWebServerResponse? in
+
+            XCTAssertEqual(request.headers["x-custom-header"] as? String, "test-value")
+
+            getExpectation.fulfill()
+
+            let res = GCDWebServerDataResponse(text: "blah")!
+
+            return res
+        }
+
+        let fetchRequest = FetchRequest(url: TestWeb.serverURL.appendingPathComponent("/test.txt"))
+
+        let fetchExpectation = expectation(description: "Fetch call should return")
+
+        fetchRequest.headers.set("X-Custom-Header", "test-value")
+
+        FetchSession.default.fetch(fetchRequest, fromOrigin: URL(string: "http://not-localhost"))
+            .then { _ -> Void in
+                fetchExpectation.fulfill()
+            }.catch { _ in
+                XCTFail()
+            }
+
+        wait(for: [optionsExpectation, getExpectation, fetchExpectation], timeout: 10)
     }
 
     func testAllowsOpaqueCORSResponse() {

@@ -18,7 +18,6 @@ CREATE TABLE "cache_entries" (
 "response_status" INTEGER NOT NULL,
 "response_status_text" TEXT NOT NULL,
 "response_redirected" INT NOT NULL,
-"response_cors_allowed_headers" TEXT,
 "response_body" BLOB NOT NULL,
 PRIMARY KEY("cache_name", "method", "request_url_no_query", "request_query", "vary_by_headers")
 );

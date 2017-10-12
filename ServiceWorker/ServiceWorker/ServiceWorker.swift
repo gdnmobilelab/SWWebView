@@ -114,12 +114,7 @@ import PromiseKit
                 do {
                     let env = try ServiceWorkerExecutionEnvironment(self)
                     fulfill(env)
-                    NSLog("perform?")
-                    //                    env.perform(#selector(ServiceWorkerExecutionEnvironment.run), on: Thread.current, with: nil, waitUntilDone: false)
                     env.run()
-                    NSLog("okay!")
-                    //                    env = nil
-                    //                    env.run()
                 } catch {
                     reject(error)
                 }
@@ -130,6 +125,8 @@ import PromiseKit
         .then { env in
 
             // Now that we have a context, we need to load the actual worker script.
+
+            env.jsContextName = "\(self.url.absoluteString) (\(self.state.rawValue))"
 
             guard let delegate = self.delegate else {
                 throw ErrorMessage("This worker has no delegate to load content through")

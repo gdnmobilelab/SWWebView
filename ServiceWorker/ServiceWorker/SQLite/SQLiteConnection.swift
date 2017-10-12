@@ -110,14 +110,7 @@ public class SQLiteConnection {
         var zErrMsg: UnsafeMutablePointer<Int8>?
         let pointer = try getDBPointer()
         let rc = sqlite3_exec(pointer, sql, nil, nil, &zErrMsg)
-        //        if rc == SQLITE_LOCKED {
-        //
-        //            DispatchQueue.global().async {
-        //                sqlite3_unlock_notify(pointer, { _, _ in
-        //                    NSLog("Free!")
-        //                }, nil)
-        //            }
-        //        }
+
         if rc != SQLITE_OK {
             try self.throwSQLiteError(zErrMsg)
         }
