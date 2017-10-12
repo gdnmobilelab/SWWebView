@@ -139,14 +139,15 @@ import PromiseKit
 
             // And then evaluate that script on the worker thread, waiting for it to complete.
 
-            let eval = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: self.url, returnType: .void)
+            let (promise, passthrough) = Promise<Void>.makePassthrough()
 
-            //            env.evaluateScript(eval)
+            let eval = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: self.url, passthrough: passthrough, returnType: .void)
+
             env.perform(#selector(ServiceWorkerExecutionEnvironment.evaluateScript(_:)), on: env.thread, with: eval, waitUntilDone: false)
             // As mentioned above, this is set to ensure we don't have two environments
             // created for one worker
 
-            let finalChain = eval.promise
+            let finalChain = promise
                 .then { (_) -> ServiceWorkerExecutionEnvironment in
                     self._executionEnvironment = env
                     return env
@@ -176,19 +177,17 @@ import PromiseKit
     public func evaluateScript<T>(_ script: String) -> Promise<T> {
 
         return getExecutionEnvironment()
-            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<Any?> in
+            .then { (exec: ServiceWorkerExecutionEnvironment) -> Promise<T> in
 
                 let returnType: ServiceWorkerExecutionEnvironment.EvaluateReturnType = T.self == JSContextPromise.self ? .promise : .object
 
-                let call = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: nil, returnType: returnType)
+                let (promise, passthrough) = Promise<T>.makePassthrough()
+
+                let call = ServiceWorkerExecutionEnvironment.EvaluateScriptCall(script: script, url: nil, passthrough: passthrough, returnType: returnType)
 
                 exec.perform(#selector(ServiceWorkerExecutionEnvironment.evaluateScript), on: exec.thread, with: call, waitUntilDone: false)
 
-                return call.resolve()
-            }
-            .then { result -> T in
-
-                try JSConvert.from(any: result)
+                return promise
             }
     }
 

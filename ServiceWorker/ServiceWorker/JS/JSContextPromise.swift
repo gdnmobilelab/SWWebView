@@ -138,7 +138,7 @@ import JavaScriptCore
     //            }
     //    }
 
-    @objc fileprivate func resolveOnThread(_ returnVal: ServiceWorkerExecutionEnvironment.PromiseWrappedCall) {
+    @objc fileprivate func resolveOnThread(_ returnVal: PromisePassthrough) {
 
         self.checkThread()
 
@@ -168,11 +168,11 @@ import JavaScriptCore
 
     public func resolve<T>() -> Promise<T> {
 
-        let wrapped = ServiceWorkerExecutionEnvironment.PromiseWrappedCall()
+        let (promise, passthrough) = Promise<T>.makePassthrough()
 
-        self.perform(#selector(JSContextPromise.resolveOnThread(_:)), on: self.thread, with: wrapped, waitUntilDone: false)
+        self.perform(#selector(JSContextPromise.resolveOnThread(_:)), on: self.thread, with: passthrough, waitUntilDone: false)
 
-        return wrapped.promise
+        return promise
             .then { anyResult -> T in
                 try JSConvert.from(any: anyResult)
             }

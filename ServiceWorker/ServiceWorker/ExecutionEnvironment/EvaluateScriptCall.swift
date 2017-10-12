@@ -28,15 +28,19 @@ extension ServiceWorkerExecutionEnvironment {
         case promise
     }
 
-    @objc internal class EvaluateScriptCall: PromiseWrappedCall {
+    @objc internal class EvaluateScriptCall: NSObject {
         let script: String
         let url: URL?
         let returnType: EvaluateReturnType
+        let fulfill: (Any?) -> Void
+        let reject: (Error) -> Void
 
-        init(script: String, url: URL?, returnType: EvaluateReturnType = .object) {
+        init(script: String, url: URL?, passthrough: PromisePassthrough, returnType: EvaluateReturnType = .object) {
             self.script = script
             self.url = url
             self.returnType = returnType
+            self.fulfill = passthrough.fulfill
+            self.reject = passthrough.reject
             super.init()
         }
     }

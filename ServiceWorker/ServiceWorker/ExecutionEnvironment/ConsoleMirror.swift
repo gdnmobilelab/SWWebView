@@ -16,6 +16,11 @@ import JavaScriptCore
         self.originalConsole = context.globalObject.objectForKeyedSubscript("console")
         super.init()
 
+        // We do this by replacing the console object with a proxy:
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+        // to the console. This allows us to both intercept calls and send them onwards
+        // to the debugging console that might be open.
+
         guard let proxyFunc = context.evaluateScript("""
              (function(funcToCall) {
                 let levels = ["debug", "info", "warn", "error", "log"];
@@ -61,6 +66,9 @@ import JavaScriptCore
         GlobalVariableProvider.add(variable: consoleProxy, to: context, withName: "console")
     }
 
+    /// Not entirely sure if this is necessary, but we remove this object and return the
+    /// original console when the worker closes. Hopefully to ensure garbage collection
+    /// runs correctly.
     func cleanup() {
         guard let console = self.originalConsole else {
             Log.error?("Cleanup with no original console. This should not happen.")
@@ -71,10 +79,15 @@ import JavaScriptCore
         self.originalConsole = nil
     }
 
+    /// The actual function that performs the logging
     fileprivate func mirror(_ level: String, _ msg: JSValue) {
 
         let values = msg.toArray()
             .map { val in
+
+                // This could do with being fleshed out a lot, but basically we
+                // leave strings untouched, and replace any objects with string
+                // representations of that object.
 
                 if let str = val as? String {
                     return str
@@ -96,6 +109,7 @@ import JavaScriptCore
         case "error":
             Log.error?(values)
         default:
+            // this should never happen (as we specify the levels in the JS above) but just in case...
             Log.error?("Tried to log to JSC console at an unknown level.")
         }
     }

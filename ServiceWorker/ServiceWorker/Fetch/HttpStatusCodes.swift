@@ -1,5 +1,8 @@
 import Foundation
 
+// Can't actually remember where I originally got these from now, but a source is here:
+// https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+
 let HttpStatusCodes: [Int: String] = [
     100: "Continue",
     101: "Switching Protocols",

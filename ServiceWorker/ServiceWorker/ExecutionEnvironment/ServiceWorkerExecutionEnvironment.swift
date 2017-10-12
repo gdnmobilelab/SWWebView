@@ -205,30 +205,50 @@ import PromiseKit
     func openWebSQLDatabase(name: String) throws -> WebSQLDatabase {
         self.checkOnThread()
         let db = try WebSQLDatabase.openDatabase(for: self.worker, in: self, name: name)
+
+        // WebSQL connections stay open until they are garbage collected, so we need to manually
+        // shut them down when the worker is done. We add to keep track of active DBs:
+
         self.activeWebSQLDatabases.add(db)
         return db
     }
 
+    /// Importing scripts is relatively complicated because it involves freezing the worker
+    /// thread entirely while we fetch the contents of our scripts. We use a DispatchSemaphore
+    /// to do that, while running our delegate function on another queue.
     func importScripts(urls: [URL]) throws {
 
         self.checkOnThread()
+
+        // We actually loop through the URL array, calling importScripts() over and over, removing
+        // a URL each time. The main reason for doing this is to keep memory usage low - in theory
+        // these JS files could be hundreds of KB big, so rather than load them all into memory
+        // we just do them one at a time.
 
         guard let url = urls.first else {
             // We've finished the array
             return
         }
 
+        // It's possible that our delegate doesn't implement script imports. If so we throw out
+        // immediately
+
         guard let loadFunction = self.worker.delegate?.serviceWorker else {
             throw ErrorMessage("Worker delegate does not implement importScripts")
         }
 
+        // This is what controls out thread freezing.
+
         let semaphore = DispatchSemaphore(value: 0)
+
+        // Because we're going to execute the load function asynchoronously on another
+        // queue, we need to have a way of passing the results back to our current context.
+        // So, we declare these variables to store the results in:
 
         var error: Error?
         var content: String?
 
-        // Because we're freezing the worker thread, we need to start another one in order
-        // to do the actual import. I'm sure there is a better way of doing this.
+        // Now we spin off a new dispatch queue and run out load function in it:
 
         DispatchQueue.global(qos: DispatchQoS.QoSClass.utility).async {
             loadFunction(self.worker, url) { err, body in
@@ -237,21 +257,52 @@ import PromiseKit
                 } else {
                     content = body
                 }
+
+                // This call resumes our thread. But because this is asynchronous, this
+                // line will run after...
+
                 semaphore.signal()
             }
         }
 
+        // ...this one, which contains the command to freeze our main thread.
+
         semaphore.wait()
+
+        // at this point our async function has executed and stored its results in the
+        // variables we created. Now we act on those variables:
 
         if let err = error {
             throw err
         } else if let hasContent = content {
+
+            // Provide our import has run successfully, we can now actually evaluate
+            // the script. withSourceURL means that the source in Safari debugger will
+            // be attributed correctly.
+
             self.jsContext.evaluateScript(hasContent, withSourceURL: url)
+
+            if let exception = self.jsContext.exception {
+
+                // If an error occurred in the process of importing the script,
+                // bail out
+
+                throw ErrorMessage("\(exception)")
+            }
+
+            // Now that we've successfully imported this script, we remove it from our
+            // array of scripts and run again.
+
             var mutableURLs = urls
             mutableURLs.removeFirst(1)
             return try self.importScripts(urls: mutableURLs)
+
         } else {
-            throw ErrorMessage("Async code did not complete")
+
+            // It's actually possible for a faulty delegate to return neither an error
+            // nor a result. So we need to factor that in.
+
+            throw ErrorMessage("importScripts loader did not return content, but did not return an error either")
         }
     }
 
@@ -269,6 +320,9 @@ import PromiseKit
         }
     }
 
+    /// Send an event (of any kind, ExtendableEvent etc.) into the worker. This is the way
+    /// the majority of triggers are set in the worker context. Like evaluateScript, it must
+    /// be called on the worker thread, which ServiceWorker does.
     @objc func dispatchEvent(_ call: DispatchEventCall) {
 
         self.checkOnThread()
@@ -282,10 +336,14 @@ import PromiseKit
         }
     }
 
+    /// Global scope delegate for running a remote fetch. Maybe we should set up worker-specific
+    /// FetchSessions that run on the worker thread, not sure really.
     func fetch(_ requestOrString: JSValue) -> JSValue? {
         return FetchSession.default.fetch(requestOrString, fromOrigin: self.worker.url)
     }
 
+    /// Part of the Service Worker spec: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/skipWaiting
+    /// is fired during install events to make sure the worker takes control of its scope immediately.
     func skipWaiting() {
         self.worker.skipWaitingStatus = true
     }

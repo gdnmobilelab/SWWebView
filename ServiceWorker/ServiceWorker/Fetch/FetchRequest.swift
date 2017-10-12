@@ -1,18 +1,23 @@
 import Foundation
 import JavaScriptCore
 
+/// https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
 public enum FetchRequestRedirect: String {
     case Follow = "follow"
     case Error = "error"
     case Manual = "manual"
 }
 
+/// Partial implementation: https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
+/// there are a lot more options on the MDN page than we have here.
 public enum FetchRequestCache: String {
     case Default = "default"
     case Reload = "reload"
     case NoCache = "no-cache"
 }
 
+/// https://developer.mozilla.org/en-US/docs/Web/API/Request/mode
+/// excludes the "navigate" mode, doesn't really apply to what we're doing here
 public enum FetchRequestMode: String {
     case SameOrigin = "same-origin"
     case NoCORS = "no-cors"
@@ -22,6 +27,8 @@ public enum FetchRequestMode: String {
 @objc protocol FetchRequestExports: JSExport {
     var method: String { get }
 
+    // This is slightly confusing, but FetchRequest's URL property is a URL in Swift, and a String
+    // in the JS environment. As a side-effect, also in Objective C.
     @objc(url)
     var urlString: String { get }
 
@@ -40,6 +47,8 @@ public enum FetchRequestMode: String {
     init?(url: JSValue, options: JSValue)
 }
 
+
+/// Replicating the Request API: https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
 @objc public class FetchRequest: NSObject, FetchRequestExports {
     public var method: String = "GET"
     public let url: URL
@@ -50,8 +59,6 @@ public enum FetchRequestMode: String {
     public var redirect: FetchRequestRedirect = FetchRequestRedirect.Follow
     public var cache: FetchRequestCache = FetchRequestCache.Default
     public var body: Data?
-
-    //    internal var origin: URL?
 
     public var urlString: String {
         return self.url.absoluteString
@@ -81,23 +88,21 @@ public enum FetchRequestMode: String {
             if url.isString == false {
                 throw ErrorMessage("Must provide a string URL")
             }
-
-            guard let workerLocation = options.context.globalObject.objectForKeyedSubscript("location").toObjectOf(WorkerLocation.self) as? WorkerLocation else {
-                // It's possible to call this constructor outside of a service worker scope, but we don't
-                // want to allow that, because we need to resolve relative URLs. If there is no self.scriptURL
-                // we must not be in a worker, so we fail.
-
-                throw ErrorMessage("Request must be used inside a Service Worker context")
+            
+            // In JS we can pass in relative string URLs. So we need to get our execution environment
+            // , and from that the worker URL. Then we create our native, absolute URL.
+            
+            guard let exec = ServiceWorkerExecutionEnvironment.contexts.object(forKey: JSContext.current()) else {
+                throw ErrorMessage("Initialiser must be run inside a service worker")
             }
 
-            guard let parsedScriptURL = URL(string: workerLocation.href) else {
-                throw ErrorMessage("Could not parse the worker context's script URL successfully")
-            }
-
-            guard let relativeURL = URL(string: url.toString(), relativeTo: parsedScriptURL) else {
+            guard let absoluteURL = URL(string: url.toString(), relativeTo: exec.worker.url) else {
                 throw ErrorMessage("Could not create relative URL with string provided")
             }
-            self.init(url: relativeURL.standardized.absoluteURL)
+            
+            // URL.standardized means we lose any /root/../back stuff and get a fully resolved URL
+            
+            self.init(url: absoluteURL.standardized.absoluteURL)
             if let optionsObject = options.toObject() as? [String: AnyObject] {
                 try self.applyOptions(opts: optionsObject)
             }
@@ -109,22 +114,9 @@ public enum FetchRequestMode: String {
         }
     }
 
-    /// The Fetch API has various rules regarding the origin of requests. We try to respect
-    /// that as best we can.
-    //    internal func enforceOrigin(origin: URL) throws {
-    //        self.origin = origin
-    //
-    //        if self.mode == .SameOrigin {
-    //            if self.url.scheme != origin.scheme || self.url.host != origin.host {
-    //                throw ErrorMessage("URL is not valid for a same-origin request")
-    //            }
-    //        } else if self.mode == .NoCORS {
-    //            if self.method != "HEAD" && self.method != "GET" && self.method != "POST" {
-    //                throw ErrorMessage("Can only send HEAD, GET and POST requests with no-cors requests")
-    //            }
-    //        }
-    //    }
-
+    
+    /// Request.options.headers can either be an instance of Headers or a key-value object.
+    /// We need to handle both types here.
     internal func applyHeadersIfExist(opts: [String: AnyObject]) {
         if let headers = opts["headers"] as? FetchHeaders {
             self.headers = headers
@@ -181,6 +173,9 @@ public enum FetchRequestMode: String {
         }
     }
 
+    
+    /// Turn this into a native URLRequest that we can use with URLSession. We could probably
+    /// actually have FetchRequest inherit from URLRequest instead of doing this, but oh well.
     internal func toURLRequest() -> URLRequest {
 
         var cachePolicy: URLRequest.CachePolicy = .returnCacheDataElseLoad
@@ -195,7 +190,7 @@ public enum FetchRequestMode: String {
             // Appears to be this: http://www.openradar.me/31284156
             cachePolicy = .reloadIgnoringLocalCacheData
         }
-
+        
         var nsRequest = URLRequest(url: self.url, cachePolicy: cachePolicy, timeoutInterval: 60)
 
         nsRequest.httpMethod = self.method

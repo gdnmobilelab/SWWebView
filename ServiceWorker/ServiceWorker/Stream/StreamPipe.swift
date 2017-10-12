@@ -248,7 +248,7 @@ public class StreamPipe: NSObject, StreamDelegate {
         // stream's hasSpaceAvailable property is false. They THEN fire an .openCompleted event, at which point
         // hasSpaceAvailable is true. I might be missing something obvious, but we're handling both here and
         // it seems to work out (because doWrite() will exit if hasSpaceAvailable is false)
-        
+
         if eventCode == .hasSpaceAvailable || eventCode == .openCompleted, let output = source as? OutputStream {
             NSLog("Stream \(output) has space available")
 

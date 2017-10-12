@@ -18,6 +18,12 @@ extension Promise {
         let (promise, fulfill, reject) = Promise<T>.pending()
 
         let fulfillCast = { (result: Any?) in
+
+            if T.self == Void.self, let voidResult = () as? T {
+                fulfill(voidResult)
+                return
+            }
+
             guard let cast = result as? T else {
                 reject(ErrorMessage("Could not cast \(result ?? "nil") to desired type \(T.self)"))
                 return
