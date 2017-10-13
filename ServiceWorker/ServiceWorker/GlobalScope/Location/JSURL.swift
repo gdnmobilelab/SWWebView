@@ -3,10 +3,7 @@ import JavaScriptCore
 
 @objc public protocol JSURLExports: JSExport {
     var href: String { get set }
-
-    @objc(protocol)
-    var _protocol: String { get set }
-
+    var `protocol`: String { get set }
     var host: String { get set }
     var hostname: String { get set }
     var origin: String { get set }
@@ -18,7 +15,8 @@ import JavaScriptCore
     init?(url: JSValue, relativeTo: JSValue)
 }
 
-@objc(JSURL) public class JSURL: LocationBase, JSURLExports {
+/// An implementation of the JS URL object: https://developer.mozilla.org/en-US/docs/Web/API/URL
+@objc public class JSURL: LocationBase, JSURLExports {
 
     public required init?(url: JSValue, relativeTo: JSValue) {
 

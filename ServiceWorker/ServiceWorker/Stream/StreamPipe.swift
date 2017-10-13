@@ -86,26 +86,8 @@ public class StreamPipe: NSObject, StreamDelegate {
             }
     }
 
-    public static func pipeRecordingLength(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Int64> {
-
-        let pipe = StreamPipe(from: from, bufferSize: bufferSize)
-        var length: Int64 = 0
-
-        pipe.hashListener = { _, count in
-            length += Int64(count)
-        }
-
-        return Promise(value: ())
-            .then {
-                try pipe.add(stream: to)
-
-                return pipe.pipe()
-            }
-            .then {
-                length
-            }
-    }
-
+    /// Quick utility function to also record the hash of all the data in the pipe. Used when saving
+    /// worker content.
     public static func pipeSHA256(from: InputStream, to: OutputStream, bufferSize: Int) -> Promise<Data> {
 
         var hashToUse = CC_SHA256_CTX()
@@ -213,15 +195,15 @@ public class StreamPipe: NSObject, StreamDelegate {
         }
 
         if self.outputStreamLeftovers.count > 0 {
-            fatalError("NO")
+            fatalError("Finished stream when there were still leftover streams. This should never happen.")
         }
 
         self.finished = true
 
         self.to.forEach { $0.close() }
         self.from.close()
-        //        self.from.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
-        //        self.to.forEach { $0.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode) }
+        self.from.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
+        self.to.forEach { $0.remove(from: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode) }
 
         if self.completePromise.promise.isPending {
             self.completePromise.fulfill(())

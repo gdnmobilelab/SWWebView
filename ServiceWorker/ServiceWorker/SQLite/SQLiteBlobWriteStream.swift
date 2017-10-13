@@ -1,6 +1,9 @@
 import Foundation
 import SQLite3
 
+/// A bridge between the a Foundation OutputStream and the SQLite C API's blob functions. Important
+/// to note that the SQLite streaming functions cannot change the size of a BLOB field. It must be
+/// created in an INSERT or UPDATE query beforehand.
 public class SQLiteBlobWriteStream: OutputStreamImplementation {
 
     let dbPointer: SQLiteBlobStreamPointer
@@ -46,7 +49,13 @@ public class SQLiteBlobWriteStream: OutputStreamImplementation {
                 throw ErrorMessage("Cannot write to a stream that is not open")
             }
             self.streamStatus = .writing
+
             let bytesLeft = state.blobLength - state.currentPosition
+
+            // Same as when reading, we don't want to write more data than the blob can hold
+            // so we cut it off if necessary - the streaming functions cannot change the size
+            // of a blob, only UPDATEs/INSERTs can.
+
             let lengthToWrite = min(Int32(len), bytesLeft)
 
             if sqlite3_blob_write(state.pointer, buffer, lengthToWrite, state.currentPosition) != SQLITE_OK {
@@ -57,6 +66,7 @@ public class SQLiteBlobWriteStream: OutputStreamImplementation {
                 throw ErrorMessage(str)
             }
 
+            // Update the position we next want to write to
             state.currentPosition += lengthToWrite
 
             if state.currentPosition == state.blobLength {
@@ -66,6 +76,7 @@ public class SQLiteBlobWriteStream: OutputStreamImplementation {
                 self.streamStatus = .open
                 self.emitEvent(event: .hasSpaceAvailable)
             }
+
             return Int(lengthToWrite)
 
         } catch {

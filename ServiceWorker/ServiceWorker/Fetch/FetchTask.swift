@@ -39,30 +39,29 @@ class FetchTask: NSObject {
     }
 
     deinit {
-        
+
         // Haven't explored this extensively, but if the task gets deallocated it's because the
         // code is no longer using it. For example, calling fetch() and never running a data transformer.
         // If that happens, we terminate the download, so we're not wasting bandwidth with content we
         // do not need.
-        
+
         if self.dataTask.state == .running {
             Log.info?("Cancelling running fetch task because nothing is listening to it")
             self.dataTask.cancel()
         }
     }
 
-    
     /// Because the redirect delegate function in FetchSession is run separately from the creation of our FetchResponse,
     /// we need to keep a reference to indicate whether a redirect happened or not.
     fileprivate var redirected = false
 
     func shouldFollowRedirect() -> Bool {
-        
+
         // As specified by the Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
         // we need to change our behaviour based on what the user has specified.
-        
+
         self.redirected = true
-        
+
         if self.request.redirect == .Follow {
             return true
         }
@@ -79,7 +78,7 @@ class FetchTask: NSObject {
 
         // The order should always go Redirect check -> initial response -> stream, but let's
         // not assume, we should check for the presence of the initial response:
-     
+
         guard let initialResponse = self.initialResponse else {
             throw ErrorMessage("Received stream but no HTTP response")
         }
@@ -91,15 +90,15 @@ class FetchTask: NSObject {
         let headers = FetchHeaders()
 
         // Transfer the headers from HTTPURLResponse into our custom FetchHeaders class.
-        
+
         try initialResponse.allHeaderFields.forEach { key, val in
-            
+
             guard let keyString = key as? String, let valString = val as? String else {
                 throw ErrorMessage("Could not parse HTTPURLResponse headers")
             }
 
             if keyString.lowercased() == "content-encoding" || keyString.lowercased() == "content-length" {
-                
+
                 // URLSession automatically decodes content (which we don't actually want it to do)
                 // so if we pass along this response to a browser with the encoding header still set, it'll
                 // fail because it will try to decode non-compressed content. The content-length header is also
@@ -109,20 +108,19 @@ class FetchTask: NSObject {
                 //
                 // so it'll now be incorrect. Since we now have no way of knowing what the uncompressed size
                 // will be, we omit the header entirely.
-                
+
                 return
-                
             }
-            
+
             headers.append(keyString, valString)
         }
-        
+
         // Now, at last, create our full FetchResponse class
 
         let fetchResponse = FetchResponse(url: url, headers: headers, status: initialResponse.statusCode, redirected: self.redirected, streamPipe: streamPipe)
 
         // And resolve our hasResponse promise with that response.
-        
+
         self.hasResponsePromise.fulfill(fetchResponse)
     }
 }

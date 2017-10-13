@@ -1,5 +1,6 @@
 import Foundation
 
+/// CacheMatchOptions are outlined here: https://developer.mozilla.org/en-US/docs/Web/API/Cache/match
 public struct CacheMatchOptions {
     let ignoreSearch: Bool
     let ignoreMethod: Bool
@@ -8,6 +9,8 @@ public struct CacheMatchOptions {
 }
 
 public extension CacheMatchOptions {
+
+    /// Just a quick shortcut method to let us construct matching options from a JS object
     static func fromDictionary(opts: [String: Any]) -> CacheMatchOptions {
 
         let ignoreSearch = opts["ignoreSearch"] as? Bool ?? false

@@ -1,6 +1,9 @@
 import Foundation
 import JavaScriptCore
 
+/// Base class used by both JSURL and WorkerLocation (which have different JSExports, so
+/// need to be different classes). Is basically a quick map between a URL object and
+/// the JS API: https://developer.mozilla.org/en-US/docs/Web/API/URL
 @objc public class LocationBase: NSObject {
 
     fileprivate var components: URLComponents
@@ -8,8 +11,6 @@ import JavaScriptCore
 
     init?(withURL: URL) {
         guard let components = URLComponents(url: withURL, resolvingAgainstBaseURL: true) else {
-            //            let err = JSValue(newErrorFromMessage: "Could not parse value provided", in: JSContext.current())
-            //            JSContext.current().exception = err
             return nil
         }
         self.components = components
@@ -40,7 +41,7 @@ import JavaScriptCore
         }
     }
 
-    @objc(protocol) public var _protocol: String {
+    @objc public var `protocol`: String {
         get {
 
             if let scheme = components.scheme {
@@ -90,7 +91,7 @@ import JavaScriptCore
 
     @objc public var origin: String {
         get {
-            return "\(self._protocol)//\(self.host)"
+            return "\(self.protocol)//\(self.host)"
         }
         set(value) {
             // As observed in Chrome, this doesn't seem to do anything
@@ -185,7 +186,7 @@ import JavaScriptCore
         }
 
         /// We can't use 'hash' as a property in native code because it's used by Objective C (grr)
-        /// so we have to resort to this total hack to get hash back.
+        /// so we have to resort to this total hack to get hash back in JS environments.
 
         jsVal.objectForKeyedSubscript("prototype").defineProperty("hash", descriptor: [
             "get": unsafeBitCast(hashGetter, to: AnyObject.self),

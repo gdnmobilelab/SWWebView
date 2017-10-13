@@ -2,7 +2,8 @@ import Foundation
 import JavaScriptCore
 
 /// All functions in this protocol should return a Promise resolving to FetchResponse
-/// a bool, or string array, depending on function.
+/// a bool, or string array, depending on function. In retrospect, these should probably
+/// be synchronous or use callbacks, and be wrapped internally. Another time.
 @objc public protocol Cache: JSExport {
     func match(_ request: JSValue, _ options: [String: Any]?) -> JSValue?
     func matchAll(_ request: JSValue, _ options: [String: Any]?) -> JSValue?

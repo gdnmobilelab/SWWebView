@@ -15,6 +15,8 @@ import JavaScriptCore
     func values() -> JSValue?
 }
 
+/// Quick implementation of URLSearchParams: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
+/// does not store any information internally, just sets and gets from the underlying URLComponents.
 @objc public class URLSearchParams: NSObject, URLSearchParamsExport {
 
     var components: URLComponents

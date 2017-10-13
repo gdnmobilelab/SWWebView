@@ -1,116 +1,69 @@
 import Foundation
 import JavaScriptCore
 
-class JSArrayBufferStream: InputStreamImplementation {
+// An additional initialiser for InputStream that handles ArrayBuffers created inside
+// a JS Context.
+extension InputStream {
 
-    // We don't really use this directly, but keeping a reference to it
-    // ensures that the data backing the ArrayBuffer does not get garbage collected.
-    fileprivate var jsValue: JSValue?
+    /// To ensure the memory does not get overwritten, we keep a reference to any byte pointer currently in use.
+    /// In the data deallocator we remove this reference and free up the memory.
+    fileprivate static var inUseArrayBufferPointers = Set<UnsafeMutableRawPointer>()
 
-    let length: Int
-    var pointer: UnsafeMutablePointer<UInt8>?
-    var currentPosition: Int = 0
+    convenience init?(arrayBuffer val: JSValue) {
 
-    fileprivate weak var _delegate: StreamDelegate?
-
-    override var delegate: StreamDelegate? {
-        get {
-            return self._delegate
-        }
-        set(val) {
-            self._delegate = val
-        }
-    }
-
-    init?(val: JSValue) {
+        // The JS methods used here store any errors they encounter in this variable...
         var maybeError: JSValueRef?
-        let arrType = JSValueGetTypedArrayType(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
 
-        if arrType != kJSTypedArrayTypeArrayBuffer {
-            // This isn't an ArrayBuffer, so we stop before we go any further.
-            return nil
-        }
-
-        let length = JSObjectGetArrayBufferByteLength(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
-
-        if maybeError != nil {
-            return nil
-        }
-
-        self.length = length
-        self.jsValue = val
-
-        super.init(data: Data(count: 0))
-    }
-
-    override func open() {
-
-        do {
-            self.streamStatus = .opening
-            guard let val = self.jsValue else {
-                throw ErrorMessage("JSValue did not exist when trying to open stream")
+        // ...so we have this function to throw an error back into the JS context, if it exists.
+        let makeExceptionIfNeeded = {
+            guard let error = maybeError else {
+                // There is no error, so we're OK
+                return
             }
 
-            var maybeError: JSValueRef?
+            let jsError = JSValue(jsValueRef: maybeError, in: val.context)
+            val.context.exception = jsError
+            throw ErrorMessage("Creation of ArrayBufferStream failed \(error)")
+        }
+
+        do {
+            let arrType = JSValueGetTypedArrayType(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
+
+            if arrType != kJSTypedArrayTypeArrayBuffer {
+                // This isn't an ArrayBuffer, so we stop before we go any further.
+                return nil
+            }
+
+            try makeExceptionIfNeeded()
+
+            let length = JSObjectGetArrayBufferByteLength(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError)
+
+            try makeExceptionIfNeeded()
+
             guard let bytes = JSObjectGetArrayBufferBytesPtr(val.context.jsGlobalContextRef, val.jsValueRef, &maybeError) else {
                 throw ErrorMessage("Could not get bytes from ArrayBuffer")
             }
 
-            if let error = maybeError {
-                guard let jsError = JSValue(jsValueRef: error, in: val.context) else {
-                    throw ErrorMessage("Error occurred, but could not extract message")
-                }
-                guard let message = jsError.objectForKeyedSubscript("message") else {
-                    throw ErrorMessage("Error occurred, but could not extract message")
-                }
-                throw ErrorMessage(message.toString())
-            }
+            try makeExceptionIfNeeded()
 
-            self.pointer = bytes.assumingMemoryBound(to: UInt8.self)
+            // At this point we store the pointer to our data...
+            InputStream.inUseArrayBufferPointers.insert(bytes)
 
-            self.streamStatus = .open
-            self.emitEvent(event: .openCompleted)
-            self.emitEvent(event: .hasBytesAvailable)
+            let data = Data(bytesNoCopy: bytes, count: length, deallocator: Data.Deallocator.custom({ releasedBytes, _ in
+
+                // ...and then release it again when the Data object is deallocated.
+
+                InputStream.inUseArrayBufferPointers.remove(releasedBytes)
+
+            }))
+
+            // Now we can just use the standard InputStream constructor.
+
+            self.init(data: data)
 
         } catch {
-            self.throwError(error)
+            Log.error?("\(error)")
+            return nil
         }
-    }
-
-    override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
-        self.streamStatus = .reading
-        guard let pointer = self.pointer else {
-            self.throwError(ErrorMessage("Pointer did not exist when trying to read"))
-            return -1
-        }
-
-        let lengthLeft = self.length - self.currentPosition
-
-        let lengthToRead = min(lengthLeft, len)
-
-        buffer.assign(from: pointer, count: lengthToRead)
-        self.pointer = pointer.advanced(by: lengthToRead)
-        self.currentPosition += lengthToRead
-
-        if self.currentPosition == self.length {
-            self.emitEvent(event: .endEncountered)
-        }
-
-        self.streamStatus = .open
-        return lengthToRead
-    }
-
-    override var hasBytesAvailable: Bool {
-        return self.currentPosition < self.length
-    }
-
-    override func close() {
-        self.streamStatus = .closed
-        self.pointer = nil
-        self.jsValue = nil
-    }
-
-    deinit {
-        self.jsValue = nil
     }
 }

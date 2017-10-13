@@ -1,5 +1,7 @@
 import Foundation
 
+/// Outlined here: https://developer.mozilla.org/en-US/docs/Web/API/Clients/matchAll, though
+/// not sure we'll ever implement Worker or SharedWorker (not sure how we'd know about them)
 @objc public enum ClientType: Int {
     case Window
     case Worker

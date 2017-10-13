@@ -1,4 +1,7 @@
 import Foundation
+
+/// Same as InputStreamImplementation, this just adds the boilerplate code any
+/// subclass of OutputStream requires.
 open class OutputStreamImplementation: OutputStream {
 
     // Get an error about abstract classes if we do not implement this. No idea why.

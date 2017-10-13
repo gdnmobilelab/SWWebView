@@ -1,5 +1,9 @@
 import Foundation
 
+/// Sometimes we want to 'clone' a stream (e.g. when cloning a FetchResponse) but we can't
+/// really because once a stream starts, any clone would be out of sync. So we have this
+/// PassthroughStream to help with that - if the source stream starts, it buffers the data
+/// into memory, then passes on if and when read actions take place.
 public class PassthroughStream {
 
     public static func create() -> (input: InputStream, output: OutputStream) {
@@ -22,7 +26,7 @@ public class PassthroughStream {
             if let delegate = self.inputDelegate {
                 delegate.emitEvent(event: .hasBytesAvailable)
             }
-
+            
             // There's no situation in which we can't write all the data, so just
             // return the amount requested
             return count
@@ -69,7 +73,15 @@ public class PassthroughStream {
         }
 
         override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
-            return self.data.read(buffer: buffer, maxLength: len)
+            let amountRead = self.data.read(buffer: buffer, maxLength: len)
+            
+            if self.data.data.count > 0 {
+                self.emitEvent(event: .hasBytesAvailable)
+            } else {
+                self.emitEvent(event: .endEncountered)
+            }
+            
+            return amountRead
         }
 
         override var hasBytesAvailable: Bool {

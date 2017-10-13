@@ -59,9 +59,8 @@ class FetchResponseTests: XCTestCase {
 
         FetchSession.default.fetch(request)
             .then { response -> Promise<Void> in
-                let lengthInHeader = response.headers.get("Content-Length")
-                XCTAssert(lengthInHeader == "20")
-
+                XCTAssertNil(response.headers.get("Content-Length"))
+              
                 return response.text()
                     .then { text -> Void in
                         XCTAssertEqual(text, "THIS IS TEST CONTENT")

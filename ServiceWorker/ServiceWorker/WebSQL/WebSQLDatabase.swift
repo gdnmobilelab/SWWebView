@@ -7,6 +7,9 @@ import PromiseKit
     func readTransaction(_: JSValue, _: JSValue, _: JSValue)
 }
 
+/// This is a partial-ish implementation of the WebSQL API. The only reason it exists is to be used
+/// by the IndexedDB shim, that's been my measure of success - if the shim works, we're done. So
+/// I have no idea what's missing here, really.
 @objc class WebSQLDatabase: NSObject, WebSQLDatabaseExports {
 
     let connection: SQLiteConnection
@@ -92,6 +95,8 @@ import PromiseKit
 
     static func openDatabase(for worker: ServiceWorker, in environment: ServiceWorkerExecutionEnvironment, name: String) throws -> WebSQLDatabase {
 
+        // We defer to the delegate to get the path where we should be storing our WebSQL data files.
+        
         guard let storagePath = try worker.delegate?.serviceWorkerGetDomainStoragePath(worker) else {
             throw ErrorMessage("ServiceWorker has no delegate")
         }
@@ -107,6 +112,8 @@ import PromiseKit
             .appendingPathComponent(escapedName)
             .appendingPathExtension("sqlite")
 
+        // If the domain-specific directory hasn't been created yet, make it
+        
         if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
             try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
         }

@@ -1,6 +1,7 @@
 import Foundation
 import SQLite3
 
+/// A bridge between the a Foundation InputStream and the SQLite C API's blob functions.
 public class SQLiteBlobReadStream: InputStreamImplementation {
 
     let dbPointer: SQLiteBlobStreamPointer
@@ -50,6 +51,9 @@ public class SQLiteBlobReadStream: InputStreamImplementation {
 
             let bytesLeft = state.blobLength - state.currentPosition
 
+            // We can't read more data than exists in the blob, so we make sure we're
+            // not going to go over:
+
             let lengthToRead = min(Int32(len), bytesLeft)
 
             if sqlite3_blob_read(state.pointer, buffer, lengthToRead, state.currentPosition) != SQLITE_OK {
@@ -59,6 +63,10 @@ public class SQLiteBlobReadStream: InputStreamImplementation {
                 let str = String(cString: errMsg)
                 throw ErrorMessage(str)
             }
+
+            // Now that we've read X bytes, ensure our pointer is updated to the next place we want
+            // to read from.
+
             state.currentPosition += lengthToRead
 
             if state.currentPosition == state.blobLength {
@@ -68,8 +76,10 @@ public class SQLiteBlobReadStream: InputStreamImplementation {
                 self.streamStatus = .open
                 self.emitEvent(event: .hasBytesAvailable)
             }
+
             return Int(lengthToRead)
         } catch {
+
             self.throwError(error)
             return -1
         }

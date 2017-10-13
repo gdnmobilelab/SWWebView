@@ -9,13 +9,15 @@ import PromiseKit
     var visibilityState: String { get }
 }
 
+/// A more specific version of Client, WindowClient: https://developer.mozilla.org/en-US/docs/Web/API/WindowClient
+/// also provides information on visibility and focus state (that don't apply to workers etc)
 @objc class WindowClient: Client, WindowClientExports {
 
     let wrapAroundWindow: WindowClientProtocol
 
     init(wrapping: WindowClientProtocol) {
         self.wrapAroundWindow = wrapping
-        super.init(wrapping: wrapping)
+        super.init(client: wrapping)
     }
 
     func focus() -> JSValue? {

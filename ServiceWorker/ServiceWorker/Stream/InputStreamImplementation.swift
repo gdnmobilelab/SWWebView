@@ -1,5 +1,7 @@
 import Foundation
 
+/// If you want to subclass InputStream you have to implement a load of boilerplate code to
+/// go along with it. This is that boilerplate code, so we can just inherit from this instead.
 open class InputStreamImplementation: InputStream {
 
     // Get an error about abstract classes if we do not implement this. No idea why.

@@ -93,7 +93,7 @@ private var allowedCORSHeaders = [
 
                 return InputStream(data: data)
 
-            } else if let arrayBufferStream = JSArrayBufferStream(val: val) {
+            } else if let arrayBufferStream = InputStream(arrayBuffer: val) {
 
                 return arrayBufferStream
             }

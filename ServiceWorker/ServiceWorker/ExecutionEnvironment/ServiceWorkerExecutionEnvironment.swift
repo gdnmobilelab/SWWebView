@@ -90,8 +90,6 @@ import PromiseKit
         self.globalScope.delegate = self
     }
 
-    var shouldKeepRunning = true
-
     @objc func run() {
         self.checkOnThread()
 
@@ -131,7 +129,6 @@ import PromiseKit
 
     deinit {
         Log.info?("Closing execution environment for: \(self.workerId)")
-        self.shouldKeepRunning = false
         let allWebSQL = self.activeWebSQLDatabases.allObjects
             .filter { $0.connection.open == true }
 

@@ -2,17 +2,27 @@ import Foundation
 import SQLite3
 import PromiseKit
 
+// These aren't imported correctly from SQLite3, so we have to define them:
+// https://stackoverflow.com/a/26884081/470339
+
 private let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
 private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
+/// 100% sure I will regret this, but the SQLite libraries I could find for Swift didn't support
+/// streaming, which we make heavy use of. Plus, I'm concerned about using SQLite in low memory
+/// conditions, like the Notification Service Extension, so we might need to heavily customise
+/// some stuff later on. Therefore, our own quick and dirty SQLite implementation.
 public class SQLiteConnection {
 
     var db: OpaquePointer?
     public let url: URL
+
     var open: Bool {
         return self.db != nil
     }
 
+    /// I was using this in testing but it turned out to not be necessary. I've left it in because
+    /// there's an outside change we'll still need to use it when dealing cross-process issues.
     static var temporaryStoreDirectory: URL?
 
     public init(_ dbURL: URL) throws {
@@ -23,13 +33,19 @@ public class SQLiteConnection {
             throw ErrorMessage("Could not create SQLite database instance: \(open)")
         }
 
+        // Again to concerns about memory usage - trying to see if setting this reduces it:
+
         try self.exec(sql: "PRAGMA cache_size = 0;")
+
         if let tempStore = SQLiteConnection.temporaryStoreDirectory {
             try self.exec(sql: "PRAGMA temp_store_directory = '\(tempStore.path)';")
         }
     }
 
     deinit {
+
+        // We'll automatically close any SQLite connection when it is dereferenced.
+
         do {
             if self.open {
                 try self.close()
@@ -39,6 +55,8 @@ public class SQLiteConnection {
         }
     }
 
+    /// A way to run a callback with a self-closing database connection. Opens, runs callback, closes, then
+    /// passes whatever the callback returned back.
     public static func inConnection<T>(_ dbURL: URL, _ cb: ((SQLiteConnection) throws -> T)) throws -> T {
 
         let conn = try SQLiteConnection(dbURL)
@@ -52,6 +70,8 @@ public class SQLiteConnection {
         }
     }
 
+    /// Much like the other inConnection() call, except this one supports promises, and waits for them to
+    /// resolve before closing the database connection.
     public static func inConnection<T>(_ dbURL: URL, _ cb: @escaping ((SQLiteConnection) throws -> Promise<T>)) -> Promise<T> {
 
         return firstly {
@@ -87,6 +107,7 @@ public class SQLiteConnection {
         }
     }
 
+    /// Quick wrapper to convert a SQLite error into a native one.
     func throwSQLiteError(_ err: UnsafeMutablePointer<Int8>?) throws {
 
         guard let errExists = err else {
@@ -98,6 +119,7 @@ public class SQLiteConnection {
         throw ErrorMessage("SQLite ERROR: \(errMsg)")
     }
 
+    /// This just saves us writing guard let statments everywhere
     fileprivate func getDBPointer() throws -> OpaquePointer {
         if let dbExists = self.db {
             return dbExists
@@ -105,6 +127,8 @@ public class SQLiteConnection {
         throw ErrorMessage("Connection is not open")
     }
 
+    /// Executes a multi-line SQL statement. Doesn't support parameters
+    /// or anything like that. Used in database migrations.
     public func exec(sql: String) throws {
 
         var zErrMsg: UnsafeMutablePointer<Int8>?
@@ -116,56 +140,42 @@ public class SQLiteConnection {
         }
     }
 
-    public func beginTransaction() throws {
-        var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
+    // I'm not totally sure these helpers are necessary, really
 
-        if rc != SQLITE_OK {
-            try self.throwSQLiteError(zErrMsg)
-        }
+    public func beginTransaction() throws {
+        return try self.exec(sql: "BEGIN TRANSACTION;")
     }
 
     public func rollbackTransaction() throws {
-        var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try getDBPointer(), "ROLLBACK TRANSACTION;", nil, nil, &zErrMsg)
-
-        if rc != SQLITE_OK {
-            try self.throwSQLiteError(zErrMsg)
-        }
+        return try self.exec(sql: "ROLLBACK TRANSACTION;")
     }
 
     public func commitTransaction() throws {
-        var zErrMsg: UnsafeMutablePointer<Int8>?
-        let rc = sqlite3_exec(try getDBPointer(), "COMMIT TRANSACTION;", nil, nil, &zErrMsg)
-
-        if rc != SQLITE_OK {
-            try self.throwSQLiteError(zErrMsg)
-        }
+        return try self.exec(sql: "COMMIT TRANSACTION;")
     }
 
     public func inTransaction<T>(_ closure: () throws -> T) throws -> T {
 
-        var zErrMsg: UnsafeMutablePointer<Int8>?
-        var rc = sqlite3_exec(try getDBPointer(), "BEGIN TRANSACTION;", nil, nil, &zErrMsg)
-
-        if rc != SQLITE_OK {
-            try self.throwSQLiteError(zErrMsg)
-        }
+        try self.beginTransaction()
 
         do {
             let result = try closure()
-            rc = sqlite3_exec(try getDBPointer(), "; COMMIT TRANSACTION;", nil, nil, &zErrMsg)
-            if rc != SQLITE_OK {
-                try self.throwSQLiteError(zErrMsg)
-            }
+            try self.commitTransaction()
             return result
 
         } catch {
-            rc = sqlite3_exec(try self.getDBPointer(), "; ROLLBACK TRANSACTION;", nil, nil, &zErrMsg)
+            do {
+                try self.rollbackTransaction()
+            } catch {
+                Log.error?("Error when rolling back transaction: \(error)")
+            }
             throw error
         }
     }
 
+    /// SQLite has different binding functions for different data types - we try to cast an Any?
+    /// object to various different types in order to make them compatible with the query. If we've
+    /// passed in something totally unsupported, it'll throw.
     fileprivate func bindValue(_ statement: OpaquePointer, idx: Int32, value: Any?) throws {
 
         if value == nil {
@@ -197,6 +207,8 @@ public class SQLiteConnection {
         return ErrorMessage(errMsg)
     }
 
+    /// Execute an update statement. Uses bindValue() to convert values into SQLite
+    /// parameters.
     public func update(sql: String, values: [Any?]) throws {
 
         let db = try getDBPointer()
@@ -235,6 +247,8 @@ public class SQLiteConnection {
         }
     }
 
+    /// Does exactly the same as an update query, except that it'll return the row_id of
+    /// the newly inserted row.
     public func insert(sql: String, values: [Any?]) throws -> Int64 {
         try self.update(sql: sql, values: values)
 
@@ -244,6 +258,7 @@ public class SQLiteConnection {
         return lastInserted
     }
 
+    /// Mapping for: https://sqlite.org/c3ref/changes.html
     public var lastNumberChanges: Int? {
         guard let db = self.db else {
             return nil
@@ -251,6 +266,7 @@ public class SQLiteConnection {
         return Int(sqlite3_changes(db))
     }
 
+    /// Get the last ID inserted, if there is one.
     public var lastInsertRowId: Int64? {
         guard let db = self.db else {
             return nil
@@ -258,7 +274,10 @@ public class SQLiteConnection {
         return sqlite3_last_insert_rowid(db)
     }
 
-    public func select<T>(sql: String, values: [Any?], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
+    /// SELECT statements use a callback format to manage the lifecycle of the result set - SQLite
+    /// requires you to close it when you're done with it, but using this callback means we don't
+    /// have to remember to do it ourselves.
+    public func select<T>(sql: String, values: [Any?] = [], _ cb: (SQLiteResultSet) throws -> T) throws -> T {
 
         let db = try getDBPointer()
 
@@ -290,17 +309,14 @@ public class SQLiteConnection {
         }
     }
 
-    public func select<T>(sql: String, _ cb: (SQLiteResultSet) throws -> T) throws -> T {
-        return try self.select(sql: sql, values: [], cb)
-    }
+    // SQLite blob streams can only set/read data on existing blobs, and cannot change their length. It requires
+    // the row_id too, so usually needs a SELECT statement to precede this call.
 
     public func openBlobReadStream(table: String, column: String, row: Int64) throws -> SQLiteBlobReadStream {
-
         return SQLiteBlobReadStream(self, table: table, column: column, row: row)
     }
 
     public func openBlobWriteStream(table: String, column: String, row: Int64) throws -> SQLiteBlobWriteStream {
-
         return SQLiteBlobWriteStream(self, table: table, column: column, row: row)
     }
 }

@@ -9,6 +9,9 @@ import PromiseKit
     func claim() -> JSValue?
 }
 
+/// Implementation of Clients: https://developer.mozilla.org/en-US/docs/Web/API/Clients to allow
+/// Service Workers to get/take control of/open clients under their scope. This is really just
+/// a bridge to whatever ServiceWorkerClientDelegate is set.
 @objc class Clients: NSObject, ClientsExports {
 
     unowned let worker: ServiceWorker
@@ -37,6 +40,9 @@ import PromiseKit
     func matchAll(_ options: [String: Any]?) -> JSValue? {
 
         return Promise<[Client]> { fulfill, reject in
+
+            // Two options provided here: https://developer.mozilla.org/en-US/docs/Web/API/Clients/matchAll
+
             let type = options?["type"] as? String ?? "all"
             let includeUncontrolled = options?["includeUncontrolled"] as? Bool ?? false
 

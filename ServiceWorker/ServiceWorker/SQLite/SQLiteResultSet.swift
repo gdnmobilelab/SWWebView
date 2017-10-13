@@ -1,6 +1,8 @@
 import Foundation
 import SQLite3
 
+/// Used in SQLiteConnection.select()'s callback, allows you to actually
+/// read rows and columns from the database.
 public class SQLiteResultSet {
 
     fileprivate var statement: OpaquePointer?
@@ -117,6 +119,7 @@ public class SQLiteResultSet {
         return Data(bytes: result, count: Int(length))
     }
 
+    /// URL isn't actually a SQLite data type, but it's convenient to do this.
     public func url(_ name: String) throws -> URL? {
         let str = try string(name)
         if let strVal = str {

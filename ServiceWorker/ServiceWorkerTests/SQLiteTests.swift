@@ -388,7 +388,7 @@ class SQLiteTests: XCTestCase {
             let output = OutputStream.toMemory()
 
             StreamPipe.pipe(from: readstream, to: output, bufferSize: 1)
-                .then {
+                .then { () -> Promise<Void> in
 
                     let result = output.property(forKey: Stream.PropertyKey.dataWrittenToMemoryStreamKey) as! Data
                     let newInput = InputStream(data: result)

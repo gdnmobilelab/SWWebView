@@ -11,8 +11,6 @@ import JavaScriptCore
 /// https://developer.mozilla.org/en-US/docs/Web/API/MessagePort
 @objc public class SWMessagePort: EventTarget, Transferable, MessagePortExports, MessagePortTarget {
 
-    fileprivate typealias QueuedMessage = (message: Any, transferList: [Transferable])
-
     public weak var targetPort: MessagePortTarget?
     public var started: Bool = false
 
@@ -66,6 +64,7 @@ import JavaScriptCore
         self.started = false
     }
 
+    /// Implementation of the JS API method: https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/postMessage
     public func postMessage(_ message: Any, _ transferList: [Transferable] = []) {
 
         do {
@@ -91,6 +90,8 @@ import JavaScriptCore
         }
     }
 
+    /// Not sure this needs to be specifically tied to ExtendableMessageEvent, but it is
+    /// for now.
     public func receiveMessage(_ evt: ExtendableMessageEvent) {
         if self.started == false {
             self.queuedMessages.append(evt)

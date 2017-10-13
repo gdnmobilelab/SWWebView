@@ -45,7 +45,6 @@
 		8A35AE921F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */; };
 		8A35AE941F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */; };
 		8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */; };
-		8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */; };
 		8A43C1871F4F29A2001221C1 /* ClientMatchAllOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */; };
 		8A43C18A1F4F2C79001221C1 /* Clients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C1891F4F2C79001221C1 /* Clients.swift */; };
 		8A43C18C1F4F32CD001221C1 /* ClientType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43C18B1F4F32CD001221C1 /* ClientType.swift */; };
@@ -72,7 +71,6 @@
 		8A9831C31F60C9D300ED23F0 /* FetchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9831C21F60C9D300ED23F0 /* FetchResponse.swift */; };
 		8A9831C41F618DAE00ED23F0 /* PromiseKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5D980F1F3DF89F002E521F /* PromiseKit.framework */; };
 		8AA70A711F8A9DDB004B36A6 /* EvaluateScriptCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA70A701F8A9DDB004B36A6 /* EvaluateScriptCall.swift */; };
-		8AA70A731F8C1B3E004B36A6 /* JSConvert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA70A721F8C1B3E004B36A6 /* JSConvert.swift */; };
 		8AB834631F6223EC00733F42 /* FetchCORSRestrictions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB834621F6223EC00733F42 /* FetchCORSRestrictions.swift */; };
 		8AC754721F3122FE00C6B70A /* ServiceWorker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC754681F3122FE00C6B70A /* ServiceWorker.framework */; };
 		8AC754771F3122FE00C6B70A /* ServiceWorkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC754761F3122FE00C6B70A /* ServiceWorkerTests.swift */; };
@@ -187,7 +185,6 @@
 		8A35AE911F5780DE00E63EF5 /* ServiceWorkerGlobalScopeDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerGlobalScopeDelegate.swift; sourceTree = "<group>"; };
 		8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceWorkerClientsDelegate.swift; sourceTree = "<group>"; };
 		8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientProtocol.swift; sourceTree = "<group>"; };
-		8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerClientsProtocol.swift; sourceTree = "<group>"; };
 		8A43C1861F4F29A2001221C1 /* ClientMatchAllOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientMatchAllOptions.swift; sourceTree = "<group>"; };
 		8A43C1891F4F2C79001221C1 /* Clients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clients.swift; sourceTree = "<group>"; };
 		8A43C18B1F4F32CD001221C1 /* ClientType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientType.swift; sourceTree = "<group>"; };
@@ -213,7 +210,6 @@
 		8A9831C01F60C5D100ED23F0 /* FetchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchSession.swift; sourceTree = "<group>"; };
 		8A9831C21F60C9D300ED23F0 /* FetchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchResponse.swift; sourceTree = "<group>"; };
 		8AA70A701F8A9DDB004B36A6 /* EvaluateScriptCall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluateScriptCall.swift; sourceTree = "<group>"; };
-		8AA70A721F8C1B3E004B36A6 /* JSConvert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSConvert.swift; sourceTree = "<group>"; };
 		8AB834621F6223EC00733F42 /* FetchCORSRestrictions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchCORSRestrictions.swift; sourceTree = "<group>"; };
 		8AC754681F3122FE00C6B70A /* ServiceWorker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ServiceWorker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AC7546B1F3122FE00C6B70A /* ServiceWorker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ServiceWorker.h; sourceTree = "<group>"; };
@@ -350,7 +346,6 @@
 			children = (
 				8A35AE931F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift */,
 				8A43C17B1F4E3FEC001221C1 /* ClientProtocol.swift */,
-				8A43C17D1F4E4102001221C1 /* WorkerClientsProtocol.swift */,
 				8A43C18B1F4F32CD001221C1 /* ClientType.swift */,
 				8A43C18D1F4F3391001221C1 /* WindowClientProtocol.swift */,
 				8A43C1911F4F3486001221C1 /* WindowClientVisibilityState.swift */,
@@ -496,7 +491,6 @@
 				8A463DEB1F6C207700AA5B26 /* GlobalVariableProvider.swift */,
 				8AEBD30F1F7DD42800AF1A21 /* JSArrayBufferStream.swift */,
 				8A2F7D461F8688C300E1A0B0 /* JSContextPromise.swift */,
-				8AA70A721F8C1B3E004B36A6 /* JSConvert.swift */,
 			);
 			path = JS;
 			sourceTree = "<group>";
@@ -935,7 +929,6 @@
 				8AC754D21F31252B00C6B70A /* FetchHeaders.swift in Sources */,
 				8A5B36191F5F4D22009F72AC /* JSArrayBuffer.swift in Sources */,
 				8AD1410D1F716E9A00ED2D2C /* SwiftEventListener.swift in Sources */,
-				8A43C17E1F4E4102001221C1 /* WorkerClientsProtocol.swift in Sources */,
 				8A181AAF1F755FCF005CED14 /* CacheStorage.swift in Sources */,
 				8AC754D41F31252B00C6B70A /* FetchRequest.swift in Sources */,
 				8A181AB11F756228005CED14 /* CacheStorageProviderDelegate.swift in Sources */,
@@ -943,7 +936,6 @@
 				8A2264AC1F33BCDA00B48902 /* WebSQLTransaction.swift in Sources */,
 				8AC755421F325CD100C6B70A /* WebSQLDatabase.swift in Sources */,
 				8AC754D61F31252B00C6B70A /* HttpStatusCodes.swift in Sources */,
-				8AA70A731F8C1B3E004B36A6 /* JSConvert.swift in Sources */,
 				8A35AE941F584EBC00E63EF5 /* ServiceWorkerClientsDelegate.swift in Sources */,
 				8A43C17C1F4E3FEC001221C1 /* ClientProtocol.swift in Sources */,
 				8AC754DA1F31252B00C6B70A /* FetchResponseProtocol.swift in Sources */,

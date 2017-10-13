@@ -288,7 +288,6 @@ import JavaScriptCore
         return firstly {
 
             try self.workers.forEach { slot in
-                slot.value.destroy()
                 try self.factory.workerFactory.update(worker: slot.value, toInstallState: .redundant)
             }
 
