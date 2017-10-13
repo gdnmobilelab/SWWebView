@@ -4,7 +4,9 @@
 
 First and foremost, it's an experiment. So it is in no way ready for production use. It's just a kernel of an idea slowly being fleshed out.
 
-*That said*, it is a collection of modules that, when put together, provide an almost drop-in replacement for WKWebView that supports various Service Worker APIs. It's split into three modules, each depending on the previous one:
+*That said*, it is a collection of modules that, when put together, provide an almost drop-in replacement for WKWebView that supports various Service Worker APIs. It's for apps only, it'll never work inside Safari, and even when it's complete I doubt it will be safe to use as a generic browser app, just with your own code.
+
+ It's split into three modules, each depending on the previous one:
 
 - **ServiceWorker**
 
@@ -39,3 +41,9 @@ The project uses Carthage for iOS dependencies and NPM for JavaScript dependenci
 ## Running
 
 Right now the easiest way to take a look at the project running is to run the `SWWebView-JSTestSuite` target in the simulator, which is a very simple app that will create an SWWebView and point it at `localhost:4567`. In order to run the test suite, go to `SWWebView/js-src` in the terminal and type `npm run test-watch`, which will transpile the JS and start a web server. You can also load `localhost:4567` in Chrome or Firefox to verify that the tests pass in all environments.
+
+## Contributing
+
+If you're interested in the project and want to contribute: you are brilliant. But I'd hold off getting too excited just yet - I still need to go through and add a lot of comments to the `ServiceWorkerContainer` and `SWWebView` modules (I know, I know, I should do it as I go along) so that it's even possible to work out what's going on. Then identify which features are missing and how they might be implemented. *Then* we're good to go.
+
+But for now, take it for a spin! If you see anything that behaves weirdly or if you have any thoughts on the project in general, please do [let me know](https://twitter.com/_alastair).
