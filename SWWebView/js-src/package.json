@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c -i ./src/boot.ts -o ../SWWebView/js-dist/runtime.js",
-    "build-tests":
-      "rollup -c rollup.test.config.js -i ./tests/test-bootstrap.ts -o ../SWWebView-JSTestSuite/js-tests/tests.js",
+    "build-tests": "rollup -c rollup.test.config.js -i ./tests/test-bootstrap.ts -o ../SWWebView-JSTestSuite/js-tests/tests.js",
     "test-watch": "gobble"
   },
   "author": "",
@@ -16,14 +15,14 @@
     "chai": "^4.1.1",
     "event-target": "^0.1.0",
     "eventtarget": "^0.1.0",
+    "gobble-cli": "^0.8.0",
     "rollup": "^0.45.2",
     "rollup-plugin-commonjs": "^8.1.0",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-typescript2": "^0.5.0",
     "rollup-watch": "^4.3.1",
-    "tiny-emitter":
-      "git+https://github.com/alastaircoote/tiny-emitter-w3cish.git",
+    "tiny-emitter": "git+https://github.com/alastaircoote/tiny-emitter-w3cish.git",
     "typescript": "^2.4.2"
   },
   "devDependencies": {

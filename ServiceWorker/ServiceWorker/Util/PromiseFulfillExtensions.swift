@@ -16,10 +16,8 @@ import PromiseKit
     }
 }
 
-
 extension Promise {
-    
-    
+
     /// And an extension method on Promise to create a passthrough promise
     static func makePassthrough() -> (promise: Promise<T>, passthrough: PromisePassthrough) {
 
@@ -44,7 +42,6 @@ extension Promise {
         return (promise, passthrough)
     }
 
-    
     /// And to turn any already-created promise into a passthrough.
     func passthrough(_ target: PromisePassthrough) {
         self.then { result in

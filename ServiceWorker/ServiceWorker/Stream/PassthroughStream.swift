@@ -26,7 +26,7 @@ public class PassthroughStream {
             if let delegate = self.inputDelegate {
                 delegate.emitEvent(event: .hasBytesAvailable)
             }
-            
+
             // There's no situation in which we can't write all the data, so just
             // return the amount requested
             return count
@@ -74,13 +74,13 @@ public class PassthroughStream {
 
         override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
             let amountRead = self.data.read(buffer: buffer, maxLength: len)
-            
+
             if self.data.data.count > 0 {
                 self.emitEvent(event: .hasBytesAvailable)
             } else {
                 self.emitEvent(event: .endEncountered)
             }
-            
+
             return amountRead
         }
 

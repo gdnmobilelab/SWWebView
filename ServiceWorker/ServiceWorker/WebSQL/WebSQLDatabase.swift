@@ -96,7 +96,7 @@ import PromiseKit
     static func openDatabase(for worker: ServiceWorker, in environment: ServiceWorkerExecutionEnvironment, name: String) throws -> WebSQLDatabase {
 
         // We defer to the delegate to get the path where we should be storing our WebSQL data files.
-        
+
         guard let storagePath = try worker.delegate?.serviceWorkerGetDomainStoragePath(worker) else {
             throw ErrorMessage("ServiceWorker has no delegate")
         }
@@ -113,7 +113,7 @@ import PromiseKit
             .appendingPathExtension("sqlite")
 
         // If the domain-specific directory hasn't been created yet, make it
-        
+
         if FileManager.default.fileExists(atPath: dbDirectory.path) == false {
             try FileManager.default.createDirectory(at: dbDirectory, withIntermediateDirectories: true, attributes: nil)
         }
