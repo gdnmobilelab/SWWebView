@@ -4,7 +4,7 @@
 
 First and foremost, it's an experiment. So it is in no way ready for production use. It's just a kernel of an idea slowly being fleshed out.
 
-*That said*, it is a collection of modules that, when put together, provide an almost drop-in replacement for WKWebView that supports various Service Worker APIs. It's for apps only, it'll never work inside Safari, and even when it's complete I doubt it will be safe to use as a generic browser app, just with your own code.
+*That said*, it is a collection of modules that, when put together, provide an almost drop-in replacement for WKWebView that supports various Service Worker APIs. It's for apps only, it'll never work inside Safari, and even when it's complete I doubt it will be safe to use as a generic browser app, just with your own code. If you are thinking of using it, or if you think it's an abomination, I'd encourage you to read about [why you might or might not want to use it](https://github.com/gdnmobilelab/SWWebView/wiki/Why-use-SWWebView%3F).
 
  It's split into three modules, each depending on the previous one:
 
@@ -28,7 +28,11 @@ First and foremost, it's an experiment. So it is in no way ready for production 
 
 - **SWWebView**
 
-  A subclass of WKWebView that injects JavaScript to create a version of the Service Worker API you can access like you would the real thing in Chrome and Firefox. Allows you to register, unregister and postMessage to a worker. Sends fetch events through the worker when it is in control of an SWWebView. As you might imagine, there are a lot of tradeoffs and caveats involved in getting it working.
+  A subclass of WKWebView that injects JavaScript to create a version of the Service Worker API you can access like you would the real thing in Chrome and Firefox. Allows you to register, unregister and postMessage to a worker. Sends fetch events through the worker when it is in control of an SWWebView. As you might imagine, there are [a lot of tradeoffs and caveats](https://github.com/gdnmobilelab/SWWebView/wiki/How-SWWebView-bridges-between-the-webview-and-native) involved in getting it working.
+
+## Requirements
+ - XCode 9 (and iOS 11 on devices)
+ - Node 6 or above
 
 ## Installation
 
@@ -40,7 +44,7 @@ The project uses Carthage for iOS dependencies and NPM for JavaScript dependenci
 
 ## Running
 
-Right now the easiest way to take a look at the project running is to run the `SWWebView-JSTestSuite` target in the simulator, which is a very simple app that will create an SWWebView and point it at `localhost:4567`. In order to run the test suite, go to `SWWebView/js-src` in the terminal and type `npm run test-watch`, which will transpile the JS and start a web server. You can also load `localhost:4567` in Chrome or Firefox to verify that the tests pass in all environments.
+Right now the easiest way to take a look at the project running is to open `SWWebView/SWWebView.xcworkspace` and run the `SWWebView-JSTestSuite` target in the simulator, which is a very simple app that will create an SWWebView and point it at `localhost:4567`. In order to run the test suite, go to `SWWebView/js-src` in the terminal and type `npm run test-watch`, which will transpile the JS and start a web server. You can also load `localhost:4567` in Chrome or Firefox to verify that the tests pass in all environments.
 
 ## Contributing
 

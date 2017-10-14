@@ -1,11 +1,3 @@
-//
-//  ViewController.swift
-//  SWWebView-JSTestSuite
-//
-//  Created by alastair.coote on 11/08/2017.
-//  Copyright © 2017 Guardian Mobile Innovation Lab. All rights reserved.
-//
-
 import UIKit
 import SWWebView
 import WebKit
@@ -38,18 +30,15 @@ class ViewController: UIViewController {
             fatalError()
         }
 
-        let headerScript = WKUserScript(source: "var swwebviewSettings = \(SWWebView.javascriptConfigDictionary);", injectionTime: .atDocumentStart, forMainFrameOnly: false)
-
-        config.userContentController.addUserScript(headerScript)
-
         self.coordinator = SWWebViewCoordinator(storageURL: storageURL)
 
         let swView = SWWebView(frame: self.view.frame, configuration: config)
+        // This will move to a delegate method eventually
         swView.serviceWorkerPermittedDomains.append("localhost:4567")
         swView.containerDelegate = self.coordinator!
         self.view.addSubview(swView)
 
-        var url = URLComponents(string: "sw://alastairtest.ngrok.io/tests.html")!
+        var url = URLComponents(string: "sw://localhost:4567/tests.html")!
         URLCache.shared.removeAllCachedResponses()
         NSLog("Loading \(url.url!.absoluteString)")
         swView.load(URLRequest(url: url.url!))

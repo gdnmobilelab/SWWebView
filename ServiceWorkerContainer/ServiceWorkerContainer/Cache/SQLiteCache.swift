@@ -38,7 +38,12 @@ import PromiseKit
 
             return FetchSession.default.fetch(request, fromOrigin: worker.url)
                 .then { response -> Promise<Void> in
-                    self.storage.put(cacheName: self.name, request: request, response: response.toCacheable())
+
+                    guard let asCacheable = response as? CacheableFetchResponse else {
+                        throw ErrorMessage("Could not convert?")
+                    }
+
+                    return self.storage.put(cacheName: self.name, request: request, response: asCacheable)
                 }
         }.toJSPromiseInCurrentContext()
     }
@@ -72,7 +77,12 @@ import PromiseKit
             let actualPuts = mapped.map { request in
                 return FetchSession.default.fetch(request, fromOrigin: worker.url)
                     .then { response -> Promise<Void> in
-                        self.storage.put(cacheName: self.name, request: request, response: response.toCacheable())
+
+                        guard let asCacheable = response as? CacheableFetchResponse else {
+                            throw ErrorMessage("Could not convert?")
+                        }
+
+                        return self.storage.put(cacheName: self.name, request: request, response: asCacheable)
                     }
             }
 
