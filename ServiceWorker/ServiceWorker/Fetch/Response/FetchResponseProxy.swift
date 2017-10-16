@@ -149,6 +149,12 @@ private var allowedCORSHeaders = [
     }
 
     func arrayBuffer() -> JSValue? {
+        NSLog("are we even hitting this?")
+
+        guard let ctx = JSContext.current() else {
+            Log.error?("Tried to call arrayBuffer() outside of a JSContext")
+            return nil
+        }
 
         if self.responseType == .Opaque {
 
@@ -161,13 +167,7 @@ private var allowedCORSHeaders = [
 
         return self.data()
             .then { data -> JSValue? in
-
-                guard let currentContext = JSContext.current() else {
-                    Log.error?("Tried to call arrayBuffer() outside of a JSContext")
-                    return nil
-                }
-
-                let buffer = JSArrayBuffer.make(from: data, in: currentContext)
+                let buffer = JSArrayBuffer.make(from: data, in: ctx)
                 return buffer
             }.toJSPromiseInCurrentContext()
     }

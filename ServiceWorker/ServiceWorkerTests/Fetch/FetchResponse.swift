@@ -181,7 +181,7 @@ class FetchResponseTests: XCTestCase {
             fetch('\(TestWeb.serverURL.appendingPathComponent("/test.dat"))')
             .then(function(res) { return res.arrayBuffer() })
             .then(function(arrBuffer) {
-            let arr = new Uint8Array(arrBuffer);
+                let arr = new Uint8Array(arrBuffer);
 
             return [arr[0],arr[1],arr[2],arr[3],arr[4]]
             })
