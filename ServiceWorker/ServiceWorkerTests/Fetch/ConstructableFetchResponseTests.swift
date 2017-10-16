@@ -22,7 +22,7 @@ class ConstructableFetchResponseTests: XCTestCase {
                 XCTAssertEqual(array[0] as? String, "hello")
                 XCTAssertEqual(array[1] as? Int, 200)
                 XCTAssertEqual(array[2] as? String, "")
-                XCTAssertEqual(array[3] as? String, "text/plain")
+                XCTAssertEqual(array[3] as? String, "text/plain;charset=UTF-8")
             }
             .assertResolves()
     }
