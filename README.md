@@ -1,7 +1,5 @@
 # SWWebView
 
-![Proof that tests pass](https://www.gdnmobilelab.com/swwebview/tests.png)
-
 ## What is this?
 
 First and foremost, it's an experiment. So it is in no way ready for production use. It's just a kernel of an idea slowly being fleshed out.
