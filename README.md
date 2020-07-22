@@ -1,5 +1,7 @@
 # SWWebView
 
+**UPDATE:** the Guardian Mobile Lab has closed and this repo has been archived as a snapshot of the work we completed. If you're looking to use SWWebView today please look at the forks of this project, such as https://github.com/lexrus/SWWebView.
+
 ## What is this?
 
 First and foremost, it's an experiment. So it is in no way ready for production use. It's just a kernel of an idea slowly being fleshed out.
